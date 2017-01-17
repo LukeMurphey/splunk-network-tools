@@ -1,20 +1,19 @@
 from network_tools_app.search_command import SearchCommand
 from network_tools_app import pyspeedtest
-import sys
 
 class Speedtest(SearchCommand):
     
     def __init__(self, runs=1, server=None):
         SearchCommand.__init__(self, run_in_preview=True, logger_name="speedtest")
         
-        try:
-            self.params = {
-                'runs' : int(runs),
+        self.params = {
                 'host' : server
-            }
+        }
+        
+        try:
+            self.params['runs'] = int(runs)
         except ValueError:
-            sys.stderr.write('The runs parameter must be an integer')
-            return
+            raise ValueError('The runs parameter must be an integer')
         
         self.logger.info("Speedtest running")
     
