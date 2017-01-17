@@ -1,4 +1,10 @@
 """
+This class provides a base class for search commands that handles much of the Splunk-to-Python interaction necessary for making a search command.
+
+See below for a basic example of a class that sub-classes SearchCommand:
+
+
+
 from search_command import SearchCommand
 import sys
 
@@ -13,7 +19,7 @@ class Echo(SearchCommand):
         SearchCommand.__init__( self, run_in_preview=True, logger_name='echo_search_command')
     
     def handle_results(self, results, session_key, in_preview):
-        self.output_results({'echo' : self.what_to_echo})
+        self.output_results([{'echo' : self.what_to_echo}])
         
 if __name__ == '__main__':
     try:
@@ -97,8 +103,8 @@ class SearchCommand(object):
         
         # If no equal-sign was found then initialize the value to None
         if splitter < 0:
-            name = argument
-            value = None
+            name = None
+            value = argument
             
         # If a splitter was found, then parse the value
         else:
@@ -127,7 +133,7 @@ class SearchCommand(object):
                 name, value = cls.parse_argument( a ) 
                 
                 # If the argument has no value then it was an unnamed argument. Put it in the arguments array
-                if value is None:
+                if name is None:
                     args.append(value)
                     
                 else:
