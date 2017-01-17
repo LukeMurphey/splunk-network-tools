@@ -1,0 +1,5 @@
+<project default="package" name="network_tools">
+	
+	<import file="basebuild.xml"/>
+	
+</project>
