@@ -4,7 +4,7 @@ from network_tools_app import pyspeedtest
 class Speedtest(SearchCommand):
     
     def __init__(self, runs=1, server=None):
-        SearchCommand.__init__(self, run_in_preview=True, logger_name="speedtest")
+        SearchCommand.__init__(self, run_in_preview=True, logger_name="speedtest_search_command")
         
         self.params = {
                 'host' : server
