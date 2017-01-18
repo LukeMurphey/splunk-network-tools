@@ -9,7 +9,7 @@ import sys
 class WakeOnLAN(SearchCommand):
     
     def __init__(self, host=None, mac_address=None, ip_address=None, port=None):
-        SearchCommand.__init__(self, run_in_preview=True, logger_name="wakeonlan")
+        SearchCommand.__init__(self, run_in_preview=True, logger_name="wakeonlan_search_command")
         
         self.params = {}
         self.mac_address = None
@@ -41,7 +41,7 @@ class WakeOnLAN(SearchCommand):
         
         getargs = {
             'output_mode': 'json',
-            'query' : '{"name":"' + '"}'
+            'query' : '{"name":"' + name + '"}'
         }
         self.logger.info("query is %r", getargs['query'])
         _, l = rest.simpleRequest(uri, sessionKey=session_key, getargs=getargs, raiseAllErrors=True)
@@ -60,18 +60,24 @@ class WakeOnLAN(SearchCommand):
         
         # FYI: we ignore results since this is a generating command
         
-        # Resolve the MAC address if needed
+        # Resolve the MAC address (and port and IP address) if needed
         host_info = None
         
         if self.host is not None:
             host_info = self.getHost(self.host, session_key)
             
-            if self.mac_address is None:
-                self.mac_address = host_info['mac_address']
+            if host_info is not None:
                 
-            # TODO: get the other info too
+                if self.mac_address is None:
+                    self.mac_address = host_info['mac_address']
+                
+                if 'ip_address' not in self.params and 'ip_address' in host_info and len(host_info['ip_address']) > 0:
+                    self.params['ip_address'] = host_info['ip_address']
+                    
+                if 'port' not in self.params and 'port' in host_info and len(host_info['port']) > 0:
+                    self.params['port'] = host_info['port']
         
-        # Make sure we have a MAC address to perform a request on
+        # Make sure we have a MAC address to perform a request on, stop if we don't
         if self.mac_address is None:
             raise ValueError("No MAC address was provided and unable to resolve one from the hosts table")
             return
