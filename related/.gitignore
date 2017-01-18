@@ -1,8 +1,0 @@
-*.py[cod]
-*.project
-*.pydevproject
-local.properties
-tmp/
-
-.settings/
-.DS_Store
