@@ -1,17 +1,15 @@
 from network_tools_app.search_command import SearchCommand
-from network_tools_app import pyspeedtest
+from network_tools_app.speedtest_helper import do_speedtest
 
 class Speedtest(SearchCommand):
     
-    def __init__(self, runs=1, server=None):
+    def __init__(self, runs=1, host=None):
         SearchCommand.__init__(self, run_in_preview=True, logger_name="speedtest_search_command")
         
-        self.params = {
-                'host' : server
-        }
+        self.host = host
         
         try:
-            self.params['runs'] = int(runs)
+            self.runs = int(runs)
         except ValueError:
             raise ValueError('The runs parameter must be an integer')
         
@@ -22,17 +20,7 @@ class Speedtest(SearchCommand):
         # FYI: we ignore results since this is a generating command
         
         # Do the speedtest
-        result = {}
-        
-        st = pyspeedtest.SpeedTest(**self.params)
-        result['ping'] = round(st.ping(),2)
-        result['download'] = round(st.download(),2)
-        result['download_readable'] = pyspeedtest.pretty_speed(st.download())
-        
-        result['upload'] = round(st.upload(),2)
-        result['upload_readable'] = pyspeedtest.pretty_speed(st.upload())
-        
-        result['server'] = st.host
+        result = do_speedtest(host=self.host, runs=self.runs, index="main", logger=self.logger)
         
         # Output the results
         self.output_results([result])
