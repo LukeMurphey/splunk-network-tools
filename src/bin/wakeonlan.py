@@ -43,7 +43,7 @@ class WakeOnLAN(SearchCommand):
             'output_mode': 'json',
             'query' : '{"name":"' + name + '"}'
         }
-        self.logger.info("query is %r", getargs['query'])
+        
         _, l = rest.simpleRequest(uri, sessionKey=session_key, getargs=getargs, raiseAllErrors=True)
         l  = json.loads(l)
     
@@ -71,11 +71,12 @@ class WakeOnLAN(SearchCommand):
                 if self.mac_address is None:
                     self.mac_address = host_info['mac_address']
                 
-                if 'ip_address' not in self.params and 'ip_address' in host_info and len(host_info['ip_address']) > 0:
+                if 'ip_address' not in self.params and host_info.get('ip_address', None) is not None and len(host_info['ip_address']) > 0:
                     self.params['ip_address'] = host_info['ip_address']
                     
-                if 'port' not in self.params and 'port' in host_info and len(host_info['port']) > 0:
+                if 'port' not in self.params and host_info.get('port', None) is not None and len(host_info['port']) > 0:
                     self.params['port'] = host_info['port']
+                
         
         # Make sure we have a MAC address to perform a request on, stop if we don't
         if self.mac_address is None:
