@@ -23,10 +23,8 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenforwarder', 'b
 			search += ' server=' + server_input.val();
 		}
 		
-		alert(search);
-		
 		var tokens = mvc.Components.getInstance("submitted");
-		//tokens.set('speedtest_search', search);
+		tokens.set('speedtest_search', search);
 		  
 	});
 	

@@ -1,6 +1,6 @@
 <form hideEdit="true" script="speedtest.js,tabs.js" stylesheet="tabs.css,speedtest.css">
   <label>Speedtest</label>
-  <description>Perform a speedtest on the Internet connection in order to determine the bandwidth and ping time</description>
+  <description>Perform a test on the Internet connection in order to determine the latency and amount of available bandwidth</description>
   <search id="speedtest_search">
     <query>$speedtest_search$</query>
   </search>
@@ -122,7 +122,7 @@
   		<input type="time" token="timefield" searchWhenChanged="true">
 			<label></label>
 		    <default>
-		    	<earliest>-30d@h</earliest>
+		    	<earliest>-30d@d</earliest>
 		        <latest>now</latest>
 		    </default>
 		</input>
