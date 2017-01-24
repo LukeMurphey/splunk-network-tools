@@ -37,7 +37,7 @@ class WakeOnLAN(SearchCommand):
         
     def getHost(self, name, session_key):
         
-        uri = '/servicesNS/nobody/network_tools/storage/collections/data/wol_hosts'
+        uri = '/servicesNS/nobody/network_tools/storage/collections/data/network_hosts'
         
         getargs = {
             'output_mode': 'json',
