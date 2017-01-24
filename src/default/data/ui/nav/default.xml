@@ -1,0 +1,10 @@
+<nav color="#129793">
+  <view name="speedtest" default="true" />
+  <collection label="Search">
+  	<view name="search" />
+  	<view name="datasets" />
+  	<view name="reports" />
+  	<view name="alerts" />
+  	<view name="dashboards" />
+  </collection>
+</nav>

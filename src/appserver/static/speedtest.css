@@ -1,0 +1,13 @@
+#panel2-fieldset{
+	float: left;
+}
+
+#panel2-fieldset + .panel-element-row{
+	display: inline-block;
+	margin-top: 20px;
+}
+
+#runs_input{
+	margin-right: 0px;
+	padding-right: 0px;
+}

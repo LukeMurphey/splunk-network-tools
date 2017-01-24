@@ -1,0 +1,215 @@
+<form hideEdit="true" script="speedtest.js,tabs.js" stylesheet="tabs.css,speedtest.css">
+  <label>Speedtest</label>
+  <description>Perform a speedtest on the Internet connection in order to determine the bandwidth and ping time</description>
+  <search id="speedtest_search">
+    <query>$speedtest_search$</query>
+  </search>
+  <search id="speedtest_data_search">
+    <query>sourcetype="speedtest"</query>
+    <earliest>-30d@d</earliest>
+    <latest>now</latest>
+    <sampleRatio>1</sampleRatio>
+  </search>
+	<row id="tabs">
+	   <panel>
+	      <html>
+	         <ul id="tabs" class="nav nav-tabs">
+             	<li class="active">
+                	<a href="#" class="toggle-tab" data-toggle="tab" data-elements="tab_results_controls,tab_upload,tab_download,tab_ping,row_bandwidth">Results</a>
+            	</li>
+		    	<li>
+					<a href="#" class="toggle-tab" data-toggle="tab" data-elements="tab_current_results,tab_ping_controls">Execute Speedtest</a>
+		    	</li>
+		 	</ul>
+	      </html>
+	   </panel>
+	</row>
+  <row id="tab_ping_controls">
+  	<panel>
+      	<input id="server_input" type="text" token="server">
+	      <label>Server (optional)</label>
+	      <prefix>server=</prefix>
+	    </input>
+	    <input id="runs_input" type="dropdown" token="runs">
+	      <label>Runs</label>
+	      <choice value="1">1 run</choice>
+	      <choice value="2">2 runs (recommended)</choice>
+	      <choice value="3">3 runs</choice>
+	      <choice value="4">4 runs</choice>
+	      <choice value="5">5 runs</choice>
+	      <choice value="6">6 runs</choice>
+	      <choice value="7">7 runs</choice>
+	      <choice value="8">8 runs</choice>
+	      <choice value="9">9 runs</choice>
+	      <choice value="10">10 runs</choice>
+	      <prefix>runs=</prefix>
+	      <default>2</default>
+	    </input>
+	    <html>
+		    <a href="#" id="execute_speedtest_input" class="btn btn-primary">Execute Speedtest</a>
+	    </html>
+	</panel>
+  </row>
+  <row id="tab_current_results">
+    <panel>
+      <single>
+        <search base="speedtest_search">
+          <query>table ping</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,50,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">Ping</option>
+        <option name="unit">ms</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search base="speedtest_search">
+          <query>`readable_bandwidth(download)` | table download</query>
+        </search>
+        <option name="colorBy">trend</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">Download</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search base="speedtest_search">
+          <query>`readable_bandwidth(upload)`| table upload</query>
+        </search>
+        <option name="colorBy">trend</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">Upload</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  
+  <row id="tab_results_controls">
+  	<panel>
+  		<input type="time" token="timefield" searchWhenChanged="true">
+			<label></label>
+		    <default>
+		    	<earliest>-30d@h</earliest>
+		        <latest>now</latest>
+		    </default>
+		</input>
+  	</panel>
+  </row>
+  <row id="tab_ping">
+    <panel>
+      <title>Ping</title>
+      <chart>
+        <!--
+        <search base="speedtest_data_search">>
+          <query>timechart avg(ping) as ping</query>
+        </search>
+        -->
+        <search>
+          <query>sourcetype="speedtest" | timechart avg(ping) as ping</query>
+          <earliest>$timefield.earliest$</earliest>
+          <latest>$timefield.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <!-- 
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">minmax</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+         -->
+      </chart>
+    </panel>
+    </row>
+    <row id="row_bandwidth">
+      <panel>
+      <title>Bandwidth</title>
+      <chart>
+      <!-- 
+        <search base="speedtest_data_search">
+          <query>timechart avg(upload) as upload avg(download) as download</query>
+          <sampleRatio>1</sampleRatio>
+        </search> -->
+        <search>
+          <query>sourcetype="speedtest"  | timechart avg(upload) as upload avg(download) as download</query>
+          <earliest>$timefield.earliest$</earliest>
+          <latest>$timefield.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
+    </panel>
+    </row>
+</form>
