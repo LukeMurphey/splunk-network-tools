@@ -1,6 +1,7 @@
 /local.properties
 .project
 .pydevproject
+*.pyc
 
 # OS generated files #
 ######################
