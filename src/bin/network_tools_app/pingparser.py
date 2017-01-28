@@ -9,6 +9,7 @@ from optparse import OptionGroup, OptionParser
 
 import re
 import sys
+import collections
 
 __all__ = ["parse",
            "format_ping_result",
@@ -84,15 +85,17 @@ def parse(ping_output):
     except:
         minping = avgping = maxping = jitter = 'NaN'
 
-    return {'host'        : host,
-            'sent'        : sent,
-            'received'    : received,
-            'packet_loss' : packet_loss,
-            'minping'     : minping,
-            'avgping'     : avgping,
-            'maxping'     : maxping,
-            'jitter'      : jitter
-            }
+    d = collections.OrderedDict()
+    d['host'] = host
+    d['sent'] = sent
+    d['received'] = received
+    d['packet_loss'] = packet_loss
+    d['min_ping'] = minping
+    d['avg_ping'] = avgping
+    d['max_ping'] = maxping
+    d['jitter'] = jitter
+
+    return d
 
 
 def format_ping_result(ping_result, format_string=default_format):

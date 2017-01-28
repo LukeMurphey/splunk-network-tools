@@ -3,6 +3,7 @@ import pyspeedtest
 import pingparser
 from platform import system as system_name
 import subprocess
+import collections
 
 def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_command", logger=None):
     """
@@ -40,12 +41,11 @@ def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_comma
     if index is not None:
         writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
         
-        result = {
-            'output' : output,
-            'return_code' : return_code
-        }
-        
+        result = collections.OrderedDict()
         result.update(parsed)
+        
+        result['return_code'] = return_code
+        result['output'] = output
     
         # Log that we performed the ping
         if logger:
