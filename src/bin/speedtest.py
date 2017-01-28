@@ -1,5 +1,5 @@
 from network_tools_app.search_command import SearchCommand
-from network_tools_app.speedtest_helper import do_speedtest
+from network_tools_app import speedtest
 
 class Speedtest(SearchCommand):
     
@@ -20,7 +20,7 @@ class Speedtest(SearchCommand):
         # FYI: we ignore results since this is a generating command
         
         # Do the speedtest
-        result = do_speedtest(host=self.server, runs=self.runs, index="main", logger=self.logger)
+        result = speedtest(host=self.server, runs=self.runs, index="main", logger=self.logger)
         
         # Output the results
         self.output_results([result])
