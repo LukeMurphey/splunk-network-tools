@@ -1,5 +1,6 @@
 from event_writer import StashNewWriter
 import pyspeedtest
+import pingparser
 from platform import system as system_name
 import subprocess
 
@@ -29,20 +30,28 @@ def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_comma
         output = e.output
         return_code = e.returncode
     
+    # Parse the output
+    try:
+        parsed = pingparser.parse(output)
+    except Exception:
+        parsed = {}
+    
     # Write the event as a stash new file
     if index is not None:
         writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
-    
+        
         result = {
             'output' : output,
             'return_code' : return_code
         }
+        
+        result.update(parsed)
     
         # Log that we performed the ping
         if logger:
             logger.info("Wrote stash file=%s", writer.write_event(result))
             
-    return output, return_code
+    return output, return_code, parsed
 
 def speedtest(host, runs=2, index=None, sourcetype="speedtest", source="speedtest_search_command", logger=None):
     """

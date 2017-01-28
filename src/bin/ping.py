@@ -20,11 +20,8 @@ class Ping(SearchCommand):
         # FYI: we ignore results since this is a generating command
         
         # Do the ping
-        result = {}
+        _, return_code, result = ping(self.host, self.count, index="main", logger=self.logger)
         
-        output, return_code = ping(self.host, self.count, index="main", logger=self.logger)
-        
-        result['output'] = output
         result['return_code'] = return_code
         
         # Output the results
