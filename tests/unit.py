@@ -5,7 +5,7 @@ import os
 
 sys.path.append( os.path.join("..", "src", "bin") )
 
-from network_tools_app import ping
+from network_tools_app import ping, traceroute
 
 class TestPing(unittest.TestCase):
     
@@ -22,9 +22,22 @@ class TestPing(unittest.TestCase):
         self.assertNotEquals(return_code, 0)
         self.assertGreater(len(output), 0)
         
+class TestTraceroute(unittest.TestCase):
+    
+    def test_do_traceroute(self):
+        output, return_code, parsed = traceroute("google.com")
+        
+        #self.assertNotEquals(parsed, 0)
+        self.assertGreater(len(parsed), 0)
+        
+        import pprint
+        pprint.pprint(parsed)
+        #print parsed
+        
 if __name__ == "__main__":
     loader = unittest.TestLoader()
     suites = []
     suites.append(loader.loadTestsFromTestCase(TestPing))
+    suites.append(loader.loadTestsFromTestCase(TestTraceroute))
 
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(suites))

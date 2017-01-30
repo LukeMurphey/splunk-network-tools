@@ -1,5 +1,6 @@
 <nav color="#129793">
   <view name="speedtest" default="true" />
+  <view name="ping" />
   <collection label="Search">
   	<view name="search" />
   	<view name="datasets" />
