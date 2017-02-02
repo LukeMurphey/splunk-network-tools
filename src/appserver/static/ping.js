@@ -31,6 +31,7 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'boots
 		
 		// Kick off the search
 		var tokens = mvc.Components.getInstance("submitted");
+		tokens.set('ping_search', null);
 		tokens.set('ping_search', TokenUtils.replaceTokenNames('| ping $host$ $count$', params ));
 	});
 	

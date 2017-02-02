@@ -18,6 +18,7 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'boots
 		
 		// Kick off the search
 		var tokens = mvc.Components.getInstance("submitted");
+		tokens.set('traceroute_search', null);
 		tokens.set('traceroute_search', TokenUtils.replaceTokenNames('| traceroute $host$', params ));
 	});
 	

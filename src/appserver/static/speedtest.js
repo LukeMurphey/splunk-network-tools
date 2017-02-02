@@ -29,6 +29,7 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'boots
 		
 		// Kick off the search
 		var tokens = mvc.Components.getInstance("submitted");
+		tokens.set('speedtest_search', null);
 		tokens.set('speedtest_search', TokenUtils.replaceTokenNames('| speedtest $runs$ $server$', params ));
 	});
 	
