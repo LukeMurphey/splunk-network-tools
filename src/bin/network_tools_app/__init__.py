@@ -11,7 +11,7 @@ import collections
 import os
 import binascii
 
-def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source="traceroute_search_command", logger=None):
+def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source="traceroute_search_command", logger=None, include_dest_info=True):
     """
     Performs a traceroute using the the native traceroute command and returns the output in a parsed format.
     """
@@ -73,6 +73,10 @@ def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source
             hop['ip'] = ips
             hop['name'] = names
             
+            if include_dest_info:
+                hop['dest_ip'] = trp.dest_ip
+                hop['dest_host'] = trp.dest_name
+            
             parsed.append(hop)
             
     except Exception as e:
@@ -84,8 +88,11 @@ def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source
         
         # Let's store the basic information for the traceroute that will be included with each hop
         proto = collections.OrderedDict()
-        proto['dest_ip'] = trp.dest_ip
-        proto['dest_host'] = trp.dest_name
+        
+        # Include the destination info if it was included already
+        if not include_dest_info:
+            proto['dest_ip'] = trp.dest_ip
+            proto['dest_host'] = trp.dest_name
         
         if unique_id is None:
             unique_id = binascii.b2a_hex(os.urandom(4))
