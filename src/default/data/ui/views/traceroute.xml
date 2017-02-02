@@ -1,0 +1,146 @@
+<form hideEdit="true" script="traceroute.js,tabs.js" stylesheet="tabs.css,traceroute.css">
+  <label>Traceroute</label>
+  <description>Perform a traceroute to identify the hops a connection takes to the a source.</description>
+  <search id="traceroute_search">
+    <query>$traceroute_search$</query>
+  </search>
+  <search id="traceroute_data_search">
+    <query>sourcetype="traceroute"</query>
+    <earliest>-30d@d</earliest>
+    <latest>now</latest>
+    <sampleRatio>1</sampleRatio>
+  </search>
+	<row id="tabs">
+	   <panel>
+	      <html>
+	         <ul id="tabs" class="nav nav-tabs">
+             	<li class="active">
+                	<a href="#" class="toggle-tab" data-toggle="tab" data-elements="tab_results_controls,tab_traceroute">Results</a>
+            	</li>
+		    	<li>
+					<a href="#" class="toggle-tab" data-toggle="tab" data-elements="tab_current_results,tab_traceroute_controls,tab_traceroute_data">Execute Traceroute</a>
+		    	</li>
+		 	</ul>
+	      </html>
+	   </panel>
+	</row>
+  <row id="tab_traceroute_controls">
+  	<panel>
+      	<input id="host_input" type="text" token="host" searchWhenChanged="false">
+	      <label>Host</label>
+	    </input>
+	    <html>
+		    <a href="#" id="execute_input" class="btn btn-primary">Execute Traceroute</a>
+	    </html>
+	</panel>
+  </row>
+  <row id="tab_current_results">
+    <panel>
+      <single>
+        <search base="traceroute_search">
+          <query>stats count(hop) as hops</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,15,30]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">Hops</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search base="traceroute_search">
+          <query>stats first(dest_host) as dest_host</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">Host Name</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search base="traceroute_search">
+          <query>stats first(dest_ip) as dest_ip</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">IP Address</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  
+  <row id="tab_results_controls">
+  	<panel>
+  		<input type="time" token="timefield" searchWhenChanged="true">
+			<label></label>
+		    <default>
+		    	<earliest>-30d@d</earliest>
+		        <latest>now</latest>
+		    </default>
+		</input>
+  	</panel>
+  </row>
+  <row id="tab_traceroute">
+    <panel>
+      <title>Traceroute</title>
+      <table>
+        <!--
+        <search base="speedtest_data_search">>
+          <query>timechart avg(ping) as ping</query>
+        </search>
+        -->
+        <search>
+          <query>sourcetype="traceroute" | stats count(hop) as hops by dest_host, dest_ip, unique_id | table dest_host, dest_ip, hops, unique_id</query>
+          <earliest>0</earliest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">row</option>
+        <drilldown>
+        	<link>search?q=search%20sourcetype%3D"traceroute"%20unique_id%3D$row.unique_id$%20%7C%20stats%20list(rtt)%20as%20rtt%20values(ip)%20as%20ip%20first(dest_host)%20as%20dest_host%20first(dest_ip)%20as%20dest_ip%20by%20hop%20%7C%20table%20hop%20rtt%20ip%20dest_host%20dest_ip%20%7C%20sort%20hop</link>
+        </drilldown>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  
+  <row id="tab_traceroute_data">
+    <panel>
+      <title>Hop Details</title>
+      <table>
+        <search base="traceroute_search">
+          <query></query>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    </row>
+</form>
