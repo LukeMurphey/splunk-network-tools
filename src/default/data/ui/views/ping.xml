@@ -159,7 +159,7 @@
       <title>Raw Data</title>
       <table>
         <search base="ping_search">
-          <query>| eval dest=host | fields dest sent received packet_loss min_ping avg_ping max_ping jitter | eval row="Value" | transpose column_name=Data header_field=row</query>
+          <query>| eval dest=if(isnull(dest),host,dest) | fields dest sent received packet_loss min_ping avg_ping max_ping jitter | eval row="Value" | transpose column_name=Data header_field=row</query>
         </search>
         <option name="count">20</option>
         <option name="dataOverlayMode">none</option>

@@ -20,9 +20,14 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'boots
 		// Get the server to use (if provided)
 		var server_input = mvc.Components.getInstance("server_input");
 		
-		if(server_input && server_input.val()){
+		if(server_input && server_input.val() && server_input.val().length > 0){
 			params['host'] = 'host=' + server_input.val();
 		}
+		else{
+			alert("Please enter the name of a host to perform the ping against");
+			return false;
+		}
+		
 		
 		// Kick off the search
 		var tokens = mvc.Components.getInstance("submitted");
@@ -31,6 +36,6 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'boots
 	
 	// By default, show the most recent speedtest result. To do this, we will set the speedtest search token to be a historical search.
 	var tokens = mvc.Components.getInstance("submitted");
-	tokens.set('ping_search', '| search sourcetype=ping | head 1 | table ping upload download upload_readable download_readable');
+	tokens.set('ping_search', '| search sourcetype=ping | head 1 | table dest sent received packet_loss min_ping avg_ping max_ping jitter');
 	
 });
