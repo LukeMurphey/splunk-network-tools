@@ -109,10 +109,6 @@ def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source
             if logger:
                 logger.info("Wrote stash file=%s", writer.write_event(result))
             
-            #results.append(result)
-    
-
-            
     return output, return_code, parsed
 
 def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_command", logger=None):

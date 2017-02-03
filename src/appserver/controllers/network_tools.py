@@ -52,6 +52,18 @@ class NetworkToolsHelper(controllers.BaseController):
         cherrypy.response.status = 400
         return self.render_json(output, set_mime='text/plain')
  
+    @expose_page(must_login=True, methods=['GET', 'POST'])
     def ping(self, host):
-        pass
+        desc = {}
+        
+        return self.render_json(desc)
+    
+    @expose_page(must_login=True, methods=['GET', 'POST'])
+    def wake(self, host):
+        
+        desc = {
+            'success': True
+        }
+        
+        return self.render_json(desc)
         
