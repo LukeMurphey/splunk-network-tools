@@ -135,7 +135,7 @@
       <title>Hop Details</title>
       <table>
         <search base="traceroute_search">
-          <query></query>
+          <query>| fields - dest_host dest_ip</query>
         </search>
         <option name="count">20</option>
         <option name="dataOverlayMode">none</option>
