@@ -20,10 +20,10 @@
     <div class="modal-body form form-horizontal modal-body-scrolling">
         Are you sure you want to remove this host?
         
-        <table class="disable-input-info-table">
+        <table class="delete-host-info-table">
         	<tr>
-        		<td class="disable-input-info">Host Name</td>
-        		<td class="disable-input-name"></td>
+        		<td class="delete-host-info">Host Name</td>
+        		<td class="delete-host-name"></td>
         	</tr>
         </table>
     </div>
@@ -47,7 +47,7 @@
 	</div>
 </div>
 
-<div class="btn-group create-content pull-right new-input-button-group">
+<div class="btn-group create-content pull-right new-host-button-group">
     <a class="btn btn-primary create-host" href="#">
         Create a New Host
     </a>
@@ -59,7 +59,7 @@
     <input type="text" placeholder="Search by name or IP address" id="free-text-filter" class="input-large search-query" value="<% if(filter_text !== null) { %><%- filter_text %><% } %>">
 </form>
 
-<div class="inputs-count pull-left">
+<div class="host-count pull-left">
 	<%- hosts_count %> hosts
 </div>
 
@@ -77,12 +77,12 @@
         <% for (var i = 0; i < hosts.length; i++) { %>
         <tr data-host-key="<%- hosts[i].attributes._key %>">
             <td><a href="#"><%- hosts[i].attributes.name %></a></td>
-            <td><%- hosts[i].attributes.mac_address %></td>
-			<td><%- hosts[i].attributes.ip_address %></td>
+            <td><%- hosts[i].attributes.ip_address %></td>
+			<td><%- hosts[i].attributes.mac_address %></td>
 			<td>
-				<a class="action-link wake-host" data-name="<%- hosts[i].attributes._key %>" href="#">Wake</a>
-				<a class="action-link delete-host" data-name="<%- hosts[i].attributes._key %>" href="#">Delete</a>
-				<a class="action-link edit-host" data-name="<%- hosts[i].attributes._key %>" href="#">Edit</a>
+				<a class="action-link wake-host" data-name="<%- hosts[i].attributes.name %>" href="#">Wake</a>
+				<a class="action-link delete-host" data-key="<%- hosts[i].attributes._key %>" href="#">Delete</a>
+				<a class="action-link edit-host" data-key="<%- hosts[i].attributes._key %>" href="#">Edit</a>
 			</td>
         </tr>
 		<% } %>

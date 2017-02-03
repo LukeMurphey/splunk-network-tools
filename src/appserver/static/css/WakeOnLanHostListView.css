@@ -45,7 +45,7 @@
 	margin-left: 64px;
 }
 
-.new-input-button-group{
+.new-host-button-group{
 	margin-top: 8px;
 	margin-right: 16px;
 }
@@ -72,11 +72,11 @@ td{
 	background-color: white;
 }
 
-.disable-input-info-table{
+.delete-host-info-table{
 	margin: 16px 0 8px 8px;
 }
 
-.disable-input-info{
+.delete-host-info{
     font-weight: bold;
     padding-right: 12px;
 }
@@ -90,9 +90,14 @@ td{
 	margin-left: 2px;
 }
 
-.inputs-count{
+.host-count{
 	padding-top: 13px;
 	padding-left: 12px;
+}
+
+#success_message, #failure_message{
+	margin-left:16px;
+	margin-bottom:0px;
 }
 
 /*

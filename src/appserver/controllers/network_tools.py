@@ -1,22 +1,12 @@
 import logging
-import os
-import sys
-import json
 import cherrypy
-import re
-import base64
 
-from splunk import AuthorizationFailed, ResourceNotFound
 import splunk.appserver.mrsparkle.controllers as controllers
-import splunk.appserver.mrsparkle.lib.util as util
 from splunk.appserver.mrsparkle.lib import jsonresponse
 from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
-import splunk.clilib.bundle_paths as bundle_paths
-from splunk.util import normalizeBoolean as normBool
 from splunk.appserver.mrsparkle.lib.decorators import expose_page
-from splunk.appserver.mrsparkle.lib.routes import route
-import splunk.entity as entity
-from splunk.rest import simpleRequest
+
+from network_tools_app import wakeonlan
 
 def setup_logger(level):
     """
@@ -61,9 +51,20 @@ class NetworkToolsHelper(controllers.BaseController):
     @expose_page(must_login=True, methods=['GET', 'POST'])
     def wake(self, host):
         
-        desc = {
-            'success': True
-        }
+        try:
+            result = wakeonlan(host)
+            
+            desc = {
+                'success': True
+            }
+            
+            desc.update(result)
+                        
+        except Exception as e:
+            desc = {
+                'success': False,
+                'message': str(e)
+            }
         
         return self.render_json(desc)
         

@@ -220,12 +220,14 @@ define([
         			// On success, populate the table
         			success: function() {
         				console.info('Host wake-on-lan packet sent');
+        				this.showSuccessMessage('Wake-on-lan request sent to host');
         			}.bind(this),
         		  
         			// Handle cases where the file could not be found or the user did not have permissions
         			complete: function(jqXHR, textStatus){
         				if( jqXHR.status == 403){
         					console.info('Inadequate permissions to wake host');
+        					this.showFailureMessage('Inadequate permissions to send a wake-on-lan request');
         				}
         				else{
         					this.retain_state = true;
@@ -239,6 +241,7 @@ define([
         			error: function(jqXHR, textStatus, errorThrown){
         				if( jqXHR.status != 403 ){
         					console.info('Host wake-on-lan packet request failed');
+        					this.showFailureMessage('Error when attempting to send a wake-on-lan request');
         				}
         			}.bind(this)
         	});
@@ -261,7 +264,7 @@ define([
         		network_host_model.destroy({
         			success: function(model, response) {
         			  console.info("Host deleted");
-        			  this.showMessage("Host successfully deleted");
+        			  this.showSuccessMessage("Host successfully deleted");
         			  
         			  // Reload the view
         			  this.getHosts();
@@ -274,30 +277,56 @@ define([
         },
         
         /**
-         * Open a dialog to disable the input.
+         * Open a dialog to delete a host.
          */
-        openDisableInputDialog: function(ev){
+        openDeleteHostDialog: function(ev){
         	
         	// Get the input that is being requested to disable
         	var name = $(ev.target).data("name");
-        	var namespace = $(ev.target).data("namespace");
-        	var owner = $(ev.target).data("owner");
         	
         	// Record the info about the input to disable
-        	$("#disable-this-input", this.$el).data("name", name);
-        	$("#disable-this-input", this.$el).data("namespace", namespace);
-        	$("#disable-this-input", this.$el).data("owner", owner);
+        	$("#delete-host-info-table", this.$el).data("name", name);
         	
-        	// Show the info about the input to disable
-        	$(".disable-input-name", this.$el).text(name);
-        	$(".disable-input-namespace", this.$el).text(namespace);
-        	$(".disable-input-owner", this.$el).text(owner);
+        	// Show the info about the input to delete
+        	$(".delete-host-name", this.$el).text(name);
         	
         	// Show the modal
-        	$("#disable-input-modal", this.$el).modal();
+        	$("#remove-host-modal", this.$el).modal();
         	
         	return false;
         	
+        },
+        
+        /**
+         * Show a message indicating success.
+         */
+        showSuccessMessage: function(message){
+        	this.hideFailureMessage();
+        	$("#success_text", this.$el).text(message);
+        	$("#success_message", this.$el).show();
+        },
+        
+        /**
+         * Hide the success message.
+         */
+        hideSuccessMessage: function(message){
+        	$("#success_message", this.$el).hide();
+        },
+        
+        /**
+         * Show a message indicating failure.
+         */
+        showFailureMessage: function(message){
+        	this.hideSuccessMessage();
+        	$("#error_text", this.$el).text(message);
+        	$("#failure_message", this.$el).show();
+        },
+        
+        /**
+         * Hide the success failure.
+         */
+        hideFailureMessage: function(message){
+        	$("#failure_message", this.$el).hide();
         },
         
         /**

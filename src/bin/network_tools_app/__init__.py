@@ -3,6 +3,7 @@ from event_writer import StashNewWriter
 import pyspeedtest
 import pingparser
 from tracerouteparser import TracerouteParser 
+from network_tools_app.wakeonlan import wol
 
 # Environment imports
 from platform import system as system_name
@@ -10,6 +11,10 @@ import subprocess
 import collections
 import os
 import binascii
+import json
+
+# Splunk imports
+import splunk.rest as rest
 
 def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source="traceroute_search_command", logger=None, include_dest_info=True):
     """
@@ -190,4 +195,85 @@ def speedtest(host, runs=2, index=None, sourcetype="speedtest", source="speedtes
     # Return the result
     return result
     
+def getHost(name, session_key, logger=None):
+    
+    uri = '/servicesNS/nobody/network_tools/storage/collections/data/network_hosts'
+    
+    getargs = {
+        'output_mode': 'json',
+        'query' : '{"name":"' + name + '"}'
+    }
+    
+    _, l = rest.simpleRequest(uri, sessionKey=session_key, getargs=getargs, raiseAllErrors=True)
+    l  = json.loads(l)
 
+    # Make sure we got at least one result
+    if len(l) > 0:
+        if logger is not None:
+            logger.info("Successfully found an entry in the table of hosts for host=%s", name)
+        
+        return l[0]
+    
+    else:
+        if logger is not None:
+            logger.warn("Failed to find an entry in the table of hosts for host=%s", name)
+        
+        return None
+    
+def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None, sourcetype="speedtest", source="speedtest_search_command", logger=None, session_key=None):
+    """
+    Performs a wake-on-LAN request.
+    """
+    
+    # Resolve the MAC address (and port and IP address) if needed
+    host_info = None
+    
+    if host is not None:
+        host_info = getHost(host, session_key)
+        
+        if host_info is not None:
+            
+            if mac_address is None:
+                mac_address = host_info.get('mac_address', None)
+            
+            if ip_address is not None:
+                ip_address = host_info.get('ip_address', None)
+                
+            if port is None:
+                port = host_info.get('port', None)
+            
+    
+    # Make sure we have a MAC address to perform a request on, stop if we don't
+    if mac_address is None:
+        raise ValueError("No MAC address was provided and unable to resolve one from the hosts table")
+        return
+    
+    # Do the wake-on-LAN request
+    result = {}
+    
+    if logger is not None:
+        logger.info("Wake-on-LAN running against host with MAC address=%s", mac_address)
+    
+    # Make the kwargs
+    kw = {}
+    
+    if ip_address is not None:
+        kw['ip_address'] = ip_address
+        
+    if port is not None:
+        kw['port'] = port
+    
+    # Make the call  
+    wol.send_magic_packet(mac_address, **kw)
+    
+    # Make a dictionary that indicates what happened
+    result['message'] = "Wake-on-LAN request successfully sent"
+    result['mac_address'] = mac_address
+    
+    if ip_address is not None:
+        result['ip_address'] = ip_address
+    
+    if port is not None:
+        result['port'] = port
+        
+    return result
