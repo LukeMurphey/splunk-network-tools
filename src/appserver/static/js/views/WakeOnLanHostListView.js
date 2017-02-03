@@ -366,7 +366,7 @@ define([
         applyFilter: function(){
         	
         	// Determine if we even need to apply this filter
-        	var applied_filter_signature = ":" + this.filter_app + ":" + $('#free-text-filter').val();
+        	var applied_filter_signature = $('#free-text-filter').val();
         	
         	if(applied_filter_signature === this.applied_filter){
         		return;
@@ -374,14 +374,6 @@ define([
         	
         	// Persist the signature for this filter
         	this.applied_filter = applied_filter_signature;
-        	
-        	// Get the app filter
-        	if( this.filter_app !== null ){
-        		this.data_table.columns(2).search( "^" + this.filter_app + "$", true );
-        	}
-        	else{
-        		this.data_table.columns(2).search( "" );
-        	}
         	
         	// Apply the text filter
         	this.filter_text = $('#free-text-filter').val();
