@@ -22,14 +22,54 @@
         
         <table class="delete-host-info-table">
         	<tr>
-        		<td class="delete-host-info">Host Name</td>
+        		<td class="delete-host-info">Name</td>
         		<td class="delete-host-name"></td>
         	</tr>
         </table>
     </div>
     <div class="modal-footer">
         <a href="#" class="btn btn-dialog-cancel pull-left" data-dismiss="modal" style="display: inline;">Cancel</a>
-        <a href="#" class="btn btn-primary" id="disable-this-input" data-dismiss="modal" style="display: inline;">Yes, Remove</a>
+        <a href="#" class="btn btn-primary" id="delete-this-host" data-key="" data-dismiss="modal" style="display: inline;">Yes, Remove</a>
+    </div>
+</div>
+
+<div tabindex="-1" id="add-host-modal" class="modal fade in hide">
+    <div class="modal-header">
+        <button type="button" class="close btn-dialog-close" data-dismiss="modal">x</button>
+        <h3 class="text-dialog-title">Network Host</h3>
+    </div>
+    <div class="modal-body form form-horizontal modal-body-scrolling">
+		<form class="form-horizontal">
+		  <div class="control-group">
+		    <label class="control-label" for="inputName">Name</label>
+		    <div class="controls">
+		      <input type="text" id="inputName" placeholder="e.g. backup_server_03">
+		      <input type="hidden" id="inputKey" value="" />
+		    </div>
+		  </div>
+		  <div class="control-group">
+		    <label class="control-label" for="inputMAC">MAC Address</label>
+		    <div class="controls">
+		      <input type="text" id="inputMAC" placeholder="e.g. 00:11:22:33:44:55 or 00-11-22-33-44-55">
+		    </div>
+		  </div>
+		  <div class="control-group">
+		    <label class="control-label" for="inputIP">IP Address</label>
+		    <div class="controls">
+		      <input type="text" id="inputIP" placeholder="e.g. 10.1.2.3">
+		    </div>
+		  </div>
+		  <div class="control-group">
+		    <label class="control-label" for="inputPort">Port</label>
+		    <div class="controls">
+		      <input type="text" id="inputPort" placeholder="e.g. 8080">
+		    </div>
+		  </div>
+		</form>
+    </div>
+    <div class="modal-footer">
+        <a href="#" class="btn btn-dialog-cancel pull-left" data-dismiss="modal" style="display: inline;">Cancel</a>
+        <a href="#" class="btn btn-primary" id="save-host" data-dismiss="modal" style="display: inline;">Save</a>
     </div>
 </div>
 

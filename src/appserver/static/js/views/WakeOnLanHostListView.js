@@ -109,8 +109,9 @@ define([
             "click .wake-host" : "wakeHost",
             
             // Options for creating and editing hosts
-            "click create-host" : "createHost",
-            "click edit-host" : "editHost"
+            "click .create-host" : "openCreateHostDialog",
+            "click .edit-host" : "openEditHostDialog",
+            "click #save-host" : "saveHost"
         },
         
         /**
@@ -250,14 +251,113 @@ define([
         },
         
         /**
+         * Open the host creation dialog.
+         */
+        openCreateHostDialog: function(){
+        	
+        	// Set the form values
+  		  	$("#inputName", this.$el).val("");
+  		  	$("#inputIP", this.$el).val("");
+  		  	$("#inputMAC", this.$el).val("");
+  		  	$("#inputPort", this.$el).val("");
+  		  	$("#inputKey", this.$el).val("");
+  		  	
+  		  	// Open the modal dialog
+        	$("#add-host-modal", this.$el).modal();
+        },
+        
+        /**
+         * Save the given host
+         */
+        saveHost: function(){
+        	
+        	// Get the key of the item we are editing
+        	var _key =  $("#inputKey", this.$el).val();
+        	
+        	// Get the values
+  		  	var name = $("#inputName", this.$el).val();
+  		  	var ip_address = $("#inputIP", this.$el).val();
+  		  	var mac_address = $("#inputMAC", this.$el).val();
+  		  	var port = $("#inputPort", this.$el).val();
+        	
+  		  	// This will include the entry that is saved
+  		  	var host = null;
+  		  	
+        	// Make a new entry
+            if (_key === "" || _key === null) {
+        	
+            	// Make the host
+	        	host = new NetworkHostModel({
+	        		  name: name,
+	        		  ip_address: ip_address,
+	        		  mac_address: mac_address,
+	        		  port: port
+	        	});
+	
+	        	// Save the host and update the list
+	        	host.save().done(function(){
+	        		this.showSuccessMessage("Host successfully created");
+	        		this.getHosts();
+	        	}.bind(this))
+	        	
+            }
+            
+            // Edit the existing entry
+            else{
+            	
+            	// Find the entry
+            	host = this.network_hosts_model.get(_key);
+            	
+            	// Update the entry
+            	host.set({
+	        		  name: name,
+	        		  ip_address: ip_address,
+	        		  mac_address: mac_address,
+	        		  port: port
+	        	});
+            	
+            	host.save();
+            	this.renderList(true);
+            	
+            	this.showSuccessMessage("Host successfully saved");
+            }
+        },
+        
+        /**
+         * Open the host creation dialog for editing.
+         */
+        openEditHostDialog: function(ev){
+        	
+        	// Get the key of the item we are editing
+        	var _key = $(ev.target).data("key");
+        	
+        	var host = this.network_hosts_model.get(_key);
+        	
+        	if(host === null){
+        		alert("Unable to find the host to edit");
+        		return;
+        	}
+        	
+        	// Set the form values
+  		  	$("#inputName", this.$el).val(host.attributes.name);
+  		  	$("#inputIP", this.$el).val(host.attributes.ip_address);
+  		  	$("#inputMAC", this.$el).val(host.attributes.mac_address);
+  		  	$("#inputPort", this.$el).val(host.attributes.port);
+  		  	$("#inputKey", this.$el).val(host.attributes._key);
+  		  	
+        	// Show the modal
+        	$("#add-host-modal", this.$el).modal();
+        },
+        
+        /**
          * Delete the given host.
          */
         deleteHost: function(ev){
         	
         	// Get the input that is being requested to disable
-        	var input = $(ev.target).data("name");
+        	var _key = $(ev.target).data("key");
         	
-        	var network_host_model = this.network_hosts_model.get(selected_key);
+        	var network_host_model = this.network_hosts_model.get(_key);
         	
         	// Remove the host
         	if(network_host_model !== null){
@@ -281,14 +381,15 @@ define([
          */
         openDeleteHostDialog: function(ev){
         	
-        	// Get the input that is being requested to disable
-        	var name = $(ev.target).data("name");
+        	// Get the host that is being requested to delete
+        	var _key = $(ev.target).data("key");
+        	var network_host_model = this.network_hosts_model.get(_key);
         	
-        	// Record the info about the input to disable
-        	$("#delete-host-info-table", this.$el).data("name", name);
+        	// Record the info about the host to delete
+        	$("#delete-this-host", this.$el).data("key", _key);
         	
         	// Show the info about the input to delete
-        	$(".delete-host-name", this.$el).text(name);
+        	$(".delete-host-name", this.$el).text(network_host_model.attributes.name);
         	
         	// Show the modal
         	$("#remove-host-modal", this.$el).modal();
@@ -385,20 +486,6 @@ define([
          */
         endsWith: function(str, suffix) {
             return str.indexOf(suffix, str.length - suffix.length) !== -1;
-        },
-        
-        /**
-         * Get a count of the inputs that exist.
-         */
-        getInputsCount: function(){
-        	var inputs = this.getInputsJSON();
-        	
-        	if(inputs){
-        		return inputs.length;
-        	}
-        	else{
-        		return 0;
-        	}
         },
         
         /**
