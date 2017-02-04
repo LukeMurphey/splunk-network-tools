@@ -111,7 +111,25 @@ define([
             // Options for creating and editing hosts
             "click .create-host" : "openCreateHostDialog",
             "click .edit-host" : "openEditHostDialog",
-            "click #save-host" : "saveHost"
+            "click #save-host" : "saveHost",
+            
+            // This is used to fix some wierdness with bootstrap and input focus
+            "shown #add-host-modal" : "focusView",
+            
+            // Get the inputs to trigger validation when the user moves to the next input
+            "change #inputName" : "validateName",
+            "change #inputMAC" : "validateMACAddress",
+            "change #inputIP" : "validateIPAddress",
+            "change #inputPort" : "validatePort"
+        },
+            	        
+        /**
+         * Fixes an issue where clicking an input loses focus instantly due to a problem in Bootstrap.
+         * 
+         * http://stackoverflow.com/questions/11634809/twitter-bootstrap-focus-on-textarea-inside-a-modal-on-click
+         */
+        focusView: function(){
+        	$('#inputName').focus();
         },
         
         /**
@@ -271,6 +289,11 @@ define([
          */
         saveHost: function(){
         	
+        	// Stop if the input doesn't validate
+        	if(!this.validateHostForm()){
+        		return;
+        	}
+        	
         	// Get the key of the item we are editing
         	var _key =  $("#inputKey", this.$el).val();
         	
@@ -297,6 +320,7 @@ define([
 	        	// Save the host and update the list
 	        	host.save().done(function(){
 	        		this.showSuccessMessage("Host successfully created");
+	        		$("#add-host-modal", this.$el).modal('hide');
 	        		this.getHosts();
 	        	}.bind(this))
 	        	
@@ -316,10 +340,13 @@ define([
 	        		  port: port
 	        	});
             	
-            	host.save();
-            	this.renderList(true);
-            	
-            	this.showSuccessMessage("Host successfully saved");
+            	host.save().done(function(){
+            		$("#add-host-modal", this.$el).modal('hide');
+            		this.renderList(true);
+            		
+            		this.showSuccessMessage("Host successfully saved");
+            	}.bind(this));
+
             }
         },
         
@@ -347,6 +374,136 @@ define([
   		  	
         	// Show the modal
         	$("#add-host-modal", this.$el).modal();
+        },
+        
+        /**
+         * Determine if the provided MAC address is valid.
+         */
+        isValidMACAddress: function(mac_address){
+        	var regex = /^[0-9a-f]{1,2}([\.:-])(?:[0-9a-f]{1,2}\1){4}[0-9a-f]{1,2}$/gmi;
+        	
+        	return regex.test(mac_address);
+        },
+        
+        /**
+         * Determine if the provided IP address is valid.
+         */
+        isValidIPAddress: function(ip_address){
+        	
+        	if(ip_address === ""){
+        		return true;
+        	}
+        	
+        	var regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        	
+        	return regex.test(ip_address);
+        },
+        
+        /**
+         * Determine if the provided port is valid.
+         */
+        isValidPort: function(port){
+        	
+        	if(port === ""){
+        		return true;
+        	}
+        	
+        	var regex = /^[0-9]+$/;
+        	
+        	return regex.test(port);
+        },
+        
+        /**
+         * Determine if the provided name is valid.
+         */
+        isValidName: function(name){
+        	var regex = /^.+$/;
+        	
+        	return regex.test(name);
+        },
+        
+        /**
+         * Perform validation and show/hide error messages accordingly.
+         */
+        doValidation: function(selector, value, validation_fx, message){
+        	if(!validation_fx(value)){
+  		  		$(selector, this.$el).addClass('error');
+  		  		$(selector + ' .help-inline', this.$el).text(message);
+  		  		return 1;
+  		  	}
+  		  	else{
+  		  		$(selector, this.$el).removeClass('error');
+  		  		$(selector + ' .help-inline', this.$el).text('');
+  		  		return 0;
+  		  	}
+        },
+        
+        /**
+         * Validate the name field and post a message accordingly.
+         */
+        validateName: function(){
+        	return this.doValidation('.input-host-name.control-group', $("#inputName", this.$el).val(), this.isValidName.bind(this), 'Name is not valid');
+        },
+        
+        /**
+         * Validate the MAC address field and post a message accordingly.
+         */
+        validateMACAddress: function(){
+        	return this.doValidation('.input-host-mac.control-group', $("#inputMAC", this.$el).val(), this.isValidMACAddress.bind(this), 'A valid MAC address must be provided (like 00:11:22:33:44:55)');
+        },
+        
+        /**
+         * Validate the IP address field and post a message accordingly.
+         */
+        validateIPAddress: function(){
+        	return this.doValidation('.input-host-ip.control-group', $("#inputIP", this.$el).val(), this.isValidIPAddress.bind(this), 'IP address is invalid')
+        },
+        
+        /**
+         * Validate the port field and post a message accordingly.
+         */
+        validatePort: function(){
+        	return this.doValidation('.input-host-port.control-group', $("#inputPort", this.$el).val(), this.isValidPort.bind(this), 'Port is invalid')
+        },
+        
+        /**
+         * Determine if the form is valid.
+         */
+        validateHostForm: function(){
+        	
+        	var issues = 0;
+        	
+        	// Get the values
+  		  	var name = $("#inputName", this.$el).val();
+  		  	var ip_address = $("#inputIP", this.$el).val();
+  		  	var mac_address = $("#inputMAC", this.$el).val();
+  		  	var port = $("#inputPort", this.$el).val();
+  		  	
+  		  	// Test 'em
+  		  	issues += this.validateName();
+  		  	issues += this.validateMACAddress();
+  		  	issues += this.validateIPAddress();
+  		  	issues += this.validatePort();
+  		  	
+  		  	/*
+  		  	if(!this.isValidName(name)){
+  		  		issues += 1;
+  		  		$('.input-host-name.control-group', this.$el).addClass('error');
+  		  		$('.input-host-name.control-group .help-inline', this.$el).text('Name is not valid');
+  		  	}
+  		  	else{
+  		  		$('.input-host-name.control-group', this.$el).removeClass('error');
+  		  		$('.input-host-name.control-group .help-inline', this.$el).text('');
+  		  	}
+  		  	*/
+        	
+  		  	// Return the validation status
+  		  	if(issues > 0){
+  		  		return false;
+  		  	}
+  		  	else{
+  		  		return true;
+  		  	}
         },
         
         /**
