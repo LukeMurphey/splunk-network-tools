@@ -85,12 +85,6 @@
   <i class="icon-alert"></i><span id="error_text">Changes could not be saved</span>
 </div>
 
-<div class="selected-message-container pull-left">
-	<div id="selected-message" class="hide alert alert-info">
-	  <i class="icon-alert"></i><span id="selected-text"></span><a class="clear-selected-items" href="#">Clear selected items.</a>
-	</div>
-</div>
-
 <div class="btn-group create-content pull-right new-host-button-group">
     <a class="btn btn-primary create-host" href="#">
         Create a New Host
@@ -120,7 +114,7 @@
 
         <% for (var i = 0; i < hosts.length; i++) { %>
         <tr data-host-key="<%- hosts[i].attributes._key %>">
-            <td><a class="<%- getHostOnlineStatusClass(hosts[i]) %> font-icon-network-server" data-host="<%- hosts[i].attributes.ip_address %>" href="#"><%- hosts[i].attributes.name %></a></td>
+            <td><a class="<%- getHostOnlineStatusClass(hosts[i]) %> font-icon-network-server wake-host" data-host="<%- hosts[i].attributes.ip_address %>" data-key="<%- hosts[i].attributes._key %>" href="#"><%- hosts[i].attributes.name %></a></td>
             <td><%- hosts[i].attributes.ip_address %></td>
 			<td><%- hosts[i].attributes.mac_address %></td>
 			<td>
