@@ -103,6 +103,10 @@ define([
         	// Start pinging the hosts to show whether they are online or not
         	setInterval(this.updateHostsStatuses.bind(this), 1000);
         	
+        	// Setup an interval to hide the informational message if it should be hidden
+        	this.message_posted_time = null;
+        	setInterval(this.hideMessageIfNecessary.bind(this), 1000);
+        	
         },
         
         events: {
@@ -561,12 +565,23 @@ define([
         },
         
         /**
+         * Hide the message if it is old enough
+         */
+        hideMessageIfNecessary: function(){
+        	if(this.message_posted_time && ((this.message_posted_time + 5000) < new Date().getTime() )){
+        		this.message_posted_time = null;
+        		$("#success_message", this.$el).fadeOut(200);
+        	}
+        },
+        
+        /**
          * Show a message indicating success.
          */
         showSuccessMessage: function(message){
         	this.hideFailureMessage();
         	$("#success_text", this.$el).text(message);
         	$("#success_message", this.$el).show();
+        	this.message_posted_time = new Date().getTime();
         },
         
         /**
