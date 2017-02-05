@@ -129,3 +129,37 @@ td{
 .btn-group.open .btn-primary.dropdown-toggle {
     background-color: #65a637;
 }
+
+@keyframes highlighted-online {
+  0% {
+    background: #58c126;
+  }
+
+  100% {
+    background: inherit;
+  }
+}
+
+.fade-online:before{
+	-moz-animation: highlighted-online 2.5s;
+ 	-webkit-animation: highlighted-online 2.5s;
+  	-o-animation: highlighted-online 2.5s;
+  	animation: highlighted-online 2.5s;
+}
+
+@keyframes highlighted-offline {
+  0% {
+    background: #a5a5a5;
+  }
+
+  100% {
+    background: inherit;
+  }
+}
+
+.fade-offline:before{
+	-moz-animation: highlighted-offline 2.5s;
+ 	-webkit-animation: highlighted-offline 2.5s;
+  	-o-animation: highlighted-offline 2.5s;
+  	animation: highlighted-offline 2.5s;
+}

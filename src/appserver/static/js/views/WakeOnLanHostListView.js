@@ -671,11 +671,19 @@ define([
         				// Evaluate the result
         				if(data['return_code'] == 0){
         					host_entry['online'] = true;
-        					$("[data-host='" + ip_address + "']").removeClass('host-unknown').removeClass('host-offline').addClass('host-online');
+        					$("[data-host='" + ip_address + "']").removeClass('host-unknown')
+        						.removeClass('host-offline')
+        						.removeClass('fade-offline')
+        						.addClass('fade-online')
+        						.addClass('host-online');
         				}
         				else{
         					host_entry['online'] = false;
-        					$("[data-host='" + ip_address + "']").removeClass('host-unknown').addClass('host-offline').removeClass('host-online');
+        					$("[data-host='" + ip_address + "']").removeClass('host-unknown')
+        						.addClass('host-offline')
+        						.addClass('fade-offline')
+        						.removeClass('fade-online')
+        						.removeClass('host-online');
         				}
         				
         			}.bind(this),
