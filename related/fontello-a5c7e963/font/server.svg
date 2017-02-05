@@ -1,0 +1,12 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg">
+<metadata>Copyright (C) 2017 by original authors @ fontello.com</metadata>
+<defs>
+<font id="server" horiz-adv-x="1000" >
+<font-face font-family="server" font-weight="400" font-stretch="normal" units-per-em="1000" ascent="850" descent="-150" />
+<missing-glyph horiz-adv-x="1000" />
+<glyph glyph-name="network-server" unicode="&#xe800;" d="M262 781h467a27 27 0 0 0 27-27v-621a27 27 0 0 0-27-27h-467a27 27 0 0 0-26 27v621a27 27 0 0 0 26 27z m72-77h338v-51h-338v51z m-2-120h338v-51h-338v51z m-1-123h338v-51h-338v51z m-246-451h843v-52h-843v52z m311 37h202a22 22 0 0 0 21-22v-96a22 22 0 0 0-21-21h-202a22 22 0 0 0-21 21v96a22 22 0 0 0 21 22z m78-44l0 276 52 0 0-276-52 0z" horiz-adv-x="1000" />
+</font>
+</defs>
+</svg>

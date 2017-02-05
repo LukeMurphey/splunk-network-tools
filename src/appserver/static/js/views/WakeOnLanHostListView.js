@@ -31,7 +31,8 @@ define([
     "kvstore",
     "bootstrap.dropdown",
     "css!../app/network_tools/css/WakeOnLanHostListView.css",
-    "css!../app/network_tools/css/SplunkDataTables.css"
+    "css!../app/network_tools/css/SplunkDataTables.css",
+    "css!../app/network_tools/css/server.css"
 ], function(
     _,
     Backbone,
@@ -84,12 +85,23 @@ define([
             
             // This indicates if data-table's state should be retained
             this.retain_state = false;
-        	
-        	// Get the hosts
             
+            // This will contain the collection of hosts
+            this.network_hosts_model = null;
+            
+            // This records the status of hosts (whether up or down)
+        	this.hosts_statuses = {};
+            
+        	// Get the hosts
         	if(KVStore && KVStore.Model){
         		this.getHosts();
         	}
+        	
+        	// Keep a variable around to prevent more than one ping from running at a time
+        	this.ping_running = false;
+        	
+        	// Start pinging the hosts to show whether they are online or not
+        	setInterval(this.updateHostsStatuses.bind(this), 1000);
         	
         },
         
@@ -228,7 +240,11 @@ define([
         wakeHost: function(ev){
         	
         	// Get the host to wake
-        	var name = $(ev.target).data("name");
+        	var _key = $(ev.target).data("key");
+        	
+        	// Get the model in case we need it
+        	var host = this.network_hosts_model.get(_key);
+        	var name = host.attributes.name;
         	
         	// Perform the call
         	$.ajax({
@@ -252,6 +268,7 @@ define([
         					this.retain_state = true;
         					// TODO put in a delay for this, to see if the host has awoken
         					//this.getHosts();
+        					this.updateHostStatus(host.attributes.ip_address);
         				}
         				
         			}.bind(this),
@@ -484,18 +501,6 @@ define([
   		  	issues += this.validateMACAddress();
   		  	issues += this.validateIPAddress();
   		  	issues += this.validatePort();
-  		  	
-  		  	/*
-  		  	if(!this.isValidName(name)){
-  		  		issues += 1;
-  		  		$('.input-host-name.control-group', this.$el).addClass('error');
-  		  		$('.input-host-name.control-group .help-inline', this.$el).text('Name is not valid');
-  		  	}
-  		  	else{
-  		  		$('.input-host-name.control-group', this.$el).removeClass('error');
-  		  		$('.input-host-name.control-group .help-inline', this.$el).text('');
-  		  	}
-  		  	*/
         	
   		  	// Return the validation status
   		  	if(issues > 0){
@@ -602,23 +607,6 @@ define([
         },
         
         /**
-         * Get the description for the app name
-         */
-        getAppDescriptionFromName: function(name){
-        	
-    		for(var c = 0; c < this.apps.models.length; c++){
-    			
-    			if(this.apps.models[c].entry.attributes.name === name){
-    				return this.apps.models[c].entry.associated.content.attributes.label;
-    			}
-    			
-    		}
-    		
-    		return name;
-        	
-        },
-        
-        /**
          * Apply a filter to the table
          */
         applyFilter: function(){
@@ -646,6 +634,122 @@ define([
         },
         
         /**
+         * Perform a ping to see if the host is online and update the icon appropriately.
+         */
+        updateHostStatus: function(ip_address){
+        	
+        	// Make sure that the host has an IP address
+        	if(!ip_address || ip_address === ""){
+        		return;
+        	}
+        	
+			// See if there is an entry for this host already. We need to do this in order to make sure we record that we pinged it.
+			var host_entry = this.hosts_statuses[ip_address];
+			
+			// If there isn't an entry, make one
+			if(host_entry === undefined){
+				host_entry = {
+						'last_checked': (new Date).getTime(),
+						'online': null
+				};
+				
+				this.hosts_statuses[ip_address] = host_entry;
+			}
+			
+			// Note that a ping is running
+			this.ping_running = true;
+			
+        	// Perform the call
+        	$.ajax({
+        			url: splunkd_utils.fullpath(['/en-US/custom/network_tools/network_tools/ping'].join('/')),
+        			data: {'host' : ip_address},
+        			type: 'POST',
+        			
+        			// On success, populate the table
+        			success: function(data) {
+        				
+        				// Evaluate the result
+        				if(data['return_code'] == 0){
+        					host_entry['online'] = true;
+        					$("[data-host='" + ip_address + "']").removeClass('host-unknown').removeClass('host-offline').addClass('host-online');
+        				}
+        				else{
+        					host_entry['online'] = false;
+        					$("[data-host='" + ip_address + "']").removeClass('host-unknown').addClass('host-offline').removeClass('host-online');
+        				}
+        				
+        			}.bind(this),
+        			
+        			// Handle errors
+        			error: function(jqXHR, textStatus, errorThrown){
+        				if( jqXHR.status != 403 ){
+        					
+        				}
+        			}.bind(this),
+        			
+        			complete: function(){
+        				// Note when we successfully checked this host
+        				host_entry['last_checked'] = (new Date).getTime();
+        				this.ping_running = false;
+        			}.bind(this)
+        	});
+        },
+        
+        /**
+         * Perform the necessary pings to see which hosts are up.
+         */
+        updateHostsStatuses: function(){
+        	
+        	// Loop through the hosts and see if any need to be pinged
+        	for(var c = 0; c < this.network_hosts_model.models.length; c++){
+        		
+        		// Stop if a ping is running
+        		if(this.ping_running){
+        			break;
+        		}
+        		
+        		// Find the status entry for the host
+        		var host_entry = this.hosts_statuses[this.network_hosts_model.models[c].attributes.ip_address];
+        		
+        		// See if the host needs to be pinged
+        		if(host_entry !== undefined && ((new Date).getTime() - host_entry.last_checked) < 20000){
+        			continue; // This host does not need to be pinged
+        		}
+        		else{
+        			// Start a ping for this host
+            		this.updateHostStatus(this.network_hosts_model.models[c].attributes.ip_address);
+        		}
+        		
+        		
+        	}
+        },
+        
+        /**
+         * Determine if the host is online or not.
+         */
+        getHostOnlineStatusClass: function(host){
+        	
+        	// Determine the IP associated with the host
+        	if(!host.attributes.ip_address || host.attributes.ip_address.length == 0 || this.hosts_statuses === undefined){
+        		return "host-unknown";
+        	}
+        	
+        	// Get the host status
+        	var host_entry = this.hosts_statuses[host.attributes.ip_address];
+        	
+        	if(host_entry === undefined || host_entry['online'] === undefined){
+        		return "host-unknown";
+        	}
+        	else if(host_entry['online']){
+        		return "host-online";
+        	}
+        	else{
+        		return "host-offline";
+        	}
+        	
+        },
+        
+        /**
          * Render the list.
          */
         renderList: function(retainState){
@@ -661,7 +765,8 @@ define([
         	$('#content', this.$el).html(_.template(input_list_template, {
         		'hosts' : this.network_hosts_model.models,
         		'filter_text': this.filter_text,
-        		'hosts_count' : this.network_hosts_model.models.length
+        		'hosts_count' : this.network_hosts_model.models.length,
+        		'getHostOnlineStatusClass' : this.getHostOnlineStatusClass.bind(this)
         	}));
         	
             // Make the table filterable, sortable and paginated with data-tables

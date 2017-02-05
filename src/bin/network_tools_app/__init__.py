@@ -118,7 +118,11 @@ def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source
 
 def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_command", logger=None):
     """
-    Pings the host using the native ping command on the platform and returns a tuple consisting of: the output string and the return code (0 is the expected return code).
+    Pings the host using the native ping command on the platform and returns a tuple consisting of:
+    
+     1) the output string
+     2) the return code (0 is the expected return code)
+     3) parsed output from the ping command
     """
     
     cmd = ["ping"]
@@ -257,11 +261,13 @@ def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None, so
     # Make the kwargs
     kw = {}
     
-    if ip_address is not None:
+    if ip_address is not None and ip_address != '':
         kw['ip_address'] = ip_address
         
-    if port is not None:
+    if port is not None and port != '':
         kw['port'] = port
+    
+    logger.info("Args: %r", kw)
     
     # Make the call  
     wol.send_magic_packet(mac_address, **kw)
@@ -270,10 +276,10 @@ def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None, so
     result['message'] = "Wake-on-LAN request successfully sent"
     result['mac_address'] = mac_address
     
-    if ip_address is not None:
+    if ip_address is not None and ip_address != '':
         result['ip_address'] = ip_address
     
-    if port is not None:
+    if port is not None and port != '':
         result['port'] = port
         
     return result

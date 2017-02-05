@@ -6,7 +6,7 @@ from splunk.appserver.mrsparkle.lib import jsonresponse
 from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
 from splunk.appserver.mrsparkle.lib.decorators import expose_page
 
-from network_tools_app import wakeonlan
+from network_tools_app import wakeonlan, ping
 
 def setup_logger(level):
     """
@@ -44,9 +44,26 @@ class NetworkToolsHelper(controllers.BaseController):
  
     @expose_page(must_login=True, methods=['GET', 'POST'])
     def ping(self, host):
-        desc = {}
+        result = {}
         
-        return self.render_json(desc)
+        try:
+            output, return_code, data = ping(host, source="network_tools_controller", logger=logger)
+            
+            result = {
+                'success': True,
+                'output' : output,
+                'return_code': return_code
+            }
+            
+            result.update(data)
+                        
+        except Exception as e:
+            result = {
+                'success': False,
+                'message': str(e)
+            }
+        
+        return self.render_json(result)
     
     @expose_page(must_login=True, methods=['GET', 'POST'])
     def wake(self, host):

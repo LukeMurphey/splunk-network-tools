@@ -43,7 +43,9 @@
 
 .loading-placeholder{
 	margin-left: 64px;
+	margin-top:64px;
 }
+
 
 .new-host-button-group{
 	margin-top: 8px;
@@ -104,6 +106,21 @@ td{
 	content:" *";
 	color: #d6563c;
 	font-weight: 700;
+}
+
+.host-online:before{
+    color: #58c126 !important;
+    display: inline !important;
+}
+
+.host-offline:before{
+    color: #a5a5a5 !important;
+    display: inline !important;
+}
+
+.host-unknown:before{
+    color: #292929 !important;
+    display: inline !important;
 }
 
 /*

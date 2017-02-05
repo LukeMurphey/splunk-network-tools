@@ -120,11 +120,11 @@
 
         <% for (var i = 0; i < hosts.length; i++) { %>
         <tr data-host-key="<%- hosts[i].attributes._key %>">
-            <td><a href="#"><%- hosts[i].attributes.name %></a></td>
+            <td><a class="<%- getHostOnlineStatusClass(hosts[i]) %> font-icon-network-server" data-host="<%- hosts[i].attributes.ip_address %>" href="#"><%- hosts[i].attributes.name %></a></td>
             <td><%- hosts[i].attributes.ip_address %></td>
 			<td><%- hosts[i].attributes.mac_address %></td>
 			<td>
-				<a class="action-link wake-host" data-name="<%- hosts[i].attributes.name %>" href="#">Wake</a>
+				<a class="action-link wake-host" data-key="<%- hosts[i].attributes._key %>" href="#">Wake</a>
 				<a class="action-link delete-host" data-key="<%- hosts[i].attributes._key %>" href="#">Delete</a>
 				<a class="action-link edit-host" data-key="<%- hosts[i].attributes._key %>" href="#">Edit</a>
 			</td>
