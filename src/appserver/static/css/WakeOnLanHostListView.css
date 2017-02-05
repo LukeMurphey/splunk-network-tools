@@ -108,6 +108,9 @@ td{
 	font-weight: 700;
 }
 
+/**
+ * Show an icon before the host information
+ */
 .host-online:before{
     color: #58c126 !important;
     display: inline !important;
@@ -130,6 +133,9 @@ td{
     background-color: #65a637;
 }
 
+/**
+ * Highlight changes in the host status
+ */
 @keyframes highlighted-online {
   0% {
     background: #58c126;
