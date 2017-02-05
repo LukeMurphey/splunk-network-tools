@@ -224,7 +224,7 @@ def getHost(name, session_key, logger=None):
         
         return None
     
-def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None, sourcetype="speedtest", source="speedtest_search_command", logger=None, session_key=None):
+def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None, sourcetype="wakeonlan", source="wakeonlan_search_command", logger=None, session_key=None):
     """
     Performs a wake-on-LAN request.
     """
@@ -240,7 +240,7 @@ def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None, so
             if mac_address is None:
                 mac_address = host_info.get('mac_address', None)
             
-            if ip_address is not None:
+            if ip_address is None:
                 ip_address = host_info.get('ip_address', None)
                 
             if port is None:
@@ -267,9 +267,10 @@ def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None, so
     if port is not None and port != '':
         kw['port'] = port
     
-    logger.info("Args: %r", kw)
+    if logger is not None:
+        logger.debug("Arguments provided to wake-on-lan: %r", kw)
     
-    # Make the call  
+    # Make the call
     wol.send_magic_packet(mac_address, **kw)
     
     # Make a dictionary that indicates what happened
@@ -281,5 +282,13 @@ def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None, so
     
     if port is not None and port != '':
         result['port'] = port
+        
+    # Write the event as a stash new file
+    if index is not None:
+        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
+    
+        # Log that we performed the wake-on-lan request
+        if logger:
+            logger.info("Wrote stash file=%s", writer.write_event(result))
         
     return result

@@ -62,6 +62,8 @@ class NetworkToolsHelper(controllers.BaseController):
                 'success': False,
                 'message': str(e)
             }
+            
+            logger.exception("Wake-on-lan request failed")
         
         return self.render_json(result)
     
@@ -69,7 +71,7 @@ class NetworkToolsHelper(controllers.BaseController):
     def wake(self, host):
         
         try:
-            result = wakeonlan(host)
+            result = wakeonlan(host, index="main", source="network_tools_controller", logger=logger)
             
             desc = {
                 'success': True
