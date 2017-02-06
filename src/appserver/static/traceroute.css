@@ -40,3 +40,10 @@
 	padding-right:10px;
 }
 */
+
+/*
+ * Remove the extra space between the time-range selector and the panel.
+ */
+#panel6 > .dashboard-panel{
+	margin-bottom: 0px;
+}

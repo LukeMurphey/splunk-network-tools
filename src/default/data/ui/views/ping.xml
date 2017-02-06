@@ -18,7 +18,7 @@
                 	<a href="#" class="toggle-tab" data-toggle="tab" data-elements="tab_results_controls,tab_upload,tab_download,tab_ping,row_bandwidth">Results</a>
             	</li>
 		    	<li>
-					<a href="#" class="toggle-tab" data-toggle="tab" data-elements="tab_current_results,tab_ping_controls">Execute Ping</a>
+					<a href="#" class="toggle-tab" data-toggle="tab" data-elements="tab_current_results,tab_ping_controls,tab_ping_data">Execute Ping</a>
 		    	</li>
 		 	</ul>
 	      </html>
@@ -130,7 +130,6 @@
   </row>
   <row id="tab_ping">
     <panel>
-      <title>Ping</title>
       <table>
         <!--
         <search base="speedtest_data_search">>

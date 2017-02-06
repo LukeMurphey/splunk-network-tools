@@ -100,7 +100,6 @@
   </row>
   <row id="tab_traceroute">
     <panel>
-      <title>Traceroute</title>
       <table>
         <!--
         <search base="speedtest_data_search">>
