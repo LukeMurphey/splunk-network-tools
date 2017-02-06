@@ -101,6 +101,7 @@ define([
         	this.ping_running = false;
         	
         	// Start pinging the hosts to show whether they are online or not
+        	this.update_host_id = 0;
         	setInterval(this.updateHostsStatuses.bind(this), 1000);
         	
         	// Setup an interval to hide the informational message if it should be hidden
@@ -272,7 +273,7 @@ define([
         					this.retain_state = true;
         					// TODO put in a delay for this, to see if the host has awoken
         					//this.getHosts();
-        					this.updateHostStatus(host.attributes.ip_address);
+        					//this.updateHostStatus(host.attributes.ip_address);
         				}
         				
         			}.bind(this),
@@ -673,6 +674,8 @@ define([
 			// Note that a ping is running
 			this.ping_running = true;
 			
+			console.info("Pinging host: " + ip_address);
+			
         	// Perform the call
         	$.ajax({
         			url: splunkd_utils.fullpath(['/en-US/custom/network_tools/network_tools/ping'].join('/')),
@@ -723,7 +726,14 @@ define([
         updateHostsStatuses: function(){
         	
         	// Loop through the hosts and see if any need to be pinged
-        	for(var c = 0; c < this.network_hosts_model.models.length; c++){
+        	var keep_going = true;
+        	
+        	while(keep_going){
+        		
+        		// If we got through all of them, then loop around
+        		if(this.update_host_id >= this.network_hosts_model.models.length){
+        			this.update_host_id = 0;
+        		}
         		
         		// Stop if a ping is running
         		if(this.ping_running){
@@ -731,7 +741,7 @@ define([
         		}
         		
         		// Find the status entry for the host
-        		var host_entry = this.hosts_statuses[this.network_hosts_model.models[c].attributes.ip_address];
+        		var host_entry = this.hosts_statuses[this.network_hosts_model.models[this.update_host_id].attributes.ip_address];
         		
         		// See if the host needs to be pinged
         		if(host_entry !== undefined && ((new Date).getTime() - host_entry.last_checked) < 20000){
@@ -739,9 +749,12 @@ define([
         		}
         		else{
         			// Start a ping for this host
-            		this.updateHostStatus(this.network_hosts_model.models[c].attributes.ip_address);
+            		this.updateHostStatus(this.network_hosts_model.models[this.update_host_id].attributes.ip_address);
+            		keep_going = false;
         		}
         		
+        		// Move to the next host
+        		this.update_host_id += 1;
         		
         	}
         },
