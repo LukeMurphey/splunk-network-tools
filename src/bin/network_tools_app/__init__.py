@@ -260,12 +260,13 @@ def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None, so
     
     # Make the kwargs
     kw = {}
-    
-    if ip_address is not None and ip_address != '':
-        kw['ip_address'] = ip_address
-        
+     
     if port is not None and port != '':
         kw['port'] = port
+    
+    # Only add the IP address if a port was provided. See https://lukemurphey.net/issues/1733.
+    if port in kw and ip_address is not None and ip_address != '':
+        kw['ip_address'] = ip_address
     
     if logger is not None:
         logger.debug("Arguments provided to wake-on-lan: %r", kw)
@@ -277,11 +278,8 @@ def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None, so
     result['message'] = "Wake-on-LAN request successfully sent"
     result['mac_address'] = mac_address
     
-    if ip_address is not None and ip_address != '':
-        result['ip_address'] = ip_address
-    
-    if port is not None and port != '':
-        result['port'] = port
+    # Add in the arguments
+    result.update(kw)
         
     # Write the event as a stash new file
     if index is not None:
