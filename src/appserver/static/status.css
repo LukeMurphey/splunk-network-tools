@@ -1,0 +1,39 @@
+/*
+ * The following sets the color of the row indicating if the response was a failure or not.
+ */
+.table-chrome.table-striped > tbody > tr > td.success{
+	background-color: #65A636; /* #3677a6 */
+    color: white;
+    font-weight: bold;
+}
+
+.table-chrome.table-striped > tbody > tr > td.success.highlighted{
+	background-color: #74b744 !important;
+}
+
+.table-chrome.table-striped > tbody > tr > td.warning{
+	background-color: #ffad00; /* #3677a6 */
+    color: white;
+    font-weight: bold;
+}
+
+.table-chrome.table-striped > tbody > tr > td.warning.highlighted{
+	background-color: #ffad00 !important;
+}
+
+.table-chrome.table-striped > tbody > tr > td.failure{
+	background-color: #d6563c;
+    color: white;
+    font-weight: bold;
+}
+
+.table-chrome.table-striped > tbody > tr > td.failure.highlighted{
+	background-color: #e66146 !important;
+}
+
+.table-chrome.table-striped > tbody > tr > td.failure{
+	/* http://bit.ly/2feBevo */
+	background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAANElEQVQYV2NcpszxnwENGBibMDCiS4AEL5w9gyoBEwQZANeBLAiXQBcES1wLs/kPMhMdAACG5Bp+pY2rpgAAAABJRU5ErkJggg==);
+    color: white;
+    font-weight: bold;
+}

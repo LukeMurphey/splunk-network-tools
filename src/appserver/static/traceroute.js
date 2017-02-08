@@ -1,5 +1,19 @@
-require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'bootstrap.tab', 'splunkjs/mvc/simplexml/ready!'],
-		function($, _, mvc, TokenUtils){
+require.config({
+    paths: {
+    	network_tools_cell_renderer: '../app/network_tools/NetworkToolsCellRenderer'
+    }
+});
+
+require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'network_tools_cell_renderer', 'bootstrap.tab', 'splunkjs/mvc/simplexml/ready!'],
+		function($, _, mvc, TokenUtils, NetworkToolsCellRenderer){
+	
+	// Setup the cell renderer
+    var resultsTable = mvc.Components.get('element4');
+    
+    resultsTable.getVisualization(function(tableView){
+        tableView.table.addCellRenderer(new NetworkToolsCellRenderer());
+        tableView.table.render();
+    });
 	
 	// Handle a click event from the execute button and force the search command to execute.
 	$( "#execute_input" ).click(function() {
