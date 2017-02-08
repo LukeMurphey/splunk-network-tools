@@ -107,7 +107,7 @@
         </search>
         -->
         <search>
-          <query>sourcetype="traceroute" | stats count(hop) as hops by dest_host, dest_ip, unique_id | table dest_host, dest_ip, hops, unique_id</query>
+          <query>sourcetype="traceroute" | stats count(hop) as hops latest(_time) as latest by dest_host, dest_ip, unique_id | sort -latest | table dest_host, dest_ip, hops, unique_id</query>
           <earliest>$timefield.earliest$</earliest>
           <latest>$timefield.latest$</latest>
         </search>
