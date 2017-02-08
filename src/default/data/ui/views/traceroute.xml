@@ -108,8 +108,8 @@
         -->
         <search>
           <query>sourcetype="traceroute" | stats count(hop) as hops by dest_host, dest_ip, unique_id | table dest_host, dest_ip, hops, unique_id</query>
-          <earliest>0</earliest>
-          <sampleRatio>1</sampleRatio>
+          <earliest>$timefield.earliest$</earliest>
+          <latest>$timefield.latest$</latest>
         </search>
         <option name="count">20</option>
         <option name="dataOverlayMode">none</option>
