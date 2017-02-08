@@ -3,18 +3,31 @@ This Ant build script contains operations that are useful for building Splunk ap
 
 1) Make a build.xml script that imports this build script (see the template below for an example); the build.xml needs to be in the same directory as basebuild.xml
 2) Set the name of the project in the root project node (see SET_APP_NAME_HERE in the example below)
-3) Download ant-contrib-0.6.jar from https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-0.6/ and put it in a "lib" directory (the directory needs to be right next to the build.xml, e.g. "lib/ant-contrib-0.6.jar")
-4) Define a default.properties file to specify default parameters. The default.properties ought to be checked in the source-code repository.
-5) Define a local.properties file to override the default parameters. This file should be install specific and thus should NOT be checked into the source-code repository.
-6) Set environment variables to set system wide options or to control the build script from a CI tool
+3) Define a default.properties file to specify default parameters in the same directory as the build.xml file. The default.properties ought to be checked in the source-code repository.
 
+Optional steps:
+4) Define a local.properties file to override the default parameters. This file should be install specific and thus should NOT be checked into the source-code repository.
+5) Set environment variables to set system wide options or to control the build script from a CI tool
+
+======================================================
+Basic build script (build.xml)
+======================================================
 A basic build script would look like this:
 
   <project default="package" name="SET_APP_NAME_HERE">
 	<import file="basebuild.xml"/>
   </project>
   
-Make sure to replace SET_APP_NAME_HERE with your project name. That should match the name of your app and the directory of app in /etc/apps. Here is a template for a basic build script:
+Make sure to replace SET_APP_NAME_HERE with your project name. That should match the name of your app and the directory of app in /etc/apps.
+
+======================================================
+Default properties file (default.properties)
+======================================================
+The default.properties files should look something like this:
+
+  value.build.packageoutput.directory=tmp/packages
+  value.build.workingcopy.directory=.
+  value.build.optimize=true
 
 Below are the parameters supported (via the local.properties and default.properties files):
  * value.build.packageoutput.directory: indicates where created packages should go (defaults to tmp/packages)
@@ -33,11 +46,16 @@ You can also use ${value.version.number} to substitute your version number in ap
   [launcher]
   version = ${value.version.number}
   
+======================================================
+Setting build parameters via environment variables
+======================================================
 If you want to use environment variables, you can assign the following confoguration options via environment variables:
 
  * value.build.packageoutput.directory: OUTPUT_DIRECTORY
  * value.deploy.splunk_home:            SPLUNK_HOME
  * value.build.minimize:                BUILD_MINIMIZED
+ 
+Setting parameters using environment variables is useful when running tests in a continuous integration environment.
 -->
 	
 <project default="package" name="basebuild">
@@ -90,9 +108,31 @@ If you want to use environment variables, you can assign the following confogura
     </path>
 	
     <!-- ================================= 
+          target: download_libraries
+         ================================= -->
+	<target name="download_libraries">
+		
+		<get src="https://lukemurphey.net/attachments/download/402/ant-contrib-0.6.jar" 
+		    dest="${basedir}/lib/ant-contrib-0.6.jar" 
+		    verbose="true"
+			skipexisting="true" />
+		
+		<get src="https://lukemurphey.net/attachments/download/403/yuicompressor-2.4.7.jar" 
+			 dest="${basedir}/lib/yuicompressor-2.4.7.jar" 
+			 verbose="true"
+			 skipexisting="true" />
+		
+		<get src="https://lukemurphey.net/attachments/download/404/yuicompressor-2.4.8.jar" 
+			 dest="${basedir}/lib/yuicompressor-2.4.8.jar" 
+			 verbose="true"
+			 skipexisting="true" />
+		
+	</target>
+	
+    <!-- ================================= 
           target: initialize_libraries
          ================================= -->
-	<target name="initialize_libraries">
+	<target name="initialize_libraries" depends="download_libraries">
 		<taskdef resource="net/sf/antcontrib/antlib.xml">
 		     <classpath>
 		    	<pathelement location="${basedir}/lib/ant-contrib-0.6.jar"/>
@@ -114,6 +154,11 @@ If you want to use environment variables, you can assign the following confogura
         <delete quiet="true" includeEmptyDirs="true">
             <fileset dir="tmp" />
         </delete>
+    	
+        <!-- Delete the downloaded build dependencies -->
+    	<delete file="${basedir}/lib/ant-contrib-0.6.jar" />
+    	<delete file="${basedir}/lib/yuicompressor-2.4.7.jar" />
+    	<delete file="${basedir}/lib/yuicompressor-2.4.8.jar" />
         
     </target>
 	
@@ -202,6 +247,22 @@ If you want to use environment variables, you can assign the following confogura
             </fileset>
         </copy>
     	
+    	<!-- Determine if this is Windows -->
+    	<condition property="is_windows" else="false">
+    		<os family="windows"/>
+    	</condition>
+    	
+    	<!-- If this is Windows, use yuicompressor 2.4.7 since 2.4.8 doesn't support Windows paths correctly -->
+		<if>
+			<equals arg1="${is_windows}" arg2="false" />
+		 		<then>
+		 			<property name="yuicompressorlib" value="lib/yuicompressor-2.4.8.jar" />
+		 		</then>
+		 	<else>
+		 		<property name="yuicompressorlib" value="lib/yuicompressor-2.4.7.jar" />
+		 	</else>
+		</if>
+		
     	<!-- Deploy the CSS and JS (and optionally minimize it) -->
     	<if>
     		<or>
@@ -211,7 +272,7 @@ If you want to use environment variables, you can assign the following confogura
     		<then>
 				<!-- The mapper to map the original source files to the minified versions with the same name, but different path -->
 		    	<mapper id="to_export_dir_mapper" type="glob" from="*" to="${export_dir}/${value.build.appname}/*" />
-		    	
+				    			
 				<!-- Minify the Javascript files -->		
 			    <apply executable="java" parallel="false">
 			    	
@@ -221,7 +282,7 @@ If you want to use environment variables, you can assign the following confogura
 			        	<include name="**/*.css" />
 			        </fileset>
 			        <arg line="-jar" />
-			        <arg path="lib/yuicompressor-2.4.8.jar" />
+			        <arg path="${yuicompressorlib}" />
 			        <srcfile />
 			        <arg line="-o"/>
 			    	<mapper refid="to_export_dir_mapper" />
