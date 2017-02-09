@@ -124,9 +124,11 @@ require(['jquery','underscore','splunkjs/mvc', 'bootstrap.tab', 'splunkjs/mvc/si
     // Wire up the tab control tokenization
     var submit = mvc.Components.get("submit");
     
-    submit.on("submit", function() {
-    	clearTabControlTokens();
-    });
+    if(submit){
+    	submit.on("submit", function() {
+        	clearTabControlTokens();
+        });
+    }
     
     // Set the token for the selected tab
     setActiveTabToken();
