@@ -1,15 +1,30 @@
+# Update the sys.path so that libraries will be loaded out of the network_tools_app directory.
+# This is important in order to make sure that app won't cause issues with other Splunk apps that may include these same libraries (since 
+# Splunk puts other apps on the sys.path which can make the apps override each other).
+import sys
+import os
+import splunk.appserver.mrsparkle.lib.util as util
+
+lib_dir = os.path.join(util.get_apps_dir(), 'network_tools', 'bin', 'network_tools_app')
+
+if not lib_dir in sys.path:
+    sys.path.append(lib_dir)
+
 # App provided imports
 from event_writer import StashNewWriter
 import pyspeedtest
 import pingparser
 from tracerouteparser import TracerouteParser 
 from network_tools_app.wakeonlan import wol
+from network_tools_app.ipwhois import IPWhois
+from network_tools_app.pythonwhois import get_whois
+from flatten import flatten
+from ipaddr import IPAddress
 
 # Environment imports
 from platform import system as system_name
 import subprocess
 import collections
-import os
 import binascii
 import json
 
@@ -290,3 +305,23 @@ def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None, so
             logger.info("Wrote stash file=%s", writer.write_event(result))
         
     return result
+
+def whois(host, index=None, sourcetype="whois", source="whois_search_command", logger=None):
+    
+    # See if this is an IP address. If so, do an IP whois.
+    try:
+        IPAddress(host) # Will throw a ValueError exception indicating that this is not an IP address
+        
+        whoisObject = IPWhois(host)
+        resultsOrig = whoisObject.lookup_rdap(depth=1)
+    except ValueError:
+        
+        # Since this isn't an IP address, run a domain whois
+        resultsOrig = get_whois(host)
+        
+    results = flatten(resultsOrig, ignore_blanks=True)
+    
+    return results
+    
+    
+    
