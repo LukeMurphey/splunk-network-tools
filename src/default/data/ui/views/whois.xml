@@ -1,0 +1,96 @@
+<form hideEdit="true" script="whois.js,tabs.js" stylesheet="tabs.css,whois.css,status.css">
+  <label>Whois</label>
+  <description>Perform a whois request to get information about the owner and operator of an IP address or domain name.</description>
+  <search id="whois_search">
+    <query>$whois_search$</query>
+  </search>
+  <search id="whois_data_search">
+    <query>sourcetype="whois"</query>
+    <earliest>-30d@d</earliest>
+    <latest>now</latest>
+    <sampleRatio>1</sampleRatio>
+  </search>
+	<row id="tabs">
+	   <panel>
+	      <html>
+	         <ul id="tabs" class="nav nav-tabs">
+             	<li class="active">
+                	<a href="#" class="toggle-tab" data-toggle="tab" data-elements="tab_results_controls,tab_whois">Results</a>
+            	</li>
+		    	<li>
+					<a href="#" class="toggle-tab" data-toggle="tab" data-elements="tab_current_results,tab_whois_controls,tab_whois_data">Execute Whois</a>
+		    	</li>
+		 	</ul>
+	      </html>
+	   </panel>
+	</row>
+  <row id="tab_whois_controls">
+  	<panel>
+      	<input id="host_input" type="text" token="host" searchWhenChanged="false">
+	      <label>Host</label>
+	    </input>
+	    <html>
+		    <a href="#" id="execute_input" class="btn btn-primary">Execute Whois</a>
+	    </html>
+	</panel>
+  </row>
+  
+  <row id="tab_results_controls">
+  	<panel>
+  		<input type="time" token="timefield" searchWhenChanged="true">
+			<label></label>
+		    <default>
+		    	<earliest>-30d@d</earliest>
+		        <latest>now</latest>
+		    </default>
+		</input>
+  	</panel>
+  </row>
+  <row id="tab_whois">
+    <panel>
+      <table>
+        <!--
+        <search base="speedtest_data_search">>
+          <query>timechart avg(ping) as ping</query>
+        </search>
+        -->
+        <search>
+          <query>sourcetype="whois"</query>
+          <earliest>$timefield.earliest$</earliest>
+          <latest>$timefield.latest$</latest>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">row</option>
+        <drilldown>
+        	<link>
+        	<![CDATA[
+        	search?q=search%20sourcetype%3D"traceroute"%20unique_id%3D$row.unique_id$%20%7C%20rex%20field%3D_raw%20"rtt%3D%5C"(%3F<rtt>%5B.0-9%5D%2B)%5C""%20max_match%3D5%20%7C%20rex%20field%3D_raw%20"name%3D%5C"(%3F<name>%5B.0-9%5D%2B)%5C""%20max_match%3D5%20%7C%20rex%20field%3D_raw%20"ip%3D%5C"(%3F<ip>%5B.0-9%5D%2B)%5C""%20max_match%3D5%20%7C%20stats%20values(rtt)%20as%20rtt%20values(ip)%20as%20ip%20values(name)%20as%20name%20first(dest_host)%20as%20dest_host%20first(dest_ip)%20as%20dest_ip%20by%20hop%20%7C%20sort%20hop
+        	]]>
+        	</link>
+        </drilldown>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  
+  <row id="tab_whois_data">
+    <panel>
+      <table>
+        <search base="whois_search">
+        	<query>| search attribute!="raw"</query>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    </row>
+</form>
