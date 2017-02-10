@@ -318,10 +318,27 @@ def whois(host, index=None, sourcetype="whois", source="whois_search_command", l
         
         # Since this isn't an IP address, run a domain whois
         resultsOrig = get_whois(host)
-        
-    results = flatten(resultsOrig, ignore_blanks=True)
     
-    return results
+    result = flatten(resultsOrig, ignore_blanks=True)
+    
+    # Pull out raw so that we can put it at the end. This is done in case the raw field contains things that might mess up the extractions.
+    raw = result.get('raw', None)
+        
+    try:
+        del result['raw']
+        result['raw'] = raw
+    except KeyError:
+        pass # Ok, raw didn't exist
+    
+    # Write the event as a stash new file
+    if index is not None:
+        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
+    
+        # Log that we performed the wake-on-lan request
+        if logger:
+            logger.info("Wrote stash file=%s", writer.write_event(result))
+    
+    return result
     
     
     

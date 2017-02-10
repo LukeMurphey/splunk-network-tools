@@ -17,12 +17,19 @@ class Whois(SearchCommand):
         
         # Do the whois
         results = whois(host=self.host, index="main", logger=self.logger)
-            
+        
         # Convert the output to a series of rows for better output in the search output
         processed = dict_to_table(results)
         
         # Sort the items
         processed = sorted(processed, key=lambda e: e['attribute'])
+        
+        """
+        processed.append({
+            'attribute' : 'raw',
+            'value' : raw
+        })
+        """
         
         # Output the results
         self.output_results(processed)

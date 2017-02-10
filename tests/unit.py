@@ -93,7 +93,7 @@ if __name__ == "__main__":
     loader = unittest.TestLoader()
     suites = []
     suites.append(loader.loadTestsFromTestCase(TestPing))
-    #suites.append(loader.loadTestsFromTestCase(TestTraceroute))
+    suites.append(loader.loadTestsFromTestCase(TestTraceroute))
     suites.append(loader.loadTestsFromTestCase(TestWhois))
     suites.append(loader.loadTestsFromTestCase(TestFlatten))
 
