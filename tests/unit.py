@@ -7,7 +7,7 @@ import collections
 
 sys.path.append( os.path.join("..", "src", "bin") )
 
-from network_tools_app import ping, traceroute, whois
+from network_tools_app import ping, traceroute, whois, nslookup
 from network_tools_app.flatten import flatten, flatten_to_table
 
 class TestPing(unittest.TestCase):
@@ -30,12 +30,7 @@ class TestTraceroute(unittest.TestCase):
     def test_do_traceroute(self):
         _, _, parsed = traceroute("att.com")
         
-        #self.assertNotEquals(parsed, 0)
         self.assertGreater(len(parsed), 0)
-        
-        import pprint
-        pprint.pprint(parsed)
-        #print parsed
         
 class TestWhois(unittest.TestCase):
     
@@ -46,6 +41,15 @@ class TestWhois(unittest.TestCase):
         
     def test_do_whois_domain(self):
         output = whois('textcritical.net')
+        
+        self.assertGreater(len(output), 0)
+        
+class TestNSLookup(unittest.TestCase):
+    
+    def test_do_lookup(self):
+        output = nslookup('textcritical.net')
+        
+        print output
         
         self.assertGreater(len(output), 0)
         
@@ -96,5 +100,6 @@ if __name__ == "__main__":
     suites.append(loader.loadTestsFromTestCase(TestTraceroute))
     suites.append(loader.loadTestsFromTestCase(TestWhois))
     suites.append(loader.loadTestsFromTestCase(TestFlatten))
+    suites.append(loader.loadTestsFromTestCase(TestNSLookup))
 
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(suites))

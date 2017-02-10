@@ -20,6 +20,7 @@ from network_tools_app.ipwhois import IPWhois
 from network_tools_app.pythonwhois import get_whois
 from flatten import flatten
 from ipaddr import IPAddress
+from dns import resolver
 
 # Environment imports
 from platform import system as system_name
@@ -341,4 +342,68 @@ def whois(host, index=None, sourcetype="whois", source="whois_search_command", l
     return result
     
     
+def nslookup(host, server=None, index=None, sourcetype="nslookup", source="nslookup_search_command", logger=None):
+    
+    result = collections.OrderedDict()
+    
+    # NS records
+    try:
+        answers = resolver.query(host,'NS')
+        
+        ns_records = []
+        
+        for a in answers:
+            ns_records.append(str(a))
+            
+        if len(ns_records) > 0:
+            result['ns'] = ns_records
+            
+    except resolver.NoAnswer:
+        pass
+    
+    # A
+    try:
+        answers = resolver.query(host,'A')
+        
+        a_records = []
+        
+        for a in answers:
+            a_records.append(str(a))
+            
+        if len(a_records) > 0:
+            result['a'] = a_records
+    except resolver.NoAnswer:
+        pass
+    
+    # AAAA
+    try:
+        answers = resolver.query(host,'AAAA')
+        
+        aaaa_records = []
+        
+        for a in answers:
+            aaaa_records.append(str(a))
+            
+        if len(aaaa_records) > 0:
+            result['aaaa'] = aaaa_records
+    
+    except resolver.NoAnswer:
+        pass
+    
+    # MX
+    try:
+        answers = resolver.query(host,'MX')
+        
+        mx_records = []
+        
+        for a in answers:
+            mx_records.append(str(a))
+            
+        if len(mx_records) > 0:
+            result['mx'] = mx_records
+        
+    except resolver.NoAnswer:
+        pass
+    
+    return result
     
