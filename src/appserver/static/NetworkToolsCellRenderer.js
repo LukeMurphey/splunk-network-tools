@@ -1,8 +1,8 @@
 define(['jquery', 'underscore', 'splunkjs/mvc', 'views/shared/results_table/renderers/BaseCellRenderer'], function($, _, mvc, BaseCellRenderer) {
     
-    var WebsiteStatusCellRenderer = BaseCellRenderer.extend({
+    var NetworkToolsCellRenderer = BaseCellRenderer.extend({
     	 canRender: function(cell) {
-    		 return ($.inArray(cell.field, ["avg_ping", "max_ping", "min_ping", "packet_loss", "hops"]) >= 0);
+    		 return ($.inArray(cell.field, ["avg_ping", "max_ping", "min_ping", "packet_loss", "hops", "raw"]) >= 0);
     		 //["avg_ping", "max_ping", "min_ping", "jitter", "packet_loss", "hops"]
 		 },
 		 
@@ -53,6 +53,20 @@ define(['jquery', 'underscore', 'splunkjs/mvc', 'views/shared/results_table/rend
 				
 			 }
 			 
+			 // Handle the raw field (expand the newlines to HTML breaks)
+			 if( cell.field == "raw" ){
+				 
+				 if(Array.isArray(cell.value)){
+					 for(var c = 0; c < cell.value.length; c++){
+						 cell.value[c] = cell.value[c].replace(/\n/g, "<br />");
+					 }
+				 }
+				 else{
+					 cell.value = cell.value.replace(/\n/g, "<br />");
+				 }
+				 
+			 }
+			 
 			 // Render the cell
 			 if( icon != null ){
 				 $td.html(_.template('<i class="icon-<%- icon %>"> </i><%- value %>', {
@@ -66,5 +80,5 @@ define(['jquery', 'underscore', 'splunkjs/mvc', 'views/shared/results_table/rend
 		 }
 	});
     
-    return WebsiteStatusCellRenderer;
+    return NetworkToolsCellRenderer;
 });
