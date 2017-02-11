@@ -1,6 +1,6 @@
 <form hideEdit="true" script="traceroute.js,tabs.js" stylesheet="tabs.css,traceroute.css,status.css">
   <label>Traceroute</label>
-  <description>Perform a traceroute to identify the hops a connection takes to the a source.</description>
+  <description>Perform a traceroute to identify the hops a connection takes to a remote host.</description>
   <search id="traceroute_search">
     <query>$traceroute_search$</query>
   </search>
