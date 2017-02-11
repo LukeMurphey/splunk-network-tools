@@ -2,6 +2,8 @@
   <view name="speedtest" default="true" />
   <view name="ping" />
   <view name="traceroute" />
+  <view name="whois" />
+  <view name="nslookup" />
   <view name="wakeonlan" />
   <collection label="Search">
   	<view name="search" />
