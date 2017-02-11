@@ -16,10 +16,13 @@ __all__ = ["parse",
            "main",
            ]
 
+class PingParseException(Exception):
+    pass
+
 # Pull regex compilation out of parser() so it only gets done once
 
 # Parse first line of output containing the domain
-host_matcher = re.compile(r'PING ([a-zA-Z0-9.\-]+) *\(')
+host_matcher = re.compile(r'ping(?:ing)? ([a-zA-Z0-9.\-]+)', re.IGNORECASE)
 
 # Old version, failed on OS X due to 0.0% formatted percentage (November 20, 2016, ssteinerX)
 # https://regex101.com/r/zt9G2w/1
@@ -29,11 +32,15 @@ host_matcher = re.compile(r'PING ([a-zA-Z0-9.\-]+) *\(')
 
 # This one works on OS X output which includes the percentage in 0.0% format
 # https://regex101.com/r/nmjQzI/2
-rslt_matcher = re.compile(r'(\d+) packets transmitted, (\d+) (?:packets )?received, (\d+\.?\d*)% packet loss')
+rslt_matcher = re.compile(r'(?P<sent>\d+) packets transmitted, (?P<received>\d+) (?:packets )?received, (?P<packet_loss>\d+\.?\d*)% packet loss')
+rslt_matcher_windows = re.compile(r'Sent = (?P<sent>\d+), Received = (?P<received>\d+), Lost = \d+ \((?P<packet_loss>\d+\.?\d*)% loss')
+#rslt_matcher_windows = re.compile(r'.*')
+
 
 # Pull out round-trip min/avg/max/stddev = 49.042/49.042/49.042/0.000 ms
 # TODO: make this more specific i.e. match a bit before the '=' sign
-minmax_matcher = re.compile(r'(\d+.\d+)/(\d+.\d+)/(\d+.\d+)/(\d+.\d+)')
+minmax_matcher = re.compile(r'(?P<min>\d+.\d+)/(?P<avg>\d+.\d+)/(?P<max>\d+.\d+)/(?P<jitter>\d+.\d+)')
+minmax_matcher_windows = re.compile(r'Minimum = (?P<min>\d+.?\d*)ms, Maximum = (?P<max>\d+.?\d*)ms, Average = (?P<avg>\d+.?\d*)ms')
 
 # Available replacements
 format_replacements = [('%h', 'host'),
@@ -49,13 +56,43 @@ format_replacements = [('%h', 'host'),
 default_format = ','.join([fmt for fmt, field in format_replacements])
 
 
-def _get_match_groups(ping_output, regex):
+def _get_match_groups(ping_output, regex, names=None, msg=""):
     """
     Get groups by matching regex in output from ping command.
     """
+    
+    # Try each regex if multiple are provided
+    if isinstance(regex, (list, tuple)):
+        
+        for r in regex:
+            
+            try:
+                return _get_match_groups(ping_output, r, names)
+            except PingParseException:
+                continue # Try the next one
+            
+        # We got no matches
+        raise PingParseException('Invalid PING output:\n' + ping_output)
+        
     match = regex.search(ping_output)
+    
     if not match:
-        raise Exception('Invalid PING output:\n' + ping_output)
+        raise PingParseException('Invalid PING output:\n' + ping_output)
+    
+    # Extract the named fields
+    if names is not None:
+        out = []
+        
+        for name in names:
+            
+            try:
+                out.append(match.group(name))
+            except IndexError:
+                # Couldn't find this field, till it with None
+                out.append(None)
+            
+        return out
+    
     return match.groups()
 
 
@@ -77,12 +114,13 @@ def parse(ping_output):
                     in milliseconds
     """
     host = _get_match_groups(ping_output, host_matcher)[0]
-    sent, received, packet_loss = _get_match_groups(ping_output, rslt_matcher)
+    sent, received, packet_loss = _get_match_groups(ping_output, [rslt_matcher, rslt_matcher_windows], ['sent', 'received', 'packet_loss'])
 
     try:
         minping, avgping, maxping, jitter = _get_match_groups(ping_output,
-                                                              minmax_matcher)
-    except:
+                                                              [minmax_matcher, minmax_matcher_windows],
+                                                              ['min', 'avg', 'max', 'jitter'])
+    except PingParseException:
         minping = avgping = maxping = jitter = 'NaN'
 
     d = collections.OrderedDict()

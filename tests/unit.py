@@ -9,6 +9,7 @@ sys.path.append( os.path.join("..", "src", "bin") )
 
 from network_tools_app import ping, traceroute, whois, nslookup
 from network_tools_app.flatten import flatten, flatten_to_table
+from network_tools_app import pingparser
 
 class TestPing(unittest.TestCase):
     
@@ -91,13 +92,66 @@ class TestFlatten(unittest.TestCase):
         
         self.assertGreaterEqual(len(flattened['configuration']), 3)
         
+class TestPingParser(unittest.TestCase):
+    
+    def test_windows_parse(self):
+        
+        output = """Pinging 127.0.0.1 with 32 bytes of data:
+Reply from 127.0.0.1: bytes=32 time<1ms TTL=128
+Reply from 127.0.0.1: bytes=32 time<1ms TTL=128
+Reply from 127.0.0.1: bytes=32 time<1ms TTL=128
+
+Ping statistics for 127.0.0.1:
+    Packets: Sent = 3, Received = 3, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 0ms, Average = 0ms
+        """
+        
+        parsed = pingparser.parse(output)
+          
+        self.assertEquals(parsed['host'], '127.0.0.1')
+        self.assertEquals(parsed['sent'], '3')
+        self.assertEquals(parsed['received'], '3')
+        self.assertEquals(parsed['packet_loss'], '0')
+        
+        self.assertEquals(parsed['min_ping'], '0')
+        self.assertEquals(parsed['avg_ping'], '0')
+        self.assertEquals(parsed['max_ping'], '0')
+        self.assertEquals(parsed['jitter'], None)
+        
+    def test_osx_parse(self):
+        
+        output = """
+PING 127.0.0.1 (127.0.0.1): 56 data bytes
+64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.052 ms
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.136 ms
+64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.080 ms
+
+--- 127.0.0.1 ping statistics ---
+3 packets transmitted, 3 packets received, 0.0% packet loss
+round-trip min/avg/max/stddev = 0.052/0.089/0.136/0.035 ms
+        """
+        
+        parsed = pingparser.parse(output)
+        
+        self.assertEquals(parsed['host'], '127.0.0.1')
+        self.assertEquals(parsed['sent'], '3')
+        self.assertEquals(parsed['received'], '3')
+        self.assertEquals(parsed['packet_loss'], '0.0')
+        
+        self.assertEquals(parsed['min_ping'], '0.052')
+        self.assertEquals(parsed['avg_ping'], '0.089')
+        self.assertEquals(parsed['max_ping'], '0.136')
+        self.assertEquals(parsed['jitter'], '0.035')
+        
 if __name__ == "__main__":
     loader = unittest.TestLoader()
     suites = []
-    suites.append(loader.loadTestsFromTestCase(TestPing))
-    suites.append(loader.loadTestsFromTestCase(TestTraceroute))
-    suites.append(loader.loadTestsFromTestCase(TestWhois))
-    suites.append(loader.loadTestsFromTestCase(TestFlatten))
-    suites.append(loader.loadTestsFromTestCase(TestNSLookup))
+    #suites.append(loader.loadTestsFromTestCase(TestPing))
+    suites.append(loader.loadTestsFromTestCase(TestPingParser))
+    #suites.append(loader.loadTestsFromTestCase(TestTraceroute))
+    #suites.append(loader.loadTestsFromTestCase(TestWhois))
+    #suites.append(loader.loadTestsFromTestCase(TestFlatten))
+    #suites.append(loader.loadTestsFromTestCase(TestNSLookup))
 
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(suites))
