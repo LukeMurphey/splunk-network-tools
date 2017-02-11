@@ -117,7 +117,7 @@ Approximate round trip times in milli-seconds:
         self.assertEquals(parsed['min_ping'], '0')
         self.assertEquals(parsed['avg_ping'], '0')
         self.assertEquals(parsed['max_ping'], '0')
-        self.assertEquals(parsed['jitter'], None)
+        self.assertEquals(parsed['jitter'], None) # Windows ping currently doesn't include jitter 
         
     def test_osx_parse(self):
         
