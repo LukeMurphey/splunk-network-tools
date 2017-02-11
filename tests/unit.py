@@ -49,8 +49,6 @@ class TestNSLookup(unittest.TestCase):
     def test_do_lookup(self):
         output = nslookup('textcritical.net')
         
-        print output
-        
         self.assertGreater(len(output), 0)
         
 class TestFlatten(unittest.TestCase):
