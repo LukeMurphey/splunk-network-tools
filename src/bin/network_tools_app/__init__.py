@@ -37,7 +37,10 @@ def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source
     Performs a traceroute using the the native traceroute command and returns the output in a parsed format.
     """
     
-    cmd = ["traceroute"]
+    if system_name().lower() == "windows":
+        cmd = ["tracert"]
+    else:
+        cmd = ["traceroute"]
     
     # Add the host argument
     cmd.append(host)
@@ -144,7 +147,7 @@ def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_comma
     cmd = ["ping"]
     
     # Add the argument of the number of pings
-    if system_name().lower()=="windows":
+    if system_name().lower=="windows":
         cmd.extend(["-n", str(count)])
     else:
         cmd.extend(["-c", str(count)])
