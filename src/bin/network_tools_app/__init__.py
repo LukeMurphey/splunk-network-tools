@@ -349,8 +349,16 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup", source="nsloo
     result = collections.OrderedDict()
     
     # Add the hostname we are querying for
-    if 'query' not in result:
-        result['query'] = host
+    result['query'] = host
+    
+    # Make a resolver
+    custom_resolver = resolver.Resolver()
+    
+    if server is not None:
+        custom_resolver.nameservers = [server]
+    
+    # Log the server used
+    result['server'] = custom_resolver.nameservers
     
     # NS records
     try:

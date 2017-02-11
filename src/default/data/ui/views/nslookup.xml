@@ -1,0 +1,88 @@
+<form hideEdit="true" script="nslookup.js,tabs.js" stylesheet="tabs.css,nslookup.css,status.css">
+  <label>NSLookup</label>
+  <description>Perform an NSLookup to obtain information about a domain-name.</description>
+  <search id="nslookup_search">
+    <query>$nslookup_search$</query>
+  </search>
+  <search id="nslookup_data_search">
+    <query>sourcetype="nslookup" | fields query a aaaa mx ns</query>
+    <earliest>-30d@d</earliest>
+    <latest>now</latest>
+    <sampleRatio>1</sampleRatio>
+  </search>
+	<row id="tabs">
+	   <panel>
+	      <html>
+	         <ul id="tabs" class="nav nav-tabs">
+             	<li class="active">
+                	<a href="#" class="toggle-tab" data-toggle="tab" data-elements="tab_results_controls,tab_nslookup">Results</a>
+            	</li>
+		    	<li>
+					<a href="#" class="toggle-tab" data-toggle="tab" data-elements="tab_current_results,tab_nslookup_controls,tab_nslookup_data">Execute NSlookup</a>
+		    	</li>
+		 	</ul>
+	      </html>
+	   </panel>
+	</row>
+  <row id="tab_nslookup_controls">
+  	<panel>
+      	<input id="host_input" type="text" token="host" searchWhenChanged="false">
+	      <label>Host</label>
+	    </input>
+	    <html>
+		    <a href="#" id="execute_input" class="btn btn-primary">Execute NSLookup</a>
+	    </html>
+	</panel>
+  </row>
+  
+  <row id="tab_results_controls">
+  	<panel>
+  		<input type="time" token="timefield" searchWhenChanged="true">
+			<label></label>
+		    <default>
+		    	<earliest>-30d@d</earliest>
+		        <latest>now</latest>
+		    </default>
+		</input>
+  	</panel>
+  </row>
+  <row id="tab_nslookup">
+    <panel>
+      <table>
+        <!--
+        <search base="speedtest_data_search">>
+          <query>timechart avg(ping) as ping</query>
+        </search>
+        -->
+        <search>
+          <query>sourcetype="nslookup" | fields _time query a aaaa mx ns | fields - _raw</query>
+          <earliest>$timefield.earliest$</earliest>
+          <latest>$timefield.latest$</latest>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">row</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  
+  <row id="tab_nslookup_data">
+    <panel>
+      <table>
+        <search base="nslookup_search">
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    </row>
+</form>
