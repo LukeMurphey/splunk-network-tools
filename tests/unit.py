@@ -94,7 +94,7 @@ class TestFlatten(unittest.TestCase):
         
 class TestPingParser(unittest.TestCase):
     
-    def test_windows_parse(self):
+    def test_windows_parse_localhost(self):
         
         output = """Pinging 127.0.0.1 with 32 bytes of data:
 Reply from 127.0.0.1: bytes=32 time<1ms TTL=128
@@ -117,6 +117,33 @@ Approximate round trip times in milli-seconds:
         self.assertEquals(parsed['min_ping'], '0')
         self.assertEquals(parsed['avg_ping'], '0')
         self.assertEquals(parsed['max_ping'], '0')
+        self.assertEquals(parsed['jitter'], None) # Windows ping currently doesn't include jitter
+        
+    def test_windows_parse_domain(self):
+        
+        output = """
+Pinging google.com [74.125.202.100] with 32 bytes of data:
+Reply from 74.125.202.100: bytes=32 time=45ms TTL=44
+Reply from 74.125.202.100: bytes=32 time=45ms TTL=44
+Reply from 74.125.202.100: bytes=32 time=45ms TTL=44
+Reply from 74.125.202.100: bytes=32 time=45ms TTL=44
+
+Ping statistics for 74.125.202.100:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 45ms, Maximum = 45ms, Average = 45ms
+        """
+        
+        parsed = pingparser.parse(output)
+          
+        self.assertEquals(parsed['host'], 'google.com')
+        self.assertEquals(parsed['sent'], '4')
+        self.assertEquals(parsed['received'], '4')
+        self.assertEquals(parsed['packet_loss'], '0')
+        
+        self.assertEquals(parsed['min_ping'], '45')
+        self.assertEquals(parsed['avg_ping'], '45')
+        self.assertEquals(parsed['max_ping'], '45')
         self.assertEquals(parsed['jitter'], None) # Windows ping currently doesn't include jitter 
         
     def test_osx_parse(self):
