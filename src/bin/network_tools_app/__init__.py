@@ -320,6 +320,8 @@ def whois(host, index=None, sourcetype="whois", source="whois_search_command", l
         # Since this isn't an IP address, run a domain whois
         resultsOrig = get_whois(host)
     
+    resultsOrig['dest'] = host
+    
     result = flatten(resultsOrig, ignore_blanks=True)
     
     # Pull out raw so that we can put it at the end. This is done in case the raw field contains things that might mess up the extractions.
@@ -340,8 +342,7 @@ def whois(host, index=None, sourcetype="whois", source="whois_search_command", l
             logger.info("Wrote stash file=%s", writer.write_event(result))
     
     return result
-    
-    
+
 def nslookup(host, server=None, index=None, sourcetype="nslookup", source="nslookup_search_command", logger=None):
     
     result = collections.OrderedDict()
