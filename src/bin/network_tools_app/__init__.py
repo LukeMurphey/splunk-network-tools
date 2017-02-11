@@ -320,7 +320,8 @@ def whois(host, index=None, sourcetype="whois", source="whois_search_command", l
         # Since this isn't an IP address, run a domain whois
         resultsOrig = get_whois(host)
     
-    resultsOrig['dest'] = host
+    if 'query' not in resultsOrig:
+        resultsOrig['query'] = host
     
     result = flatten(resultsOrig, ignore_blanks=True)
     
@@ -337,7 +338,7 @@ def whois(host, index=None, sourcetype="whois", source="whois_search_command", l
     if index is not None:
         writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
     
-        # Log that we performed the wake-on-lan request
+        # Log that we performed the whois request
         if logger:
             logger.info("Wrote stash file=%s", writer.write_event(result))
     
@@ -346,6 +347,10 @@ def whois(host, index=None, sourcetype="whois", source="whois_search_command", l
 def nslookup(host, server=None, index=None, sourcetype="nslookup", source="nslookup_search_command", logger=None):
     
     result = collections.OrderedDict()
+    
+    # Add the hostname we are querying for
+    if 'query' not in result:
+        result['query'] = host
     
     # NS records
     try:
@@ -405,6 +410,14 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup", source="nsloo
         
     except resolver.NoAnswer:
         pass
+    
+    # Write the event as a stash new file
+    if index is not None:
+        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
+    
+        # Log the data
+        if logger:
+            logger.info("Wrote stash file=%s", writer.write_event(result))
     
     return result
     
