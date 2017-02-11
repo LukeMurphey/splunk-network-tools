@@ -147,11 +147,11 @@ round-trip min/avg/max/stddev = 0.052/0.089/0.136/0.035 ms
 if __name__ == "__main__":
     loader = unittest.TestLoader()
     suites = []
-    #suites.append(loader.loadTestsFromTestCase(TestPing))
+    suites.append(loader.loadTestsFromTestCase(TestPing))
     suites.append(loader.loadTestsFromTestCase(TestPingParser))
-    #suites.append(loader.loadTestsFromTestCase(TestTraceroute))
-    #suites.append(loader.loadTestsFromTestCase(TestWhois))
-    #suites.append(loader.loadTestsFromTestCase(TestFlatten))
-    #suites.append(loader.loadTestsFromTestCase(TestNSLookup))
+    suites.append(loader.loadTestsFromTestCase(TestTraceroute))
+    suites.append(loader.loadTestsFromTestCase(TestWhois))
+    suites.append(loader.loadTestsFromTestCase(TestFlatten))
+    suites.append(loader.loadTestsFromTestCase(TestNSLookup))
 
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(suites))
