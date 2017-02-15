@@ -147,7 +147,7 @@ def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_comma
     cmd = ["ping"]
     
     # Add the argument of the number of pings
-    if system_name().lower=="windows":
+    if system_name().lower()=="windows":
         cmd.extend(["-n", str(count)])
     else:
         cmd.extend(["-c", str(count)])
