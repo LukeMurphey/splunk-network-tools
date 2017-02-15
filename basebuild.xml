@@ -20,22 +20,60 @@ A basic build script would look like this:
   
 Make sure to replace SET_APP_NAME_HERE with your project name. That should match the name of your app and the directory of app in /etc/apps.
 
+You can override the build targets from basebuild.xml by making new targets with the same name in build.xml.
+
 ======================================================
 Default properties file (default.properties)
 ======================================================
-The default.properties files should look something like this:
+The default.properties file should look something like this:
 
   value.build.packageoutput.directory=tmp/packages
-  value.build.workingcopy.directory=.
   value.build.optimize=true
 
-Below are the parameters supported (via the local.properties and default.properties files):
- * value.build.packageoutput.directory: indicates where created packages should go (defaults to tmp/packages)
- * value.build.number:                  indicates the build number specified in app.conf (defaults to 1)
- * value.src.directory:                 indicates where the app code is (defaults to src)
- * value.version.number:                indicators the version number of the app
- * value.deploy.splunk_home:            indicates the location of the Splunk install to use for testing and local deployment
- 
+You can set override the default values by setting the parameters in a local.properties file. Additionally, you can set them via environment variables (useful when running tests in a continuous integration environment).
+
+Here are the most important parameters:
+╔═════════════════════════════════════╦══════════════════════╦══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╦═══════════════╦═══════════════════════╗
+║            Property file            ║ Environment variable ║                                                       Description                                                        ║ Default value ║     Example Value     ║
+╠═════════════════════════════════════╬══════════════════════╬══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╬═══════════════╬═══════════════════════╣
+║ value.deploy.splunk_home            ║ SPLUNK_HOME          ║ Indicates where the Splunk install is to use for testing                                                                 ║               ║ /Applications/Splunk/ ║
+║ value.build.packageoutput.directory ║ OUTPUT_DIRECTORY     ║ Indicates where the place the created package; set when you don't want the created package to be in the /tmp directory   ║ /tmp/packages ║ /Users/luke/Desktop/  ║
+║ value.version.number                ║                      ║ Indicates the version number to use (if you want to ${value.version.number} to be substituted in the txt and conf files) ║               ║ 2.0.1                 ║
+╚═════════════════════════════════════╩══════════════════════╩══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╩═══════════════╩═══════════════════════╝
+
+Here are some other supported variables:
+╔═══════════════════════╦══════════════════════╦═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╦══════════════════════════════════════════════╗
+║     Property file     ║ Environment variable ║                                                        Description                                                        ║                Default value                 ║
+╠═══════════════════════╬══════════════════════╬═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╬══════════════════════════════════════════════╣
+║ value.build.minimize  ║ BUILD_MINIMIZED      ║ If set to 1 or true, the JS and CSS in the package will be minimized                                                      ║ true (code is minified automatically)        ║
+║ value.deploy.minimize ║                      ║ If set to 1 or true, the JS and CSS will be minimized when copying to your local Splunk build for testing                 ║ true (code is minified automatically)        ║
+║ value.src.directory   ║                      ║ Indicates which directory has the source-code                                                                             ║ /src                                         ║
+║ value.build.number    ║                      ║ Indicates the build number to use (if you want to ${value.build.number} to be substituted in the txt and conf files)      ║ Generated the date of the last change in git ║
+║ skip_bump             ║                      ║ Indicates if the build script shouldn't try to bump the web-server in order to prevent SplunkWeb from returning old files ║                                              ║
+╚═══════════════════════╩══════════════════════╩═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╩══════════════════════════════════════════════╝
+
+======================================================
+Build targets
+======================================================
+
+Below are the main build targets you should consider using:
+╔════════════════════════════╦═════════════════════════════════════════════════════════════════════════════╦══════════════════════════╗
+║        Build Target        ║                                 Description                                 ║   Required Properties    ║
+╠════════════════════════════╬═════════════════════════════════════════════════════════════════════════════╬══════════════════════════╣
+║ package                    ║ Create an installable Splunk package                                        ║                          ║
+║ deploy                     ║ Exports the app to a live Splunk install                                    ║ value.deploy.splunk_home ║
+║ splunk.refresh             ║ Tells Splunk to refresh itself so that changes to views appear              ║ value.deploy.splunk_home ║
+║ splunk.start               ║ Starts Splunk                                                               ║ value.deploy.splunk_home ║
+║ splunk.stop                ║ Stops Splunk                                                                ║ value.deploy.splunk_home ║
+║ splunk.restart             ║ Restarts Splunk                                                             ║ value.deploy.splunk_home ║
+║ splunk.restart_web         ║ Restarts SplunkWeb                                                          ║ value.deploy.splunk_home ║
+║ splunk.run_unit            ║ Runs unit tests                                                             ║ value.deploy.splunk_home ║
+║ splunk.deploy_and_run_unit ║ Same as above but deploys to Splunk first so that it has the latest changes ║ value.deploy.splunk_home ║
+╚════════════════════════════╩═════════════════════════════════════════════════════════════════════════════╩══════════════════════════╝
+
+======================================================
+Having the build script set your version & build numbers
+======================================================
 To use the generated build number, put ${value.build.number} in your file where you want the string replacement to occur. For example, below a snippet from app.conf that will be populated with the build number:
 
   [install]
@@ -45,17 +83,8 @@ You can also use ${value.version.number} to substitute your version number in ap
 
   [launcher]
   version = ${value.version.number}
-  
-======================================================
-Setting build parameters via environment variables
-======================================================
-If you want to use environment variables, you can assign the following confoguration options via environment variables:
 
- * value.build.packageoutput.directory: OUTPUT_DIRECTORY
- * value.deploy.splunk_home:            SPLUNK_HOME
- * value.build.minimize:                BUILD_MINIMIZED
- 
-Setting parameters using environment variables is useful when running tests in a continuous integration environment.
+
 -->
 	
 <project default="package" name="basebuild">
@@ -369,10 +398,28 @@ Setting parameters using environment variables is useful when running tests in a
 		<property name="minimize" value="${value.deploy.minimize}"/>
 	</target>
 	
+	<!-- =================================
+	          target: verify_splunk_home
+	     ================================= -->
+	<target name="verify_splunk_home">
+		<property name="absolute_src_path" location="${value.src.directory}"/>
+		
+		<fail unless="value.deploy.splunk_home">
+"value.deploy.splunk_home" has not been defined
+Declare it in the a local.properties file in the following path:
+			
+   ${absolute_src_path}/local.properties
+			
+Below is an example of the file:
+
+   value.deploy.splunk_home=/Applications/Splunk
+		</fail>
+	</target>
+	
     <!-- ================================= 
           target: deploy
          ================================= -->
-    <target name="deploy" depends="splunk.bump_if_necessary,setup_tmp_directory_for_deployment,set_minimize_for_deploy,populate_export_dir" description="Deploys the app to an instance of Splunk" >
+    <target name="deploy" depends="verify_splunk_home,splunk.bump_if_necessary,setup_tmp_directory_for_deployment,set_minimize_for_deploy,populate_export_dir" description="Deploys the app to an instance of Splunk" >
         
     	<!-- Set the permissions for *nix hosts -->
     	<chmod perm="755">
@@ -387,7 +434,7 @@ Setting parameters using environment variables is useful when running tests in a
     <!-- ================================= 
           target: splunk.stop
          ================================= -->
-    <target name="splunk.stop" description="Stop Splunk">
+    <target name="splunk.stop" description="Stop Splunk" depends="verify_splunk_home">
         <exec executable="${value.deploy.splunk_home}/bin/splunk">
             <arg line="stop" />
             <arg line="--accept-license" />
@@ -397,28 +444,30 @@ Setting parameters using environment variables is useful when running tests in a
 	<!-- ===================================================================
 		  target: splunk.web_conf
 		 =================================================================== -->
-	<target name="splunk.web_conf" description="Configure SplunkWeb for easier web development">
+	<target name="splunk.web_conf" description="Configure SplunkWeb for easier web development"  depends="verify_splunk_home">
 	    <mkdir dir="${value.deploy.splunk_home}/etc/system/local/"/>
 	    
 	  	<echo file="${value.deploy.splunk_home}/etc/system/local/web.conf">[settings]
-	  	enable_gzip=True
-	  	minify_js=False
-	  	minify_css=False
-	  	js_no_cache=True
+	  	minify_js = False
+	  	minify_css = False
+	  	js_no_cache = True
+	  	cacheEntriesLimit = 0
+	  	cacheBytesLimit = 0
+	  	enableWebDebug = True
 	  	</echo> 	
 	</target>
 	
 	<!-- ===================================================================
 		  target: splunk.enable_fips
 		 =================================================================== -->
-	<target name="splunk.enable_fips" description="Configure SplunkWeb for easier web development">
+	<target name="splunk.enable_fips" description="Configure SplunkWeb for easier web development" depends="verify_splunk_home">
 	  	<echo file="${value.deploy.splunk_home}/etc/splunk-launch.conf">SPLUNK_FIPS=1</echo> 	
 	</target>
 	
 	<!-- ===================================================================
 		  target: splunk.enable_custom_root_endpoint
 		 =================================================================== -->
-	<target name="splunk.enable_custom_root_endpoint" description="Configure SplunkWeb for easier web development">
+	<target name="splunk.enable_custom_root_endpoint" description="Configure SplunkWeb for easier web development" depends="verify_splunk_home">
 	    <mkdir dir="${value.deploy.splunk_home}/etc/system/local/"/>
 	    
 	  	<echo file="${value.deploy.splunk_home}/etc/system/local/web.conf">[settings]
@@ -429,7 +478,7 @@ Setting parameters using environment variables is useful when running tests in a
 	<!-- ================================= 
       	 target: does_appserver_exist	
      	 ================================= -->
-	<target name="does_appserver_exist">
+	<target name="does_appserver_exist" depends="verify_splunk_home">
     	<condition property="appserver_dir_exists">
       		<available file="${basedir}/${value.src.directory}/appserver/" type="dir"/>
     	</condition>
@@ -454,7 +503,7 @@ Setting parameters using environment variables is useful when running tests in a
     <!-- ================================= 
           target: splunk.bump_if_necessary
          ================================= -->
-    <target name="splunk.bump_if_necessary" unless="appserver_up_to_date" if="appserver_dir_exists" depends="initialize_libraries,does_appserver_exist,is_appserver_up_to_date">
+    <target name="splunk.bump_if_necessary" unless="appserver_up_to_date" if="appserver_dir_exists" depends="verify_splunk_home,initialize_libraries,does_appserver_exist,is_appserver_up_to_date">
     	<if>
     		<bool>
     			<not>
@@ -470,14 +519,14 @@ Setting parameters using environment variables is useful when running tests in a
     <!-- ================================= 
           target: splunk.push_version_defined
          ================================= -->
-	<target name="splunk.push_version_defined">
+	<target name="splunk.push_version_defined" depends="verify_splunk_home">
 		<available file="${value.deploy.splunk_home}/var/run/splunk/push-version.txt" property="value.deploy.bump_available"/>
 	</target>
 	
     <!-- ================================= 
           target: splunk.get_push_version
          ================================= -->
-	<target name="splunk.get_push_version" depends="splunk.push_version_defined,splunk.get_default_push_version" if="value.deploy.bump_available">
+	<target name="splunk.get_push_version" depends="verify_splunk_home,splunk.push_version_defined,splunk.get_default_push_version" if="value.deploy.bump_available">
     	<loadfile
     	      property="value.deploy.bump"
     	      srcFile="${value.deploy.splunk_home}/var/run/splunk/push-version.txt">
@@ -490,7 +539,7 @@ Setting parameters using environment variables is useful when running tests in a
     <!-- ================================= 
           target: splunk.get_default_push_version
          ================================= -->
-	<target name="splunk.get_default_push_version" unless="value.deploy.bump_available">
+	<target name="splunk.get_default_push_version" unless="value.deploy.bump_available" depends="verify_splunk_home">
 		<property name="value.deploy.bump">0</property>
 		<echo>No push version available, assigning the default</echo>
 	</target>
@@ -498,7 +547,7 @@ Setting parameters using environment variables is useful when running tests in a
     <!-- ================================= 
           target: splunk.bump
          ================================= -->
-    <target name="splunk.bump" depends="splunk.get_push_version,initialize_libraries" description="Bump Splunk">
+    <target name="splunk.bump" depends="verify_splunk_home,splunk.get_push_version,initialize_libraries" description="Bump Splunk">
 		
     	<!-- Increment the value -->
     	<math result="value.deploy.bump_updated" operand1="${value.deploy.bump}" operation="+" operand2="1" datatype="int"/>
@@ -516,7 +565,7 @@ Setting parameters using environment variables is useful when running tests in a
     <!-- ================================= 
           target: splunk.start
          ================================= -->
-    <target name="splunk.start" description="Start Splunk">
+    <target name="splunk.start" description="Start Splunk" depends="verify_splunk_home">
         <exec executable="${value.deploy.splunk_home}/bin/splunk">
             <arg line="start" />
             <arg line="--accept-license" />
@@ -526,7 +575,7 @@ Setting parameters using environment variables is useful when running tests in a
     <!-- ================================= 
           target: splunk.restart
          ================================= -->
-    <target name="splunk.restart" description="Start Splunk">
+    <target name="splunk.restart" description="Start Splunk" depends="verify_splunk_home">
         <exec executable="${value.deploy.splunk_home}/bin/splunk">
             <arg line="restart" />
             <arg line="--accept-license" />
@@ -536,7 +585,7 @@ Setting parameters using environment variables is useful when running tests in a
     <!-- ================================= 
           target: splunk.restart_web
          ================================= -->
-    <target name="splunk.restart_web" description="Restart Splunk">
+    <target name="splunk.restart_web" description="Restart Splunk" depends="verify_splunk_home">
         <exec executable="${value.deploy.splunk_home}/bin/splunk">
 		    <arg line="restart" />
 		    <arg line="splunkweb" />
@@ -559,7 +608,7 @@ Setting parameters using environment variables is useful when running tests in a
     <!-- ================================= 
           target: splunk.refresh
          ================================= -->
-    <target name="splunk.refresh" description="Refresh Splunk">
+    <target name="splunk.refresh" description="Refresh Splunk" depends="verify_splunk_home">
     	
       	<!-- Define the username and password if not already defined -->
       	<property name="splunk_username" value="admin"/>
@@ -589,12 +638,12 @@ Setting parameters using environment variables is useful when running tests in a
     <!-- ================================= 
           target: test.deploy_and_run_unit
          ================================= -->
-    <target name="test.deploy_and_run_unit" description="Deploys the application and runs tests" depends="skip_bump,deploy,test.run_unit" />
+    <target name="test.deploy_and_run_unit" description="Deploys the application and runs tests" depends="verify_splunk_home,skip_bump,deploy,test.run_unit" />
 	
     <!-- ================================= 
           target: test.run_unit
          ================================= -->
-    <target name="test.run_unit" description="Run unit tests">
+    <target name="test.run_unit" description="Run unit tests" depends="verify_splunk_home">
         <exec failonerror="true" executable="${value.deploy.splunk_home}/bin/splunk" dir="${basedir}/tests">
         	<arg line="cmd" />
         	<arg line="python" />
