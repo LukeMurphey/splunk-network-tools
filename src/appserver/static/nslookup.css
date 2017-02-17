@@ -1,10 +1,11 @@
-#panel2-fieldset{
-	float: left;
+#panel2 .fieldset{
+	float:left;
 }
 
-#panel2-fieldset + .panel-element-row{
+#panel2 .panel-element-row{
 	display: inline-block;
 	margin-top: 20px;
+	clear: none;
 }
 
 #runs_input{

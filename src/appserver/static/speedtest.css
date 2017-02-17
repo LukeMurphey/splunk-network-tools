@@ -1,10 +1,40 @@
-#panel2-fieldset{
-	float: left;
+/*
+ * Make the execute button show up closer to the other controls.
+ */
+#panel2 .fieldset{
+	float:left;
+	padding-right: 0px;
 }
 
-#panel2-fieldset + .panel-element-row{
+#panel2 .panel-element-row{
 	display: inline-block;
 	margin-top: 20px;
+	clear: none;
+}
+
+/*
+ * Make the execute button show up closer to the other controls.
+ */
+#element2 .panel-body.html, /* For Splunk 6.4*/
+#content2  .panel-body.html /* For Splunk 6.5+ */
+{
+	padding-left: 0px;
+}
+
+/*
+ * Add in the borders on the dashboard elements. This is for Splunk 6.4 (not needed on 6.5). 
+ */
+.dashboard-body > .dashboard-row {
+	border-left: 1px solid #ccc;
+	border-right: 1px solid #ccc;
+}
+
+/*
+ * This makes the tabs jive with the edges of the panels better (only works on 6.5)
+ */
+.dashboard-layout-row-column{
+	border-left: 1px solid #ccc;
+	border-right: 1px solid #ccc;
 }
 
 #runs_input{
@@ -16,13 +46,6 @@
 	margin-bottom: 2px;
 }
 
-/*
- * This makes the tabs jive with the edges of the panels better
- */
-.dashboard-layout-row-column{
-	border-left: 1px solid #ccc;
-	border-right: 1px solid #ccc;
-}
 
 /*
  * For making the dashboard go to the edges
