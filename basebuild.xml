@@ -1,36 +1,38 @@
 <!-- 
 This Ant build script contains operations that are useful for building Splunk apps. To use it with you app, do the following:
 
-1) Make a build.xml script that imports this build script (see the template below for an example); the build.xml needs to be in the same directory as basebuild.xml
-2) Set the name of the project in the root project node (see SET_APP_NAME_HERE in the example below)
-3) Define a default.properties file to specify default parameters in the same directory as the build.xml file. The default.properties ought to be checked in the source-code repository.
+1) Run the start_project build target like this:
 
-Optional steps:
-4) Define a local.properties file to override the default parameters. This file should be install specific and thus should NOT be checked into the source-code repository.
-5) Set environment variables to set system wide options or to control the build script from a CI tool
+    ant -f basebuild.xml start_project
 
-======================================================
-Basic build script (build.xml)
-======================================================
-A basic build script would look like this:
+2) Test your build by running the new build script that has been made:
 
-  <project default="package" name="SET_APP_NAME_HERE">
-	<import file="basebuild.xml"/>
-  </project>
-  
-Make sure to replace SET_APP_NAME_HERE with your project name. That should match the name of your app and the directory of app in /etc/apps.
-
-You can override the build targets from basebuild.xml by making new targets with the same name in build.xml.
+    ant
+    
+This should produce a file in the tmp/packages directory. From now on, re-run the "ant" command (no argument needed) to produce a fresh package.
 
 ======================================================
-Default properties file (default.properties)
+Syncing your source code to a local Splunk install
 ======================================================
-The default.properties file should look something like this:
 
-  value.build.packageoutput.directory=tmp/packages
-  value.build.optimize=true
+The build script provides some tools to help you send your code to a local Splunk install for testing. This allows you to send the code from the
+app you are writing to a live Splunk install to see the running changes. To do, edit the "local.properties" file and declare the location of your
+Splunk install:
 
-You can set override the default values by setting the parameters in a local.properties file. Additionally, you can set them via environment variables (useful when running tests in a continuous integration environment).
+    value.deploy.splunk_home=/Users/luke_murphey/Applications/Splunk
+    
+Once you do that, run the following build target to have your code sent to your Splunk install:
+
+    ant deploy
+
+See the section on build targets below for some other useful targets.
+
+======================================================
+Defining build properties
+======================================================
+
+You can set override the default behavior of the build script by setting the parameters in a local.properties file. Additionally, you can set them
+via environment variables (useful when running tests in a continuous integration environment).
 
 Here are the most important parameters:
 ╔═════════════════════════════════════╦══════════════════════╦══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╦═══════════════╦═══════════════════════╗
@@ -74,7 +76,8 @@ Below are the main build targets you should consider using:
 ======================================================
 Having the build script set your version & build numbers
 ======================================================
-To use the generated build number, put ${value.build.number} in your file where you want the string replacement to occur. For example, below a snippet from app.conf that will be populated with the build number:
+To use the generated build number, put ${value.build.number} in your file where you want the string replacement to occur. For example, below a
+snippet from app.conf that will be populated with the build number:
 
   [install]
   build = ${value.build.number}
@@ -120,12 +123,17 @@ You can also use ${value.version.number} to substitute your version number in ap
 	<import_environment_var property="value.build.packageoutput.directory" variable="OUTPUT_DIRECTORY" />
 	<import_environment_var property="value.build.minimize" variable="BUILD_MINIMIZED" />
 	<import_environment_var property="value.deploy.minimize" variable="DEPLOY_MINIMIZED" />
-
+	
 	<!-- Import the default properties -->
     <property file="default.properties" />
 	
+	<!-- Set some default values in case they were not set in the default.properties file -->
+	<property name="value.build.packageoutput.directory" value="tmp/packages" />
+	<property name="value.build.optimize" value="true" />
+	
     <!-- Set up some basic parameters -->
     <property name="value.src.directory" value="src" />
+	<property name="absolute_src_path" location="${value.src.directory}"/> <!-- This is an absolute version of the file path for error messages -->
     <property name="value.temp.directory" value="${java.io.tmpdir}/${user.name}" />
     <property name="value.build.appname" value="${ant.project.name}" />
     
@@ -137,9 +145,75 @@ You can also use ${value.version.number} to substitute your version number in ap
     </path>
 	
     <!-- ================================= 
+          target: start_project
+         ================================= -->
+	<target name="start_project">
+		
+		<!-- Make sure that the build script doesn't already exist -->
+    	<fail message="A build script already seems to exist">
+    	    <condition>
+    	        <available file="${basedir}/build.xml" type="dir"/>
+    	    </condition>
+    	</fail>
+		
+		<!-- Get the app name -->
+		<input
+		    message="Please enter the name of the Splunk app you are creating. This should be the directory name and shouldn't include space (e.g. website_monitoring):"
+		    addproperty="app_name"
+		/>
+		
+		<condition property="app_name_empty">
+		    <equals arg1="" arg2="${app_name}"/>
+		</condition>
+		
+		<fail if="app_name_empty">No app name was provided, cannot proceed</fail>
+		
+		<!-- Make the build script -->
+		<echo file="${basedir}/build.xml">
+<![CDATA[<project default="package" name="${app_name}">
+	<import file="basebuild.xml"/>
+</project>]]>
+		</echo> 
+		
+		<!-- Make the source code directory (if necessary) -->
+		<mkdir dir="${value.src.directory}" />
+		
+		<!-- Make the default.properties file -->
+		<echo file="${basedir}/default.properties">
+value.build.packageoutput.directory=tmp/packages
+value.build.optimize=true
+		</echo>
+		
+		<!-- Make the local.properties file -->
+		<echo file="${basedir}/local.properties">
+# Uncomment the file below and define the location of your Splunk installation in  local.properties so that you
+# can deploy the application to a Splunk installation automatically:
+#value.deploy.splunk_home=C:/Program Files/Splunk
+		</echo>
+		
+		<antcall target="download_libraries" />
+		
+		<echo>Success!
+
+A build script has been setup. To run your build run the following:
+			
+    ant
+			
+Place the source-code of your app in the following "src" directory, a.k.a:
+			
+	${absolute_src_path}
+			
+You can customize the build process by placing properties in the default.properties file or the local.properties files.</echo>
+		
+	</target>
+	
+    <!-- ================================= 
           target: download_libraries
          ================================= -->
 	<target name="download_libraries">
+		
+		<!-- Make sure the directory to store the library files exists -->
+		<mkdir dir="${basedir}/lib" />
 		
 		<get src="https://lukemurphey.net/attachments/download/402/ant-contrib-0.6.jar" 
 		    dest="${basedir}/lib/ant-contrib-0.6.jar" 
@@ -247,6 +321,15 @@ You can also use ${value.version.number} to substitute your version number in ap
           target: populate_export_dir
          ================================= -->
     <target name="populate_export_dir" depends="get_build_number,initialize_libraries">
+    	
+    	<!-- Make sure that the source directory exists -->
+    	<fail message="The directory where the source-code is supposed to be doesn't exist ('${absolute_src_path}')">
+    	    <condition>
+    	        <not>
+    	        	<available file="${absolute_src_path}" type="dir"/>
+    	        </not>
+    	    </condition>
+    	</fail>
     	
         <!-- Copy the files over that need substitution. This should only be
              applied to text files since Ant may corrupt binary files otherwise. -->
@@ -402,7 +485,6 @@ You can also use ${value.version.number} to substitute your version number in ap
 	          target: verify_splunk_home
 	     ================================= -->
 	<target name="verify_splunk_home">
-		<property name="absolute_src_path" location="${value.src.directory}"/>
 		
 		<fail unless="value.deploy.splunk_home">
 "value.deploy.splunk_home" has not been defined
