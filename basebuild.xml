@@ -1,5 +1,6 @@
 <!-- 
-This Ant build script contains operations that are useful for building Splunk apps. To use it with you app, do the following:
+This Ant build script contains operations that are useful for building Splunk apps whose source-code is in git (such as github).
+To use it with you app, do the following:
 
 1) Run the start_project build target like this:
 
@@ -16,8 +17,8 @@ Syncing your source code to a local Splunk install
 ======================================================
 
 The build script provides some tools to help you send your code to a local Splunk install for testing. This allows you to send the code from the
-app you are writing to a live Splunk install to see the running changes. To do, edit the "local.properties" file and declare the location of your
-Splunk install:
+app you are writing to a live Splunk install to see the running changes. To use this, edit the "local.properties" file and declare the location of your
+Splunk install, like this:
 
     value.deploy.splunk_home=/Users/luke_murphey/Applications/Splunk
     
@@ -131,7 +132,7 @@ You can also use ${value.version.number} to substitute your version number in ap
 	<property name="value.build.packageoutput.directory" value="tmp/packages" />
 	<property name="value.build.optimize" value="true" />
 	
-    <!-- Set up some basic parameters -->
+    <!-- Set up some basic properties that are internal to this build script -->
     <property name="value.src.directory" value="src" />
 	<property name="absolute_src_path" location="${value.src.directory}"/> <!-- This is an absolute version of the file path for error messages -->
     <property name="value.temp.directory" value="${java.io.tmpdir}/${user.name}" />
@@ -145,9 +146,21 @@ You can also use ${value.version.number} to substitute your version number in ap
     </path>
 	
     <!-- ================================= 
+          target: download_git_ignore
+         ================================= -->
+	<target name="download_git_ignore" description="Download a default gitignore tailored for Splunk apps">
+		
+		<get src="https://gist.githubusercontent.com/LukeMurphey/410031b0a1e9df33853e3b605fd0e46d/raw/.gitignore" 
+		    dest="${basedir}/.gitignore" 
+		    verbose="true"
+			skipexisting="true" />
+		
+	</target>
+	
+    <!-- ================================= 
           target: start_project
          ================================= -->
-	<target name="start_project">
+	<target name="start_project" description="Start a new Splunk app project; initialize a build script, download dependencies, etc.">
 		
 		<!-- Make sure that the build script doesn't already exist -->
     	<fail message="A build script already seems to exist">
@@ -192,6 +205,7 @@ value.build.optimize=true
 		</echo>
 		
 		<antcall target="download_libraries" />
+		<antcall target="download_git_ignore" />
 		
 		<echo>Success!
 
@@ -229,6 +243,12 @@ You can customize the build process by placing properties in the default.propert
 			 dest="${basedir}/lib/yuicompressor-2.4.8.jar" 
 			 verbose="true"
 			 skipexisting="true" />
+		
+		<get src="https://lukemurphey.net/attachments/download/405/splunkbuild.jar" 
+			 dest="${basedir}/lib/splunkbuild.jar" 
+			 verbose="true"
+			 skipexisting="true" />
+		
 		
 	</target>
 	
@@ -631,16 +651,8 @@ Below is an example of the file:
          ================================= -->
     <target name="splunk.bump" depends="verify_splunk_home,splunk.get_push_version,initialize_libraries" description="Bump Splunk">
 		
-    	<!-- Increment the value -->
-    	<math result="value.deploy.bump_updated" operand1="${value.deploy.bump}" operation="+" operand2="1" datatype="int"/>
-    	
-    	<!-- Set the current value of bump -->
-    	<echo file="${value.deploy.splunk_home}/var/run/splunk/push-version.txt">${value.deploy.bump_updated}</echo>
-    	
-    	<echo>The push version was updated from ${value.deploy.bump} to ${value.deploy.bump_updated}</echo>
-    	
-    	<echo>Restarting Splunk's web interface...</echo>
-    	<antcall target="splunk.restart_web" />
+        <taskdef name="splunkwebbump" classname="SplunkWebBump" classpath="lib/splunkbuild.jar" />
+        <splunkwebbump url="http://127.0.0.1:8000" />
     	
     </target>
 	
