@@ -1,7 +1,7 @@
-/local.properties
-.project
-.pydevproject
-*.pyc
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
 
 # OS generated files #
 ######################
@@ -13,4 +13,10 @@
 Icon?
 ehthumbs.db
 Thumbs.db
+
+/local.properties
+.project
+.pydevproject
+.settings/
 /tmp/
+.vscode/*
