@@ -344,11 +344,11 @@ traceroute to att.com (144.160.36.42), 64 hops max, 52 byte packets
         self.assertEquals(hop.probes[0].dest_ip, '144.160.36.42')
         self.assertEquals(hop.probes[0].dest, 'my.atttest.com')
 
-        self.assertEquals(hop.probes[1].dest_ip, None)
-        self.assertEquals(hop.probes[1].dest, None)
+        self.assertEquals(hop.probes[1].dest_ip, '144.160.36.42')
+        self.assertEquals(hop.probes[1].dest, 'my.atttest.com')
 
-        self.assertEquals(hop.probes[2].dest_ip, None)
-        self.assertEquals(hop.probes[2].dest, None)
+        self.assertEquals(hop.probes[2].dest_ip, '144.160.36.42')
+        self.assertEquals(hop.probes[2].dest, 'my.atttest.com')
 
     def test_osx_parse(self):
         """

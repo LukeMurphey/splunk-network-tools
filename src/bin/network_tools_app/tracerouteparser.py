@@ -1,3 +1,7 @@
+"""
+This class 
+"""
+
 import re
 
 class Probe(object):
@@ -83,7 +87,7 @@ class Traceroute(object):
 
     # Regexs for parsing the probes
     HOP_RE_WINDOWS = re.compile(r'^\s*(?P<hop>\d+)\s+(?P<probe_1><?[\d*]*)(\s*ms)?\s+(?P<probe_2><?[\d*]*)(\s*ms)?\s*(?P<probe_3><?[\d*]*)(\s*ms)?\s*(?P<dest>([^*[ ]+)|(Request timed out[.]))(\s*\[(?P<dest_ip>\d+\.\d+\.\d+\.\d+)\])?$')
-    HOP_RE_NIX = re.compile(r'\s*(((?P<hop>\d+)?\s+)?\s+)?((?P<dest>[-.\w]+)\s+)?(\((?P<dest_ip>\d+\.\d+\.\d+\.\d+)\))?\s*(?P<probe_1><?[*0-9]+([.][0-9]+)?)(\s*ms)?(\s+(?P<probe_2><?[*0-9]+([.][0-9]+)?)(\s*ms))?(\s+(?P<probe_3><?[*0-9]+([.][0-9]+)?)(\s*ms))?')
+    HOP_RE_NIX = re.compile(r'\s*(((?P<hop>\d+)?\s+)?\s+)?((?P<dest>[-.\w]+)\s+)?(\((?P<dest_ip>\d+\.\d+\.\d+\.\d+)\))?\s*(?P<probe_1><?[*0-9]+([.][0-9]+)?)(\s*ms)?(\s+[!]N)?(\s+(?P<probe_2><?[*0-9]+([.][0-9]+)?)(\s*ms))?(\s+[!]N)?(\s+(?P<probe_3><?[*0-9]+([.][0-9]+)?)(\s*ms))?(\s+[!]N)?')
     HOP_RE_LIST = [HOP_RE_WINDOWS, HOP_RE_NIX]
 
     def __init__(self):
