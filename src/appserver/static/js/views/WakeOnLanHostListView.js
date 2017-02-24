@@ -728,7 +728,7 @@ define([
         	// Loop through the hosts and see if any need to be pinged
         	var keep_going = true;
         	
-        	while(keep_going){
+        	for(var c=0; c < this.network_hosts_model.models.length && keep_going; c++){
         		
         		// If we got through all of them, then loop around
         		if(this.update_host_id >= this.network_hosts_model.models.length){
