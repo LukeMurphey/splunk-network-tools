@@ -5,97 +5,97 @@ import os
 import json
 import collections
 
-sys.path.append( os.path.join("..", "src", "bin") )
+sys.path.append(os.path.join("..", "src", "bin"))
 
 from network_tools_app import ping, traceroute, whois, nslookup
 from network_tools_app.flatten import flatten, flatten_to_table
-from network_tools_app import pingparser
+from network_tools_app import pingparser, tracerouteparser
 
 class TestPing(unittest.TestCase):
-    
+
     def test_do_ping(self):
         output, return_code, parsed = ping("127.0.0.1", count=3)
-        
+
         self.assertEquals(return_code, 0)
         self.assertGreater(len(output), 0)
         self.assertEquals(int(parsed['received']), 3)
-        
+
     def test_do_ping_error(self):
         output, return_code, _ = ping("doesnotexist", count=3)
-        
+
         self.assertNotEquals(return_code, 0)
         self.assertGreater(len(output), 0)
-        
+
 class TestTraceroute(unittest.TestCase):
-    
+
     def test_do_traceroute(self):
         _, _, parsed = traceroute("att.com")
-        
+
         self.assertGreater(len(parsed), 0)
-        
+
 class TestWhois(unittest.TestCase):
-    
+
     def test_do_whois(self):
         output = whois('173.255.235.229')
-        
+
         self.assertGreater(len(output), 0)
-        
+
     def test_do_whois_domain(self):
         output = whois('textcritical.net')
-        
+
         self.assertGreater(len(output), 0)
-        
+
 class TestNSLookup(unittest.TestCase):
-    
+
     def test_do_lookup(self):
         output = nslookup('textcritical.net')
-        
+
         self.assertGreater(len(output), 0)
-        
+
 class TestFlatten(unittest.TestCase):
-    
+
     def test_flatten_dict(self):
-        
+
         d = '{ "name" : "Test", "configuration" : { "views" : [ { "name" : "some_view", "app" : "some_app" } ], "delay" : 300, "delay_readable" : "5m", "hide_chrome" : true, "invert_colors" : true }, "_user" : "nobody", "_key" : "123456789" }'
         flattened_d = flatten(json.loads(d))
-        
+
         self.assertEquals(flattened_d['configuration.delay'], '300')
         self.assertEquals(flattened_d['configuration.views.0.name'], 'some_view')
         self.assertEquals(flattened_d['name'], "Test")
-        
+
     def test_flatten_dict_to_table(self):
-        
+
         d = '{ "name" : "Test", "configuration" : { "views" : [ { "name" : "some_view", "app" : "some_app" } ], "delay" : 300, "delay_readable" : "5m", "hide_chrome" : true, "invert_colors" : true }, "_user" : "nobody", "_key" : "123456789" }'
         flattened_d = flatten_to_table(json.loads(d))
-        
+
         self.assertGreaterEqual(len(flattened_d[0]['attribute']), 1)
         self.assertGreaterEqual(len(str(flattened_d[0]['value'])), 1)
-        
+
     def test_flatten_dict_ignore_blanks(self):
-        
+
         d = collections.OrderedDict()
-        
+
         d['not_blank'] = 'something here'
         d['none'] = None
         d['empty'] = ''
-        
+
         flattened_d = flatten(d, ignore_blanks=True)
-        
+
         self.assertEqual(flattened_d['not_blank'], 'something here')
         self.assertEqual('none' in flattened_d, False)
         self.assertEqual('empty' in flattened_d, False)
-        
+
     def test_flatten_dict_array_mv(self):
-        
+
         d = '{ "name" : "Test", "configuration" : ["a", "b", "c"] }'
         flattened = flatten(json.loads(d))
-        
+
         self.assertGreaterEqual(len(flattened['configuration']), 3)
-        
+
 class TestPingParser(unittest.TestCase):
-    
+
     def test_windows_parse_localhost(self):
-        
+
         output = """Pinging 127.0.0.1 with 32 bytes of data:
 Reply from 127.0.0.1: bytes=32 time<1ms TTL=128
 Reply from 127.0.0.1: bytes=32 time<1ms TTL=128
@@ -106,21 +106,21 @@ Ping statistics for 127.0.0.1:
 Approximate round trip times in milli-seconds:
     Minimum = 0ms, Maximum = 0ms, Average = 0ms
         """
-        
+
         parsed = pingparser.parse(output)
-          
+
         self.assertEquals(parsed['host'], '127.0.0.1')
         self.assertEquals(parsed['sent'], '3')
         self.assertEquals(parsed['received'], '3')
         self.assertEquals(parsed['packet_loss'], '0')
-        
+
         self.assertEquals(parsed['min_ping'], '0')
         self.assertEquals(parsed['avg_ping'], '0')
         self.assertEquals(parsed['max_ping'], '0')
         self.assertEquals(parsed['jitter'], None) # Windows ping currently doesn't include jitter
-        
+
     def test_windows_parse_domain(self):
-        
+
         output = """
 Pinging google.com [74.125.202.100] with 32 bytes of data:
 Reply from 74.125.202.100: bytes=32 time=45ms TTL=44
@@ -133,21 +133,21 @@ Ping statistics for 74.125.202.100:
 Approximate round trip times in milli-seconds:
     Minimum = 45ms, Maximum = 45ms, Average = 45ms
         """
-        
+
         parsed = pingparser.parse(output)
-          
+
         self.assertEquals(parsed['host'], 'google.com')
         self.assertEquals(parsed['sent'], '4')
         self.assertEquals(parsed['received'], '4')
         self.assertEquals(parsed['packet_loss'], '0')
-        
+
         self.assertEquals(parsed['min_ping'], '45')
         self.assertEquals(parsed['avg_ping'], '45')
         self.assertEquals(parsed['max_ping'], '45')
-        self.assertEquals(parsed['jitter'], None) # Windows ping currently doesn't include jitter 
-        
+        self.assertEquals(parsed['jitter'], None) # Windows ping currently doesn't include jitter
+
     def test_osx_parse(self):
-        
+
         output = """
 PING 127.0.0.1 (127.0.0.1): 56 data bytes
 64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.052 ms
@@ -158,19 +158,209 @@ PING 127.0.0.1 (127.0.0.1): 56 data bytes
 3 packets transmitted, 3 packets received, 0.0% packet loss
 round-trip min/avg/max/stddev = 0.052/0.089/0.136/0.035 ms
         """
-        
+
         parsed = pingparser.parse(output)
-        
+
         self.assertEquals(parsed['host'], '127.0.0.1')
         self.assertEquals(parsed['sent'], '3')
         self.assertEquals(parsed['received'], '3')
         self.assertEquals(parsed['packet_loss'], '0.0')
-        
+
         self.assertEquals(parsed['min_ping'], '0.052')
         self.assertEquals(parsed['avg_ping'], '0.089')
         self.assertEquals(parsed['max_ping'], '0.136')
         self.assertEquals(parsed['jitter'], '0.035')
-        
+
+class TestTracerouteParser(unittest.TestCase):
+
+    def test_windows_parse(self):
+        output = """Tracing route to att.com [144.160.155.43] over a maximum of 30 hops:
+
+  1    18 ms    <1 ms    <1 ms  10.0.0.1
+  2    14 ms    14 ms    14 ms  192.168.1.254
+  3     *        *        *     Request timed out.
+  4    34 ms    34 ms    47 ms  71.145.65.194
+  5     *        *       44 ms  71.145.64.128
+  6    40 ms    36 ms    38 ms  12.83.43.45
+  7   107 ms    84 ms    83 ms  gar2.placa.ip.att.net [12.122.110.5]
+  8    86 ms    86 ms    86 ms  12.91.205.18
+  9    87 ms    73 ms    73 ms  att.com [144.160.155.43]
+
+Trace complete."""
+
+        parsed_output = tracerouteparser.Traceroute.parse(output, True)
+
+        # Verify the destination
+        self.assertEquals(parsed_output.dest, "att.com")
+        self.assertEquals(parsed_output.dest_ip, "144.160.155.43")
+
+        # Verify the hops
+        self.assertEquals(len(parsed_output.hops), 9)
+
+        # Hop 1
+        self.assertEquals(parsed_output.hops[0].number, 1)
+        self.assertEquals(len(parsed_output.hops[0].probes), 3)
+        self.assertEquals(parsed_output.hops[0].probes[0].rtt, 18)
+        self.assertEquals(parsed_output.hops[0].probes[1].rtt, 1)
+        self.assertEquals(parsed_output.hops[0].probes[2].rtt, 1)
+
+        self.assertEquals(parsed_output.hops[0].probes[1].dest_ip, '10.0.0.1')
+        self.assertEquals(parsed_output.hops[0].probes[1].dest, '10.0.0.1')
+
+        # Hop 3 (request timed out)
+        self.assertEquals(parsed_output.hops[2].number, 3)
+        self.assertEquals(len(parsed_output.hops[2].probes), 3)
+        self.assertEquals(parsed_output.hops[2].probes[0].rtt, None)
+        self.assertEquals(parsed_output.hops[2].probes[1].rtt, None)
+        self.assertEquals(parsed_output.hops[2].probes[2].rtt, None)
+
+        self.assertEquals(parsed_output.hops[2].probes[1].dest_ip, None)
+        self.assertEquals(parsed_output.hops[2].probes[1].dest, None)
+
+        # Hop 7 (has DNS)
+        self.assertEquals(parsed_output.hops[6].number, 7)
+        self.assertEquals(len(parsed_output.hops[6].probes), 3)
+        self.assertEquals(parsed_output.hops[6].probes[0].rtt, 107)
+        self.assertEquals(parsed_output.hops[6].probes[1].rtt, 84)
+        self.assertEquals(parsed_output.hops[6].probes[2].rtt, 83)
+
+        self.assertEquals(parsed_output.hops[6].probes[1].dest, 'gar2.placa.ip.att.net')
+        self.assertEquals(parsed_output.hops[6].probes[1].dest_ip, '12.122.110.5')
+
+    def test_osx_parse(self):
+        output = """traceroute to google.com (216.58.192.238), 64 hops max, 52 byte packets
+ 1  10.0.0.1 (10.0.0.1)  1.450 ms  0.967 ms  0.842 ms
+ 2  192.168.1.254 (192.168.1.254)  15.996 ms  15.873 ms  17.041 ms
+ 3  162-235-240-3.lightspeed.cicril.sbcglobal.net (162.235.240.3)  39.095 ms  35.661 ms  35.715 ms
+ 4  71.145.65.194 (71.145.65.194)  37.061 ms  37.974 ms  36.744 ms
+ 5  12.83.43.53 (12.83.43.53)  36.973 ms
+    12.83.43.49 (12.83.43.49)  39.475 ms
+    12.83.43.53 (12.83.43.53)  38.859 ms
+ 6  12.123.159.53 (12.123.159.53)  38.333 ms  38.525 ms  38.821 ms
+ 7  12.247.252.10 (12.247.252.10)  38.299 ms  40.987 ms *
+ 8  108.170.243.193 (108.170.243.193)  37.973 ms  37.021 ms *
+ 9  216.239.42.113 (216.239.42.113)  37.602 ms
+    216.239.42.111 (216.239.42.111)  37.130 ms  38.387 ms
+10  ord30s26-in-f14.1e100.net (216.58.192.238)  37.836 ms  38.070 ms  37.424 ms"""
+
+        parsed_output = tracerouteparser.Traceroute.parse(output, True)
+
+        # Verify the destination
+        self.assertEquals(parsed_output.dest, "google.com")
+        self.assertEquals(parsed_output.dest_ip, "216.58.192.238")
+
+        # Hop 1
+        hop = parsed_output.hops[0]
+        self.assertEquals(hop.number, 1)
+        self.assertEquals(len(hop.probes), 3)
+        self.assertEquals(hop.probes[0].rtt, 1.45)
+        self.assertEquals(hop.probes[1].rtt, 0.967)
+        self.assertEquals(hop.probes[2].rtt, 0.842)
+
+        self.assertEquals(hop.probes[0].dest_ip, '10.0.0.1')
+        self.assertEquals(hop.probes[0].dest, '10.0.0.1')
+
+        # Hop 3: domain name included
+        hop = parsed_output.hops[2]
+        self.assertEquals(hop.number, 3)
+        self.assertEquals(len(hop.probes), 3)
+        self.assertEquals(hop.probes[0].rtt, 39.095)
+        self.assertEquals(hop.probes[1].rtt, 35.661)
+        self.assertEquals(hop.probes[2].rtt, 35.715)
+
+        self.assertEquals(hop.probes[0].dest_ip, '162.235.240.3')
+        self.assertEquals(hop.probes[0].dest, '162-235-240-3.lightspeed.cicril.sbcglobal.net')
+
+        # Hop 5: multiple hosts
+        hop = parsed_output.hops[4]
+        self.assertEquals(hop.number, 5)
+        self.assertEquals(len(hop.probes), 3)
+        self.assertEquals(hop.probes[0].rtt, 36.973)
+        self.assertEquals(hop.probes[1].rtt, 39.475)
+        self.assertEquals(hop.probes[2].rtt, 38.859)
+
+        self.assertEquals(hop.probes[0].dest_ip, '12.83.43.53')
+        self.assertEquals(hop.probes[0].dest, '12.83.43.53')
+
+        self.assertEquals(hop.probes[1].dest_ip, '12.83.43.49')
+        self.assertEquals(hop.probes[1].dest, '12.83.43.49')
+
+        self.assertEquals(hop.probes[2].dest_ip, '12.83.43.53')
+        self.assertEquals(hop.probes[2].dest, '12.83.43.53')
+
+    def test_linux_parse(self):
+        output = """
+traceroute to edgecastcdn.net (72.21.81.13), 30 hops max, 38 byte packets
+ 1  *  *
+ 2  *  *
+ 3  *  *
+ 4  10.251.11.32 (10.251.11.32)  3574.616 ms  0.153 ms
+ 5  10.251.10.2 (10.251.10.2)  465.821 ms  2500.031 ms
+ 6  172.18.68.206 (172.18.68.206)  170.197 ms  78.979 ms
+ 7  172.18.59.165 (172.18.59.165)  151.123 ms  525.177 ms
+ 8  172.18.59.170 (172.18.59.170)  150.909 ms  172.18.59.174 (172.18.59.174)  62.591 ms
+ 9  172.18.75.5 (172.18.75.5)  123.078 ms  68.847 ms
+10  12.91.11.5 (12.91.11.5)  79.834 ms  556.366 ms
+11  cr2.ptdor.ip.att.net (12.123.157.98)  245.606 ms  83.038 ms
+12  cr81.st0wa.ip.att.net (12.122.5.197)  80.078 ms  96.588 ms
+13  gar1.omhne.ip.att.net (12.122.82.17)  363.800 ms  12.122.111.9 (12.122.111.9)  72.113 ms
+14  206.111.7.89.ptr.us.xo.net (206.111.7.89)  188.965 ms  270.203 ms
+15  xe-0-6-0-5.r04.sttlwa01.us.ce.gin.ntt.net (129.250.196.230)  706.390 ms  ae-6.r21.sttlwa01.us.bb.gin.ntt.net (129.250.5.44)  118.042 ms
+16  xe-9-3-2-0.co1-96c-1b.ntwk.msn.net (207.46.47.85)  675.110 ms  72.21.81.13 (72.21.81.13)  82.306 ms
+
+"""
+        parsed_output = tracerouteparser.Traceroute.parse(output, True)
+
+        # Verify the destination
+        self.assertEquals(parsed_output.dest, "edgecastcdn.net")
+        self.assertEquals(parsed_output.dest_ip, "72.21.81.13")
+
+        # Verify the hops
+        self.assertEquals(len(parsed_output.hops), 16)
+
+        # Hop 1 (time out)
+        self.assertEquals(parsed_output.hops[0].number, 1)
+        self.assertEquals(len(parsed_output.hops[0].probes), 2)
+        self.assertEquals(parsed_output.hops[0].probes[0].rtt, None)
+        self.assertEquals(parsed_output.hops[0].probes[1].rtt, None)
+
+        self.assertEquals(parsed_output.hops[0].probes[1].dest_ip, None)
+        self.assertEquals(parsed_output.hops[0].probes[1].dest, None)
+
+        # Hop 4
+        self.assertEquals(parsed_output.hops[3].number, 4)
+        self.assertEquals(len(parsed_output.hops[3].probes), 2)
+        self.assertEquals(parsed_output.hops[3].probes[0].rtt, 3574.616)
+        self.assertEquals(parsed_output.hops[3].probes[1].rtt, 0.153)
+
+        self.assertEquals(parsed_output.hops[3].probes[1].dest_ip, '10.251.11.32')
+        self.assertEquals(parsed_output.hops[3].probes[1].dest, '10.251.11.32')
+
+        # Hop 8: multiple hosts
+        self.assertEquals(parsed_output.hops[7].number, 8)
+        self.assertEquals(len(parsed_output.hops[7].probes), 2)
+        self.assertEquals(parsed_output.hops[7].probes[0].rtt, 150.909)
+        self.assertEquals(parsed_output.hops[7].probes[1].rtt, 62.591)
+
+        self.assertEquals(parsed_output.hops[7].probes[0].dest_ip, '172.18.59.170')
+        self.assertEquals(parsed_output.hops[7].probes[0].dest, '172.18.59.170')
+
+        self.assertEquals(parsed_output.hops[7].probes[1].dest_ip, '172.18.59.174')
+        self.assertEquals(parsed_output.hops[7].probes[1].dest, '172.18.59.174')
+
+        # Hop 15: multiple hosts with domain names
+        hop = parsed_output.hops[14]
+        self.assertEquals(hop.number, 15)
+        self.assertEquals(len(hop.probes), 2)
+        self.assertEquals(hop.probes[0].rtt, 706.390)
+        self.assertEquals(hop.probes[1].rtt, 118.042)
+
+        self.assertEquals(hop.probes[0].dest_ip, '129.250.196.230')
+        self.assertEquals(hop.probes[0].dest, 'xe-0-6-0-5.r04.sttlwa01.us.ce.gin.ntt.net')
+
+        self.assertEquals(hop.probes[1].dest_ip, '129.250.5.44')
+        self.assertEquals(hop.probes[1].dest, 'ae-6.r21.sttlwa01.us.bb.gin.ntt.net')
+
 if __name__ == "__main__":
     loader = unittest.TestLoader()
     suites = []
@@ -180,5 +370,6 @@ if __name__ == "__main__":
     suites.append(loader.loadTestsFromTestCase(TestWhois))
     suites.append(loader.loadTestsFromTestCase(TestFlatten))
     suites.append(loader.loadTestsFromTestCase(TestNSLookup))
+    suites.append(loader.loadTestsFromTestCase(TestTracerouteParser))
 
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(suites))

@@ -1,212 +1,212 @@
-"""
-A traceroute output parser, structuring the traceroute into a
-sequence of hops, each containing individual probe results.
-
-Courtesy of the Netalyzr project: http://netalyzr.icsi.berkeley.edu
-"""
-# ChangeLog
-# ---------
-#
-# 1.0:  Initial release, tested on Linux/Android traceroute inputs only.
-#       Also Python 2 only, most likely. (Send patches!)
-#
-# Copyright 2013 Christian Kreibich. All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met:
-#
-#    1. Redistributions of source code must retain the above copyright
-#       notice, this list of conditions and the following disclaimer.
-#
-#    2. Redistributions in binary form must reproduce the above
-#       copyright notice, this list of conditions and the following
-#       disclaimer in the documentation and/or other materials provided
-#       with the distribution.
-#
-# THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR IMPLIED
-# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT,
-# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-
-import cStringIO
 import re
 
 class Probe(object):
     """
-    Abstraction of an individual probe in a traceroute.
+    This represents a traceroute probe. A probe is one attempt to get info from one hop.
     """
-    def __init__(self):
-        self.ipaddr = None
-        self.name = None
-        self.rtt = None # RTT in ms
-        self.anno = None # Annotation, such as !H, !N, !X, etc
+    def __init__(self, rtt, dest, dest_ip):
 
-    def clone(self):
-        """
-        Return a copy of this probe, conveying the same endpoint.
-        """
-        copy = Probe()
-        copy.ipaddr = self.ipaddr
-        copy.name = self.name
-        return copy
+        self.dest = None
+        self.rtt = None
+        self.dest_ip = None
+
+        # Process the RTT
+        if rtt is not None and len(rtt) > 0 and rtt[0] == '<':
+            self.rtt = int(rtt[1:])
+        elif rtt == '*' or rtt is None:
+            self.rtt = None
+        elif len(rtt) > 0:
+            self.rtt = float(rtt)
+
+        # Process the dest
+        if dest == 'Request timed out.':
+            self.dest = None
+        elif dest is not None:
+            self.dest = dest.strip()
+
+        # Process the dest_ip
+        if dest_ip == 'Request timed out.':
+            self.dest_ip = None
+        elif dest_ip is not None:
+            self.dest_ip = dest_ip.strip()
 
 class Hop(object):
     """
-    A traceroute hop consists of a number of probes.
+    This represents a single hop between a host and its destination.
+    A hop can contain multiple probes (since a single hop may be tested more than once).
     """
-    def __init__(self):
-        self.idx = None # Hop count, starting at 1
-        self.probes = [] # Series of Probe instances
+    def __init__(self, number=None):
+        self.number = number
+        self.probes = []
 
     def add_probe(self, probe):
-        """Adds a Probe instance to this hop's results."""
-        self.probes.append(probe)
+        """
+        Add a probe to this hop.
+        """
 
-    def __str__(self):
-        res = []
-        last_probe = None
-        for probe in self.probes:
-            if probe.name is None:
-                res.append('*')
-                continue
-            anno = '' if probe.anno is None else ' ' + probe.anno
-            if last_probe is None or last_probe.name != probe.name:
-                res.append('%s (%s) %1.3f ms%s' % (probe.name, probe.ipaddr,
-                                                   probe.rtt, anno))
-            else:
-                res.append('%1.3f ms%s' % (probe.rtt, anno))
-            last_probe = probe
-        return '  '.join(res)
+        if probe is not None:
 
-class TracerouteParser(object):
+            # Populate the dest from the previous probe if it doesn't have it defined
+            if probe.dest is None and len(self.probes) > 0:
+                probe.dest = self.probes[-1].dest
+
+            # Populate the dest_ip from the previous probe if it doesn't have it defined
+            if probe.dest_ip is None and len(self.probes) > 0:
+                probe.dest_ip = self.probes[-1].dest_ip
+
+            # Add the probe
+            self.probes.append(probe)
+
+class UnexpectedInputException(Exception):
     """
-    A parser for traceroute text. A traceroute consists of a sequence of
-    hops, each of which has at least one probe. Each probe records IP,
-    hostname and timing information.
+    This exception is generated when input was observed that is unexpected.
     """
-    HEADER_RE = re.compile(r'traceroute to (\S+) \((\d+\.\d+\.\d+\.\d+)\)')
+
+    pass
+
+class Traceroute(object):
+    """
+    This class will parse traceroutes done using the command-line tools like "traceroute" and
+    "tracert".
+    """
+
+    # Regexs for things to disregard
+    TRACE_COMPLETE = re.compile(r'^Trace complete')
+    EMPTY_LINES = re.compile(r'^\s*$')
+    IGNORE_LIST = [TRACE_COMPLETE, EMPTY_LINES]
+
+    # Regexs for parsing the headers
+    HEADER_RE_WINDOWS = re.compile(r'^Tracing route to (?P<dest>\S+) (\[(?P<dest_ip>\d+\.\d+\.\d+\.\d+)\])?')
+    HEADER_RE_NIX = re.compile(r'traceroute to (?P<dest>\S+) \((?P<dest_ip>\d+\.\d+\.\d+\.\d+)\)')
+    HEADER_RE_LIST = [HEADER_RE_WINDOWS, HEADER_RE_NIX]
+
+    # Regexs for parsing the probes
+    HOP_RE_WINDOWS = re.compile(r'^\s*(?P<hop>\d+)\s+(?P<probe_1><?[\d*]*)(\s*ms)?\s+(?P<probe_2><?[\d*]*)(\s*ms)?\s*(?P<probe_3><?[\d*]*)(\s*ms)?\s*(?P<dest>([^*[ ]+)|(Request timed out[.]))(\s*\[(?P<dest_ip>\d+\.\d+\.\d+\.\d+)\])?$')
+    HOP_RE_NIX = re.compile(r'\s*(((?P<hop>\d+)?\s+)?\s+)?((?P<dest>[-.\w]+)\s+)?(\((?P<dest_ip>\d+\.\d+\.\d+\.\d+)\))?\s*(?P<probe_1><?[*0-9]+([.][0-9]+)?)(\s*ms)?(\s+(?P<probe_2><?[*0-9]+([.][0-9]+)?)(\s*ms))?(\s+(?P<probe_3><?[*0-9]+([.][0-9]+)?)(\s*ms))?')
+    HOP_RE_LIST = [HOP_RE_WINDOWS, HOP_RE_NIX]
 
     def __init__(self):
-        self.dest_ip = None
-        self.dest_name = None
         self.hops = []
 
-    def __str__(self):
-        res = ['traceroute to %s (%s)' % (self.dest_name, self.dest_ip) ]
-        ctr = 1
-        for hop in self.hops:
-            res.append('%2d  %s' % (ctr, str(hop)))
-            ctr += 1
-        return '\n'.join(res)
-
-    def parse_data(self, data):
-        """Parser entry point, given string of the whole traceroute output."""
-        self.parse_hdl(cStringIO.StringIO(data))
-
-    def parse_hdl(self, hdl):
-        """Parser entry point, given readable file handle."""
+        self.dest = None
         self.dest_ip = None
-        self.dest_name = None
-        self.hops = []
 
-        for line in hdl:
-            line = line.strip()
-            if line == '':
+    @staticmethod
+    def parse(output, raise_exception_on_non_matches=False):
+        """
+        Parse the output and create a traceroute instance from the data.
+        """
+
+        # Make the traceroute that we will return once we populate it
+        traceroute = Traceroute()
+
+        traceroute.initialize_from_output(output, raise_exception_on_non_matches)
+
+        return traceroute
+
+    def try_to_match(self, line, regexs, find_all=False):
+        """
+        Try to match the line against the list of regular expressions and return the first that
+        matches. If no match is done, return None.
+        """
+
+        for regex in regexs:
+
+            # Do a findall if requested
+            if find_all:
+                matches = []
+
+                for match in regex.finditer(line):
+                    matches.append(match)
+            else:
+                matches = regex.search(line)
+
+            # Return the matches. If we looking for all entries and none matched, return None.
+            if find_all and len(matches) > 0:
+                return matches
+            elif matches:
+                return matches
+
+    def try_parse_to_dict(self, line, regexs):
+        """
+        Try to parse the line with one of the regular expressions and return the dictionary
+        from the one that matches first.
+        """
+
+        match = self.try_to_match(line, regexs, find_all=False)
+
+        if match:
+            return match.groupdict()
+
+    def initialize_from_output(self, output, raise_exception_on_non_matches=False):
+        """
+        Initialize the class from the given output.
+        """
+
+        hop = None
+
+        # Go through each line
+        for line in output.split('\n'):
+
+            # See if this is something to just ignore
+            if self.try_to_match(line, self.IGNORE_LIST):
                 continue
-            if line.lower().startswith('traceroute'):
-                # It's the header line at the beginning of the traceroute.
-                mob = self.HEADER_RE.match(line)
-                if mob:
-                    self.dest_ip = mob.group(2)
-                    self.dest_name = mob.group(1)
+
+            # Search through the output for the header
+            parsed_header = self.try_parse_to_dict(line, self.HEADER_RE_LIST)
+
+            if parsed_header:
+                self.dest = parsed_header.get('dest', None)
+                self.dest_ip = parsed_header.get('dest_ip', None)
+
+            # Try to parse this as a hop
             else:
-                hop = self._parse_hop(line)
-                self.hops.append(hop)
 
-    def _parse_hop(self, line):
-        """Internal helper, parses a single line in the output."""
-        parts = line.split()
-        parts.pop(0) # Drop hop number, implicit in resulting sequence
-        hop = Hop()
-        probe = None
+                # Parse each hop
+                parsed_hops = self.try_to_match(line, self.HOP_RE_LIST, find_all=True)
 
-        while len(parts) > 0:
-            probe = self._parse_probe(parts, probe)
-            if probe:
-                hop.add_probe(probe)
+                if parsed_hops is None:
+                    if raise_exception_on_non_matches:
+                        raise UnexpectedInputException("Unexpected input was observed: " + line)
+                    continue
 
-        return hop
+                for parsed_hop in parsed_hops:
 
-    def _parse_probe(self, parts, last_probe=None):
-        """Internal helper, parses the next probe's results from a line."""
-        try:
-            probe = Probe() if last_probe is None else last_probe.clone()
+                    parsed_hop = parsed_hop.groupdict()
 
-            tok1 = parts.pop(0)
-            if tok1 == '*':
-                return probe
+                    #print parsed_hop
 
-            tok2 = parts.pop(0)
-            if tok2 == 'ms':
-                # This is an additional RTT for the same endpoint we
-                # saw before.
-                probe.rtt = float(tok1)
-                if len(parts) > 0 and parts[0].startswith('!'):
-                    probe.anno = parts.pop(0)
-            else:
-                # This is a probe result from a different endpoint
-                probe.name = tok1
-                probe.ipaddr = tok2[1:][:-1]
-                probe.rtt = float(parts.pop(0))
-                parts.pop(0) # Drop "ms"
-                if len(parts) > 0 and parts[0].startswith('!'):
-                    probe.anno = parts.pop(0)
+                    if parsed_hop:
 
-            return probe
+                        # Convert the hop number to an integer
+                        if parsed_hop.get('hop', None) is not None:
+                            hop_number = int(parsed_hop.get('hop', 0))
+                        else:
+                            hop_number = None
 
-        except (IndexError, ValueError):
-            return None
+                        hop_dest = parsed_hop.get('dest', None)
+                        hop_dest_ip = parsed_hop.get('dest_ip', None)
 
-def demo():
-    """A simple example."""
+                        # Copy the dest to dest_ip if it is an IP
+                        if hop_dest is not None and hop_dest_ip is None:
+                            hop_dest_ip = hop_dest
 
-    tr_data = """
-traceroute to edgecastcdn.net (72.21.81.13), 30 hops max, 38 byte packets
- 1  *  *
- 2  *  *
- 3  *  *
- 4  10.251.11.32 (10.251.11.32)  3574.616 ms  0.153 ms
- 5  10.251.10.2 (10.251.10.2)  465.821 ms  2500.031 ms
- 6  172.18.68.206 (172.18.68.206)  170.197 ms  78.979 ms
- 7  172.18.59.165 (172.18.59.165)  151.123 ms  525.177 ms
- 8  172.18.59.170 (172.18.59.170)  150.909 ms  172.18.59.174 (172.18.59.174)  62.591 ms
- 9  172.18.75.5 (172.18.75.5)  123.078 ms  68.847 ms
-10  12.91.11.5 (12.91.11.5)  79.834 ms  556.366 ms
-11  cr2.ptdor.ip.att.net (12.123.157.98)  245.606 ms  83.038 ms
-12  cr81.st0wa.ip.att.net (12.122.5.197)  80.078 ms  96.588 ms
-13  gar1.omhne.ip.att.net (12.122.82.17)  363.800 ms  12.122.111.9 (12.122.111.9)  72.113 ms
-14  206.111.7.89.ptr.us.xo.net (206.111.7.89)  188.965 ms  270.203 ms
-15  xe-0-6-0-5.r04.sttlwa01.us.ce.gin.ntt.net (129.250.196.230)  706.390 ms  ae-6.r21.sttlwa01.us.bb.gin.ntt.net (129.250.5.44)  118.042 ms
-16  xe-9-3-2-0.co1-96c-1b.ntwk.msn.net (207.46.47.85)  675.110 ms  72.21.81.13 (72.21.81.13)  82.306 ms
+                        # If there is no hop number, then this a probe for the previous hop.
+                        # The lack of a hop number means this probe likely has a different
+                        # IP address but is for the same hop. For example, like this:
+                        #  8  abc.com (1.2.3.4)  150.90 ms  def.com (1.2.3.5)  62.59 ms
+                        if hop is None or hop_number is not None:
+                            #print "Making new hop:", hop_number
+                            hop = Hop(hop_number)
+                            self.hops.append(hop)
 
-"""
-    # Create parser instance:
-    trp = TracerouteParser()
+                        # Get the probes
+                        for i in range(1, 4):
 
-    # Give it some data:
-    trp.parse_data(tr_data)
+                            rtt = parsed_hop.get('probe_' + str(i), None)
 
-    # Built-up data structures as string. Should look effectively
-    # identical to the above input string.
-    print trp
-
-if __name__ == '__main__':
-    demo()
+                            if rtt is not None and len(rtt) > 0:
+                                #print "Adding probe: ", rtt, hop.number
+                                # Make the probe instance
+                                probe = Probe(rtt, hop_dest, hop_dest_ip)
+                                hop.add_probe(probe)

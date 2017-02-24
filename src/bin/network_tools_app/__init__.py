@@ -14,7 +14,7 @@ if not lib_dir in sys.path:
 from event_writer import StashNewWriter
 import pyspeedtest
 import pingparser
-from tracerouteparser import TracerouteParser 
+from tracerouteparser import Traceroute
 from network_tools_app.wakeonlan import wol
 from network_tools_app.ipwhois import IPWhois
 from network_tools_app.pythonwhois import get_whois
@@ -34,147 +34,154 @@ import splunk.rest as rest
 
 def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source="traceroute_search_command", logger=None, include_dest_info=True):
     """
-    Performs a traceroute using the the native traceroute command and returns the output in a parsed format.
+    Performs a traceroute using the the native traceroute command and returns the output in a
+    parsed, machine-readable format.
+
+    It will also write out the data into Splunk using a stash file if the index parameters is
+    set to a value that is not None.
     """
-    
+
     if system_name().lower() == "windows":
         cmd = ["tracert"]
     else:
         cmd = ["traceroute"]
-    
+
     # Add the host argument
     cmd.append(host)
-    
+
     # Run the traceroute command and get the output
     output = None
     return_code = None
-    
+
     try:
         output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
         return_code = 0
     except subprocess.CalledProcessError as e:
         output = e.output
         return_code = e.returncode
-        
+
     # Parse the output
     try:
-        trp = TracerouteParser()
-        trp.parse_data(output)
-        
+        trp = Traceroute.parse(output)
+
         # This will contain the hops
         parsed = []
-        
+
         hop_idx = 0
-        
+
         # Make an entry for each hop
         for h in trp.hops:
-            
+
             if h.probes is None or len(h.probes) == 0:
                 continue
-            
+
             hop_idx = hop_idx + 1
-            
+
             # This will track the probes
             rtts = []
             ips = []
             names = []
-            
+
             hop = collections.OrderedDict()
             hop['hop'] = hop_idx
-            
+
             for probe in h.probes:
-                
+
                 if probe.rtt is not None:
                     rtts.append(str(probe.rtt))
-                
-                if probe.ipaddr is not None:
-                    ips.append(probe.ipaddr)
-                                    
-                if probe.name is not None:
-                    names.append(probe.name)
-            
+
+                if probe.dest_ip is not None:
+                    ips.append(probe.dest_ip)
+
+                if probe.dest is not None:
+                    names.append(probe.dest)
+
             hop['rtt'] = rtts
             hop['ip'] = ips
             hop['name'] = names
-            
+
             if include_dest_info:
                 hop['dest_ip'] = trp.dest_ip
-                hop['dest_host'] = trp.dest_name
-            
+                hop['dest_host'] = trp.dest
+
             parsed.append(hop)
-            
+
     except Exception as e:
+
+        if logger:
+            logger.exception("Unable to parse traceroute output")
+
         raise Exception("Unable to parse traceroute output")
-        
+
     # Write the event as a stash new file
     if index is not None:
         writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
-        
+
         # Let's store the basic information for the traceroute that will be included with each hop
         proto = collections.OrderedDict()
-        
+
         # Include the destination info if it was included already
         if not include_dest_info:
             proto['dest_ip'] = trp.dest_ip
-            proto['dest_host'] = trp.dest_name
-        
+            proto['dest_host'] = trp.dest
+
         if unique_id is None:
             unique_id = binascii.b2a_hex(os.urandom(4))
-            
+
         proto['unique_id'] = unique_id
-        
+
         for r in parsed:
-            
+
             result = collections.OrderedDict()
             result.update(r)
             result.update(proto)
-            
+
             # Log that we performed the traceroute
             if logger:
                 logger.info("Wrote stash file=%s", writer.write_event(result))
-            
+
     return output, return_code, parsed
 
 def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_command", logger=None):
     """
     Pings the host using the native ping command on the platform and returns a tuple consisting of:
-    
+
      1) the output string
      2) the return code (0 is the expected return code)
      3) parsed output from the ping command
     """
-    
+
     cmd = ["ping"]
-    
+
     # Add the argument of the number of pings
-    if system_name().lower()=="windows":
+    if system_name().lower() == "windows":
         cmd.extend(["-n", str(count)])
     else:
         cmd.extend(["-c", str(count)])
-    
+
     # Add the host argument
     cmd.append(host)
-    
+
     output = None
     return_code = None
-    
+
     try:
         output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
         return_code = 0
     except subprocess.CalledProcessError as e:
         output = e.output
         return_code = e.returncode
-    
+
     # Parse the output
     try:
         parsed = pingparser.parse(output)
     except Exception:
         parsed = {}
-    
+
     # Write the event as a stash new file
     if index is not None:
         writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
-        
+
         result = collections.OrderedDict()
         result.update(parsed)
         
