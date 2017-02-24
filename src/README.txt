@@ -31,5 +31,6 @@ Change History
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 0.6     | Added Windows support for the traceroute command                                                                 |
 |         | Fixed excessive CPU usage on the wake-on-LAN dashboard                                                           |
+|         | Fixed execute button which was on the wrong line on Splunk 6.4                                                   |
 +---------+------------------------------------------------------------------------------------------------------------------+
 
