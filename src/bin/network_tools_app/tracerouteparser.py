@@ -76,9 +76,10 @@ class Traceroute(object):
 
     # Regexs for things to disregard
     TRACE_COMPLETE = re.compile(r'^\s*Trace complete')
+    HOP_COUNT = re.compile(r'^\s*over a maximum of .* hops')
     TRACEROUTE_WARNING = re.compile(r'^\s*traceroute: Warning:')
     EMPTY_LINES = re.compile(r'^\s*$')
-    IGNORE_LIST = [TRACE_COMPLETE, EMPTY_LINES, TRACEROUTE_WARNING]
+    IGNORE_LIST = [TRACE_COMPLETE, EMPTY_LINES, TRACEROUTE_WARNING, HOP_COUNT]
 
     # Regexs for parsing the headers
     HEADER_RE_WINDOWS = re.compile(r'^Tracing route to (?P<dest>\S+) (\[(?P<dest_ip>\d+\.\d+\.\d+\.\d+)\])?')
@@ -86,11 +87,17 @@ class Traceroute(object):
     HEADER_RE_LIST = [HEADER_RE_WINDOWS, HEADER_RE_NIX]
 
     # Regexs for parsing the probes
-    # https://regex101.com/r/Ip5pMY/1
+
+    # https://regex101.com/r/Ip5pMY
     HOP_RE_WINDOWS = re.compile(r'^\s*(?P<hop>\d+)\s+(?P<probe_1><?[\d*]*)(\s*ms)?\s+(?P<probe_2><?[\d*]*)(\s*ms)?\s*(?P<probe_3><?[\d*]*)(\s*ms)?\s*(?P<dest>([^*[ ]+)|(Request timed out[.]))(\s*\[(?P<dest_ip>\d+\.\d+\.\d+\.\d+)\])?$')
-    # https://regex101.com/r/9HDVV7/2
+    
+    # https://regex101.com/r/9HDVV7
     HOP_RE_NIX = re.compile(r'\s*(((?P<hop>\d+)?\s+)?\s+)?((?P<dest>[-.\w]+)\s+)?(\((?P<dest_ip>\d+\.\d+\.\d+\.\d+)\))?\s*(?P<probe_1><?[*0-9]+([.][0-9]+)?)(\s*ms)?(\s+[!]N)?(\s+(?P<probe_2><?[*0-9]+([.][0-9]+)?)(\s*ms))?(\s+[!]N)?(\s+(?P<probe_3><?[*0-9]+([.][0-9]+)?)(\s*ms))?(\s+[!]N)?')
-    HOP_RE_LIST = [HOP_RE_WINDOWS, HOP_RE_NIX]
+    
+    # https://regex101.com/r/QNZXnM/
+    HOP_RE_WINDOWS_ERROR_REPORT = re.compile(r'^\s*(?P<hop>\d+)\s+(?P<dest>([^*[ ]+))(\s*\[(?P<dest_ip>\d+\.\d+\.\d+\.\d+)\])?\s*reports[:].*')
+    
+    HOP_RE_LIST = [HOP_RE_WINDOWS_ERROR_REPORT, HOP_RE_WINDOWS, HOP_RE_NIX]
 
     def __init__(self):
         self.hops = []
@@ -217,3 +224,10 @@ class Traceroute(object):
                                 # Make the probe instance
                                 probe = Probe(rtt, hop_dest, hop_dest_ip)
                                 hop.add_probe(probe)
+
+                        # Add one probe to capture the dest info if this is a new hop but it has no
+                        # probes.
+                        if (hop_dest is not None or hop_dest_ip is not None) and len(hop.probes) == 0:
+                            probe = Probe(None, hop_dest, hop_dest_ip)
+                            hop.add_probe(probe)
+

@@ -293,6 +293,61 @@ Trace complete."""
         self.assertEquals(parsed_output.hops[6].probes[1].dest, 'gar2.placa.ip.att.net')
         self.assertEquals(parsed_output.hops[6].probes[1].dest_ip, '12.122.110.5')
 
+    def test_windows_parse_unreachable(self):
+        """
+        Test parsing Windows traceroute.
+        """
+
+        output = """Tracing route to att.com [144.160.36.42]
+over a maximum of 30 hops:
+
+  1    <1 ms    <1 ms    <1 ms  10.0.0.1
+  2    15 ms    14 ms    14 ms  192.168.1.254
+  3     *        *        *     Request timed out.
+  4    34 ms    33 ms    33 ms  71.145.65.194
+  5    43 ms    58 ms    92 ms  12.83.43.49
+  6    88 ms    66 ms    90 ms  ggr1.chail.ip.att.net [12.122.132.181]
+  7   125 ms    42 ms    41 ms  12.249.81.194
+  8  att.com [144.160.36.42]  reports: Destination protocol unreachable.
+
+Trace complete."""
+
+        parsed_output = tracerouteparser.Traceroute.parse(output, True)
+
+        # Verify the destination
+        self.assertEquals(parsed_output.dest, "att.com")
+        self.assertEquals(parsed_output.dest_ip, "144.160.36.42")
+
+        # Verify the hops
+        self.assertEquals(len(parsed_output.hops), 8)
+
+        # Hop 1
+        self.assertEquals(parsed_output.hops[0].number, 1)
+        self.assertEquals(len(parsed_output.hops[0].probes), 3)
+        self.assertEquals(parsed_output.hops[0].probes[0].rtt, 1)
+        self.assertEquals(parsed_output.hops[0].probes[1].rtt, 1)
+        self.assertEquals(parsed_output.hops[0].probes[2].rtt, 1)
+
+        self.assertEquals(parsed_output.hops[0].probes[1].dest_ip, '10.0.0.1')
+        self.assertEquals(parsed_output.hops[0].probes[1].dest, '10.0.0.1')
+
+        # Hop 3 (request timed out)
+        self.assertEquals(parsed_output.hops[2].number, 3)
+        self.assertEquals(len(parsed_output.hops[2].probes), 3)
+        self.assertEquals(parsed_output.hops[2].probes[0].rtt, None)
+        self.assertEquals(parsed_output.hops[2].probes[1].rtt, None)
+        self.assertEquals(parsed_output.hops[2].probes[2].rtt, None)
+
+        self.assertEquals(parsed_output.hops[2].probes[1].dest_ip, None)
+        self.assertEquals(parsed_output.hops[2].probes[1].dest, None)
+
+        # Hop 8 (unreachable)
+        self.assertEquals(parsed_output.hops[7].number, 8)
+        self.assertEquals(len(parsed_output.hops[7].probes), 1)
+
+        self.assertEquals(parsed_output.hops[7].probes[0].dest, 'att.com')
+        self.assertEquals(parsed_output.hops[7].probes[0].dest_ip, '144.160.36.42')
+
     def test_osx_parse_oddities(self):
         """
         This tests traceroute output when it contains some strange things like N! which apparently
