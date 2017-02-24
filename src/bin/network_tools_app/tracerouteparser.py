@@ -71,9 +71,10 @@ class Traceroute(object):
     """
 
     # Regexs for things to disregard
-    TRACE_COMPLETE = re.compile(r'^Trace complete')
+    TRACE_COMPLETE = re.compile(r'^\s*Trace complete')
+    TRACEROUTE_WARNING = re.compile(r'^\s*traceroute: Warning:')
     EMPTY_LINES = re.compile(r'^\s*$')
-    IGNORE_LIST = [TRACE_COMPLETE, EMPTY_LINES]
+    IGNORE_LIST = [TRACE_COMPLETE, EMPTY_LINES, TRACEROUTE_WARNING]
 
     # Regexs for parsing the headers
     HEADER_RE_WINDOWS = re.compile(r'^Tracing route to (?P<dest>\S+) (\[(?P<dest_ip>\d+\.\d+\.\d+\.\d+)\])?')

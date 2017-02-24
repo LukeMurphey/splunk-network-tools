@@ -14,6 +14,10 @@ from network_tools_app import pingparser, tracerouteparser
 class TestPing(unittest.TestCase):
 
     def test_do_ping(self):
+        """
+        Perform a ping against a host that is known to exist.
+        """
+
         output, return_code, parsed = ping("127.0.0.1", count=3)
 
         self.assertEquals(return_code, 0)
@@ -21,80 +25,129 @@ class TestPing(unittest.TestCase):
         self.assertEquals(int(parsed['received']), 3)
 
     def test_do_ping_error(self):
+        """
+        Perform a ping against a host that doesn't exist
+        """
+
         output, return_code, _ = ping("doesnotexist", count=3)
 
         self.assertNotEquals(return_code, 0)
         self.assertGreater(len(output), 0)
 
 class TestTraceroute(unittest.TestCase):
+    """
+    This tests traceroute functionality which facilitates performing a traceroute and returning
+    the raw results.
+    """
 
     def test_do_traceroute(self):
+        """
+        Perform a traceroute and ensure the reults are valid.
+        """
         _, _, parsed = traceroute("att.com")
 
         self.assertGreater(len(parsed), 0)
 
 class TestWhois(unittest.TestCase):
+    """
+    This tests the whois functionality which performs whois requests on IPs and domain names.
+    """
 
     def test_do_whois(self):
+        """
+        Test an IP whois
+        """
         output = whois('173.255.235.229')
 
         self.assertGreater(len(output), 0)
 
     def test_do_whois_domain(self):
+        """
+        Test a domain whois
+        """
+
         output = whois('textcritical.net')
 
         self.assertGreater(len(output), 0)
 
 class TestNSLookup(unittest.TestCase):
+    """
+    Tests nslookup functionality which kicks off an nslookup using network_tools_app::nslookup.
+    """
 
-    def test_do_lookup(self):
+    def test_do_nslookup(self):
+        """
+        Test performing an nslookup.
+        """
+
         output = nslookup('textcritical.net')
 
         self.assertGreater(len(output), 0)
 
 class TestFlatten(unittest.TestCase):
+    """
+    Test the flatten module which converts a Python object to a flat dictionary.
+    """
 
     def test_flatten_dict(self):
+        """
+        This tests conversion to a dictionary where the heirarchy is listed in the field names.
+        """
 
-        d = '{ "name" : "Test", "configuration" : { "views" : [ { "name" : "some_view", "app" : "some_app" } ], "delay" : 300, "delay_readable" : "5m", "hide_chrome" : true, "invert_colors" : true }, "_user" : "nobody", "_key" : "123456789" }'
-        flattened_d = flatten(json.loads(d))
+        heirarchy = '{ "name" : "Test", "configuration" : { "views" : [ { "name" : "some_view", "app" : "some_app" } ], "delay" : 300, "delay_readable" : "5m", "hide_chrome" : true, "invert_colors" : true }, "_user" : "nobody", "_key" : "123456789" }'
+        flat_list = flatten(json.loads(heirarchy))
 
-        self.assertEquals(flattened_d['configuration.delay'], '300')
-        self.assertEquals(flattened_d['configuration.views.0.name'], 'some_view')
-        self.assertEquals(flattened_d['name'], "Test")
+        self.assertEquals(flat_list['configuration.delay'], '300')
+        self.assertEquals(flat_list['configuration.views.0.name'], 'some_view')
+        self.assertEquals(flat_list['name'], "Test")
 
     def test_flatten_dict_to_table(self):
+        """
+        This tests conversion to a table in which the name and value are put into separate fields.
+        """
 
-        d = '{ "name" : "Test", "configuration" : { "views" : [ { "name" : "some_view", "app" : "some_app" } ], "delay" : 300, "delay_readable" : "5m", "hide_chrome" : true, "invert_colors" : true }, "_user" : "nobody", "_key" : "123456789" }'
-        flattened_d = flatten_to_table(json.loads(d))
+        heirarchy = '{ "name" : "Test", "configuration" : { "views" : [ { "name" : "some_view", "app" : "some_app" } ], "delay" : 300, "delay_readable" : "5m", "hide_chrome" : true, "invert_colors" : true }, "_user" : "nobody", "_key" : "123456789" }'
+        flattened_d = flatten_to_table(json.loads(heirarchy))
 
         self.assertGreaterEqual(len(flattened_d[0]['attribute']), 1)
         self.assertGreaterEqual(len(str(flattened_d[0]['value'])), 1)
 
     def test_flatten_dict_ignore_blanks(self):
+        """
+        This tests the conversion but with the dropping of blank entries.
+        """
 
-        d = collections.OrderedDict()
+        dictionary = collections.OrderedDict()
 
-        d['not_blank'] = 'something here'
-        d['none'] = None
-        d['empty'] = ''
+        dictionary['not_blank'] = 'something here'
+        dictionary['none'] = None
+        dictionary['empty'] = ''
 
-        flattened_d = flatten(d, ignore_blanks=True)
+        flattened_d = flatten(dictionary, ignore_blanks=True)
 
         self.assertEqual(flattened_d['not_blank'], 'something here')
         self.assertEqual('none' in flattened_d, False)
         self.assertEqual('empty' in flattened_d, False)
 
     def test_flatten_dict_array_mv(self):
+        """
+        This tests the conversion to ensure that a list is included within a single row.
+        """
 
-        d = '{ "name" : "Test", "configuration" : ["a", "b", "c"] }'
-        flattened = flatten(json.loads(d))
+        dictionary = '{ "name" : "Test", "configuration" : ["a", "b", "c"] }'
+        flattened = flatten(json.loads(dictionary))
 
         self.assertGreaterEqual(len(flattened['configuration']), 3)
 
 class TestPingParser(unittest.TestCase):
+    """
+    Test the class to parse the output of the ping command.
+    """
 
     def test_windows_parse_localhost(self):
+        """
+        Test parsing a ping on Windows by IP (to localhost).
+        """
 
         output = """Pinging 127.0.0.1 with 32 bytes of data:
 Reply from 127.0.0.1: bytes=32 time<1ms TTL=128
@@ -120,6 +173,9 @@ Approximate round trip times in milli-seconds:
         self.assertEquals(parsed['jitter'], None) # Windows ping currently doesn't include jitter
 
     def test_windows_parse_domain(self):
+        """
+        Test parsing a ping on Windows to a domain name.
+        """
 
         output = """
 Pinging google.com [74.125.202.100] with 32 bytes of data:
@@ -147,6 +203,9 @@ Approximate round trip times in milli-seconds:
         self.assertEquals(parsed['jitter'], None) # Windows ping currently doesn't include jitter
 
     def test_osx_parse(self):
+        """
+        Test parsing ping output on OSX.
+        """
 
         output = """
 PING 127.0.0.1 (127.0.0.1): 56 data bytes
@@ -172,8 +231,15 @@ round-trip min/avg/max/stddev = 0.052/0.089/0.136/0.035 ms
         self.assertEquals(parsed['jitter'], '0.035')
 
 class TestTracerouteParser(unittest.TestCase):
+    """
+    Test parsing of traceroute output.
+    """
 
     def test_windows_parse(self):
+        """
+        Test parsing Windows traceroute.
+        """
+
         output = """Tracing route to att.com [144.160.155.43] over a maximum of 30 hops:
 
   1    18 ms    <1 ms    <1 ms  10.0.0.1
@@ -227,7 +293,69 @@ Trace complete."""
         self.assertEquals(parsed_output.hops[6].probes[1].dest, 'gar2.placa.ip.att.net')
         self.assertEquals(parsed_output.hops[6].probes[1].dest_ip, '12.122.110.5')
 
+    def test_osx_parse_oddities(self):
+        """
+        This tests traceroute output when it contains some strange things like N! which apparently
+        means that there is an outage (see https://www.webmasterworld.com/forum23/2238.htm).
+
+        This also includes a warning which indicates that the destination has multiple addresses.
+        """
+
+        output = """
+traceroute: Warning: att.com has multiple addresses; using 144.160.36.42
+traceroute to att.com (144.160.36.42), 64 hops max, 52 byte packets
+ 1  win-ad.demo.net (10.0.0.1)  1.709 ms  1.024 ms  0.743 ms
+ 2  192.168.1.254 (192.168.1.254)  15.484 ms  16.503 ms  15.885 ms
+ 3  162-235-240-3.lightspeed.cicril.sbcglobal.net (162.235.240.3)  35.881 ms  36.367 ms  35.004 ms
+ 4  71.145.65.194 (71.145.65.194)  35.976 ms  35.911 ms  36.732 ms
+ 5  12.83.43.49 (12.83.43.49)  38.070 ms
+    12.83.43.53 (12.83.43.53)  38.454 ms
+    12.83.43.49 (12.83.43.49)  39.049 ms
+ 6  ggr1.chail.ip.att.net (12.122.132.181)  36.673 ms  36.318 ms  36.972 ms
+ 7  12.249.81.194 (12.249.81.194)  43.967 ms  43.266 ms  43.693 ms
+ 8  my.atttest.com (144.160.36.42)  45.424 ms !N  44.528 ms !N  44.779 ms !N
+        """
+
+        parsed_output = tracerouteparser.Traceroute.parse(output, True)
+
+        # Verify the destination
+        self.assertEquals(parsed_output.dest, "att.com")
+        self.assertEquals(parsed_output.dest_ip, "144.160.36.42")
+
+        # Hop 1
+        hop = parsed_output.hops[0]
+        self.assertEquals(hop.number, 1)
+        self.assertEquals(len(hop.probes), 3)
+        self.assertEquals(hop.probes[0].rtt, 1.709)
+        self.assertEquals(hop.probes[1].rtt, 1.024)
+        self.assertEquals(hop.probes[2].rtt, 0.743)
+
+        self.assertEquals(hop.probes[0].dest_ip, '10.0.0.1')
+        self.assertEquals(hop.probes[0].dest, 'win-ad.demo.net')
+
+        # Hop 8: missing probes
+        hop = parsed_output.hops[7]
+        self.assertEquals(hop.number, 8)
+        self.assertEquals(len(hop.probes), 3)
+        self.assertEquals(hop.probes[0].rtt, 45.424)
+        self.assertEquals(hop.probes[1].rtt, 44.528)
+        self.assertEquals(hop.probes[2].rtt, 44.779)
+
+        self.assertEquals(hop.probes[0].dest_ip, '144.160.36.42')
+        self.assertEquals(hop.probes[0].dest, 'my.atttest.com')
+
+        self.assertEquals(hop.probes[1].dest_ip, None)
+        self.assertEquals(hop.probes[1].dest, None)
+
+        self.assertEquals(hop.probes[2].dest_ip, None)
+        self.assertEquals(hop.probes[2].dest, None)
+
     def test_osx_parse(self):
+        """
+        Test parsing an OSX traceroute. Note that this traceroute includes multiple IPs
+        on different lines for different addresses.
+        """
+
         output = """traceroute to google.com (216.58.192.238), 64 hops max, 52 byte packets
  1  10.0.0.1 (10.0.0.1)  1.450 ms  0.967 ms  0.842 ms
  2  192.168.1.254 (192.168.1.254)  15.996 ms  15.873 ms  17.041 ms
@@ -289,6 +417,10 @@ Trace complete."""
         self.assertEquals(hop.probes[2].dest, '12.83.43.53')
 
     def test_linux_parse(self):
+        """
+        Test parsing on Linux.
+        """
+
         output = """
 traceroute to edgecastcdn.net (72.21.81.13), 30 hops max, 38 byte packets
  1  *  *
@@ -362,14 +494,4 @@ traceroute to edgecastcdn.net (72.21.81.13), 30 hops max, 38 byte packets
         self.assertEquals(hop.probes[1].dest, 'ae-6.r21.sttlwa01.us.bb.gin.ntt.net')
 
 if __name__ == "__main__":
-    loader = unittest.TestLoader()
-    suites = []
-    suites.append(loader.loadTestsFromTestCase(TestPing))
-    suites.append(loader.loadTestsFromTestCase(TestPingParser))
-    suites.append(loader.loadTestsFromTestCase(TestTraceroute))
-    suites.append(loader.loadTestsFromTestCase(TestWhois))
-    suites.append(loader.loadTestsFromTestCase(TestFlatten))
-    suites.append(loader.loadTestsFromTestCase(TestNSLookup))
-    suites.append(loader.loadTestsFromTestCase(TestTracerouteParser))
-
-    unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(suites))
+    unittest.main()
