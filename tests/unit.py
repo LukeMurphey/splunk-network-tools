@@ -298,7 +298,7 @@ Trace complete."""
         Test parsing Windows traceroute.
         """
 
-        output = """Tracing route to att.com [144.160.36.42]
+        output = """Tracing route to att.com [144.160.36.42]    
 over a maximum of 30 hops:
 
   1    <1 ms    <1 ms    <1 ms  10.0.0.1

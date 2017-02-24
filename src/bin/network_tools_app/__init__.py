@@ -1,6 +1,11 @@
+"""
+This module includes a series of functions for performing network operations (ping, traceroute, etc)
+"""
+
 # Update the sys.path so that libraries will be loaded out of the network_tools_app directory.
-# This is important in order to make sure that app won't cause issues with other Splunk apps that may include these same libraries (since 
-# Splunk puts other apps on the sys.path which can make the apps override each other).
+# This is important in order to make sure that app won't cause issues with other Splunk apps
+# that may include these same libraries (since Splunk puts other apps on the sys.path which
+# can make the apps override each other).
 import sys
 import os
 import splunk.appserver.mrsparkle.lib.util as util
@@ -32,7 +37,7 @@ import json
 # Splunk imports
 import splunk.rest as rest
 
-def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source="traceroute_search_command", logger=None, include_dest_info=True):
+def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source="traceroute_search_command", logger=None, include_dest_info=True, include_raw_output=False):
     """
     Performs a traceroute using the the native traceroute command and returns the output in a
     parsed, machine-readable format.
@@ -104,9 +109,12 @@ def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source
                 hop['dest_ip'] = trp.dest_ip
                 hop['dest_host'] = trp.dest
 
+            if include_raw_output:
+                hop['output'] = output
+
             parsed.append(hop)
 
-    except Exception as e:
+    except Exception:
 
         if logger:
             logger.exception("Unable to parse traceroute output")
@@ -184,16 +192,16 @@ def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_comma
 
         result = collections.OrderedDict()
         result.update(parsed)
-        
+
         result['dest'] = result['host']
         del result['host']
         result['return_code'] = return_code
         result['output'] = output
-    
+
         # Log that we performed the ping
         if logger:
             logger.info("Wrote stash file=%s", writer.write_event(result))
-            
+
     return output, return_code, parsed
 
 def speedtest(host, runs=2, index=None, sourcetype="speedtest", source="speedtest_search_command", logger=None):
@@ -202,38 +210,38 @@ def speedtest(host, runs=2, index=None, sourcetype="speedtest", source="speedtes
     """
     # This will contain the event we will index and return
     result = {}
-        
+
     st = pyspeedtest.SpeedTest(host=host, runs=runs)
-    result['ping'] = round(st.ping(),2)
-    
-    result['download'] = round(st.download(),2)
+    result['ping'] = round(st.ping(), 2)
+
+    result['download'] = round(st.download(), 2)
     result['download_readable'] = pyspeedtest.pretty_speed(st.download())
-        
-    result['upload'] = round(st.upload(),2)
+
+    result['upload'] = round(st.upload(), 2)
     result['upload_readable'] = pyspeedtest.pretty_speed(st.upload())
-        
+
     result['server'] = st.host
-    
+
     # Write the event as a stash new file
     if index is not None:
         writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
-    
+
         # Log that we performed the speedtest
         if logger:
             logger.info("Wrote stash file=%s", writer.write_event(result))
-        
+
     # Return the result
     return result
-    
+
 def getHost(name, session_key, logger=None):
-    
+
     uri = '/servicesNS/nobody/network_tools/storage/collections/data/network_hosts'
-    
+
     getargs = {
         'output_mode': 'json',
         'query' : '{"name":"' + name + '"}'
     }
-    
+
     _, l = rest.simpleRequest(uri, sessionKey=session_key, getargs=getargs, raiseAllErrors=True)
     l  = json.loads(l)
 
@@ -241,176 +249,177 @@ def getHost(name, session_key, logger=None):
     if len(l) > 0:
         if logger is not None:
             logger.info("Successfully found an entry in the table of hosts for host=%s", name)
-        
+
         return l[0]
-    
+
     else:
         if logger is not None:
             logger.warn("Failed to find an entry in the table of hosts for host=%s", name)
-        
+
         return None
     
 def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None, sourcetype="wakeonlan", source="wakeonlan_search_command", logger=None, session_key=None):
     """
     Performs a wake-on-LAN request.
     """
-    
+
     # Resolve the MAC address (and port and IP address) if needed
     host_info = None
-    
+
     if host is not None:
         host_info = getHost(host, session_key)
-        
+
         if host_info is not None:
-            
+
             if mac_address is None:
                 mac_address = host_info.get('mac_address', None)
-            
+
             if ip_address is None:
                 ip_address = host_info.get('ip_address', None)
-                
+
             if port is None:
                 port = host_info.get('port', None)
-            
-    
+
     # Make sure we have a MAC address to perform a request on, stop if we don't
     if mac_address is None:
         raise ValueError("No MAC address was provided and unable to resolve one from the hosts table")
         return
-    
+
     # Do the wake-on-LAN request
     result = {}
-    
+
     if logger is not None:
         logger.info("Wake-on-LAN running against host with MAC address=%s", mac_address)
-    
+
     # Make the kwargs
     kw = {}
-     
+
     if port is not None and port != '':
         kw['port'] = port
-    
+
     # Only add the IP address if a port was provided. See https://lukemurphey.net/issues/1733.
     if port in kw and ip_address is not None and ip_address != '':
         kw['ip_address'] = ip_address
-    
+
     if logger is not None:
         logger.debug("Arguments provided to wake-on-lan: %r", kw)
-    
+
     # Make the call
     wol.send_magic_packet(mac_address, **kw)
-    
+
     # Make a dictionary that indicates what happened
     result['message'] = "Wake-on-LAN request successfully sent"
     result['mac_address'] = mac_address
-    
+
     # Add in the arguments
     result.update(kw)
-        
+
     # Write the event as a stash new file
     if index is not None:
         writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
-    
+
         # Log that we performed the wake-on-lan request
         if logger:
             logger.info("Wrote stash file=%s", writer.write_event(result))
-        
+
     return result
 
 def whois(host, index=None, sourcetype="whois", source="whois_search_command", logger=None):
-    
+
     # See if this is an IP address. If so, do an IP whois.
     try:
-        IPAddress(host) # Will throw a ValueError exception indicating that this is not an IP address
-        
+        # The following will throw a ValueError exception indicating that this is not an IP address
+        IPAddress(host)
+
         whoisObject = IPWhois(host)
         resultsOrig = whoisObject.lookup_rdap(depth=1)
     except ValueError:
-        
+
         # Since this isn't an IP address, run a domain whois
         resultsOrig = get_whois(host)
-    
+
     if 'query' not in resultsOrig:
         resultsOrig['query'] = host
-    
+
     result = flatten(resultsOrig, ignore_blanks=True)
-    
-    # Pull out raw so that we can put it at the end. This is done in case the raw field contains things that might mess up the extractions.
+
+    # Pull out raw so that we can put it at the end. This is done in case the raw field contains
+    # things that might mess up the extractions.
     raw = result.get('raw', None)
-        
+
     try:
         del result['raw']
         result['raw'] = raw
     except KeyError:
         pass # Ok, raw didn't exist
-    
+
     # Write the event as a stash new file
     if index is not None:
         writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
-    
+
         # Log that we performed the whois request
         if logger:
             logger.info("Wrote stash file=%s", writer.write_event(result))
-    
+
     return result
 
 def nslookup(host, server=None, index=None, sourcetype="nslookup", source="nslookup_search_command", logger=None):
-    
+
     result = collections.OrderedDict()
-    
+
     # Add the hostname we are querying for
     result['query'] = host
-    
+
     # Make a resolver
     custom_resolver = resolver.Resolver()
-    
+
     if server is not None:
         custom_resolver.nameservers = [server]
-    
+
     # Log the server used
     result['server'] = custom_resolver.nameservers
-    
+
     # NS records
     try:
-        answers = resolver.query(host,'NS')
-        
+        answers = resolver.query(host, 'NS')
+
         ns_records = []
-        
+
         for a in answers:
             ns_records.append(str(a))
-            
+
         if len(ns_records) > 0:
             result['ns'] = ns_records
-            
+
     except resolver.NoAnswer:
         pass
-    
+
     # A
     try:
         answers = resolver.query(host,'A')
-        
+
         a_records = []
-        
+
         for a in answers:
             a_records.append(str(a))
-            
+
         if len(a_records) > 0:
             result['a'] = a_records
     except resolver.NoAnswer:
         pass
-    
+
     # AAAA
     try:
         answers = resolver.query(host,'AAAA')
-        
+
         aaaa_records = []
-        
+
         for a in answers:
             aaaa_records.append(str(a))
-            
+
         if len(aaaa_records) > 0:
             result['aaaa'] = aaaa_records
-    
+
     except resolver.NoAnswer:
         pass
     
