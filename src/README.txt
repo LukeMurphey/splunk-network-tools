@@ -10,13 +10,18 @@ This app provides a series of tools for troubleshooting networks.
 Getting Support
 ================================================
 
-Go to the following website if you need support:
+Go to the following website if you need support and start a question:
 
      https://answers.splunk.com/app/questions/3491.html
 
 You can access the source-code and get technical details about the app at:
 
      https://github.com/LukeMurphey/splunk-network-tools
+
+You can also contact me via one of the following means:
+
+ 1) Send me an email: Luke@Lukemurphey.net
+ 2) Talk to me on the Slack group splunk-usergroups; make sure to do a shout-out to @lukemurphey so that I see your message
 
 
 
