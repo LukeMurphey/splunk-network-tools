@@ -21,7 +21,7 @@ You can access the source-code and get technical details about the app at:
 You can also contact me via one of the following means:
 
  1) Send me an email: Luke@Lukemurphey.net
- 2) Talk to me on the Slack group splunk-usergroups; make sure to do a shout-out to @lukemurphey so that I see your message
+ 2) Talk to me on the Slack group splunk-usergroups. You can direct message me @lukemurphey.
 
 
 
