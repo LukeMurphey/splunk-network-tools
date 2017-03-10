@@ -1,9 +1,14 @@
 """
-This Python script loads test cases from a directory
+This Python script loads test cases that were generated from the SeleniumIDE from a directory and
+executes them.
 
-Define some resources that we will use for patching the test cases so that they run in Splunk
-The updates will:
-   1) Perform authentication before running the test cases
+The test cases need to be exported as Python 2 unittest WebDriver cases and placed in the
+ui_test_cases directory.
+
+This test runner is necessary in order to patch the test cases so that they work better with
+Splunk. Specifically, this runner will update the tests such that they:
+
+   1) Perform authentication  to Splunk before running the test cases
    2) Allow the use of browsers other than Firefox
 """
 
@@ -15,12 +20,6 @@ import unittest
 import pkgutil
 
 from selenium.webdriver.common.by import By
-
-# Put the browser drivers on the path
-#full_driver_path = os.path.join(os.getcwd(), 'browser_drivers', 'darwin')
-
-#if not full_driver_path in os.environ["PATH"]:
-#    os.environ["PATH"] += ":" +full_driver_path
 
 def add_browser_driver_to_path():
     """
@@ -42,30 +41,17 @@ def add_browser_driver_to_path():
         os.environ["PATH"] += ":" +full_driver_path
         #logger.debug("Updating path to include selenium driver, path=%s, working_path=%s", full_driver_path, os.getcwd())
 
-add_browser_driver_to_path()
-
-# This function will load the test cases
 def load_all_modules_from_dir(dirname):
     """
-    This function loads all modules in a given directory.
-    """
-
-    """
-    for importer, package_name, _ in pkgutil.iter_modules([dirname]):
-        full_package_name = '%s.%s' % (dirname, package_name)
-        if full_package_name not in sys.modules:
-            module = importer.find_module(package_name).load_module(full_package_name)
-            print "Loading module: ", module
+    This function loads test cases from the test-case directory.
     """
 
     for (module_loader, name, ispkg) in pkgutil.iter_modules([dirname]):
-        #print __package__ + '.' + name
         #importlib.import_module('ui_test_cases.' + name)
 
         #importlib.import_module('.' + name, __package__)
         importlib.import_module('.' + name, 'ui_test_cases')
 
-# This function will perform authentication with Splunk
 def do_login(self):
     """
     This function performs authentication with Splunk.
@@ -80,21 +66,35 @@ def do_login(self):
     driver.find_element_by_css_selector("input.splButton-primary.btn").click()
     self.assertTrue(self.is_element_present(By.CSS_SELECTOR, "a.manage-apps"))
 
-# This function will patch a test class 
 def patch_test_case(test_class):
     """
-    Update the test accordingly.
+    Patch the test case so that local modifications can be used.
     """
 
-    orig_setUp = test_class.setUp
+    # Keep a copy of the original setup function since we will still want to call it in the patched
+    # version.
+    orig_setup = test_class.setUp
 
-    def newSetUp(self):
-        orig_setUp(self)
+    # Create the updated setup function
+    def new_setup(self):
+        """
+        This is the updated setup function that is customized for Splunk tests.
+        """
+
+        # Call the original
+        orig_setup(self)
+
+        # Now do the other things, like authenticating with Splunk
         do_login(self)
 
-    test_class.setUp = newSetUp
+    # Patch the test case
+    test_class.setUp = new_setup
 
+    # Return the updated test case
     return test_class
+
+# Add the browser driver to the path
+add_browser_driver_to_path()
 
 # Load the test cases
 load_all_modules_from_dir('ui_test_cases')
@@ -103,19 +103,6 @@ load_all_modules_from_dir('ui_test_cases')
 suite = unittest.TestSuite()
 
 for test_case_class in unittest.TestCase.__subclasses__()[1:]:
-    #print test_case_class
     suite.addTest(unittest.makeSuite(patch_test_case(test_case_class)))
-    #suite.addTest (test_case_class())
-    #suite.addTest(test_case_class())
-    #test_cases.append(patch_test_case(test_case_class))
-
-
-#from ui_test_cases.Ping import Ping
-
-#suite = unittest.TestSuite()
-#suite.addTest(unittest.makeSuite(Ping))
 
 result = unittest.TextTestRunner(verbosity=2).run(suite)
-
-#if __name__ == "__main__":
-#    unittest.main()
