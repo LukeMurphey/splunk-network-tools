@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://selenium-ide.openqa.org/profiles/test-case">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="selenium.base" href="http://127.0.0.1:8000" />
+<title>Ping</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">Ping</td></tr>
+</thead><tbody>
+<tr>
+	<td>open</td>
+	<td>/en-US/app/network_tools/whois</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForPageToLoad</td>
+	<td></td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForNotVisible</td>
+	<td>id=tab_whois_controls</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>link=Execute Whois</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>css=#host_input input</td>
+	<td>google.com</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=execute_input</td>
+	<td></td>
+</tr>
+<!--The following wait for the single value to change to a state of running and then back-->
+<tr>
+	<td>waitForNotVisible</td>
+	<td>css=#tab_whois_data .results-table</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForVisible</td>
+	<td>css=#tab_whois_data .results-table</td>
+	<td></td>
+</tr>
+<!--Test the result (make sure it has at least some rows)-->
+<tr>
+	<td>assertCssCount</td>
+	<td>css=#tab_whois_data .results-table tbody tr:nth-child(3) td</td>
+	<td>2</td>
+</tr>
+</tbody></table>
+</body>
+</html>

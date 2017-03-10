@@ -2,4 +2,16 @@
 	
 	<import file="basebuild.xml"/>
 	
+	
+    <!-- ================================= 
+          target: test.run_ui
+         ================================= -->
+    <target name="test.run_ui" description="Run user interface tests" depends="verify_splunk_home">
+        <exec failonerror="true" executable="${value.deploy.splunk_home}/bin/splunk" dir="${basedir}/tests">
+        	<arg line="cmd" />
+        	<arg line="python" />
+        	<arg line="ui.py" />
+        </exec>
+    </target>
+
 </project>

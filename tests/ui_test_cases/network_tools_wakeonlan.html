@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://selenium-ide.openqa.org/profiles/test-case">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="selenium.base" href="http://127.0.0.1:8000/" />
+<title>WakeOnLan</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">WakeOnLan</td></tr>
+</thead><tbody>
+<tr>
+	<td>open</td>
+	<td>/en-US/app/network_tools/wakeonlan</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForCssCount</td>
+	<td>css=#table</td>
+	<td>1</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>link=Create a New Host</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForVisible</td>
+	<td>id=inputName</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=inputName</td>
+	<td>test</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=inputMAC</td>
+	<td>00:11:22:33:44:</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=save-host</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertText</td>
+	<td>css=#inputMAC + .help-inline</td>
+	<td>A valid MAC address must be provided (like 00:11:22:33:44:55)</td>
+</tr>
+
+</tbody></table>
+</body>
+</html>

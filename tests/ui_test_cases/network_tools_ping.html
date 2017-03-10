@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://selenium-ide.openqa.org/profiles/test-case">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="selenium.base" href="http://127.0.0.1:8000" />
+<title>Ping</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">Ping</td></tr>
+</thead><tbody>
+<tr>
+	<td>open</td>
+	<td>/en-US/app/network_tools/ping?form.count=3</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForPageToLoad</td>
+	<td></td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForNotVisible</td>
+	<td>id=tab_ping_controls</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>link=Execute Ping</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>css=#server_input input</td>
+	<td>127.0.0.1</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=execute_input</td>
+	<td></td>
+</tr>
+<!--The following wait for the single value to change to a state of running and then back-->
+<tr>
+	<td>waitForVisible</td>
+	<td>css=#element3 .splunk-viz-msg</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForCssCount</td>
+	<td>css=#element3 .splunk-viz-msg</td>
+	<td>0</td>
+</tr>
+<!--Test the result-->
+<tr>
+	<td>assertText</td>
+	<td>css=#element3 text</td>
+	<td>0 %</td>
+</tr>
+</tbody></table>
+</body>
+</html>
