@@ -2,7 +2,6 @@
 	
 	<import file="basebuild.xml"/>
 	
-	
     <!-- ================================= 
           target: test.run_ui
          ================================= -->
@@ -11,6 +10,12 @@
         	<arg line="cmd" />
         	<arg line="python" />
         	<arg line="ui.py" />
+			<arg line="--username" />
+			<arg line="${value.deploy.splunk_username}" />
+			<arg line="--password" />
+			<arg line="${value.deploy.splunk_password}" />
+			<arg line="--url" />
+			<arg line="${value.deploy.splunkweb_url}" />
         </exec>
     </target>
 
