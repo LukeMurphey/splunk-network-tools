@@ -144,7 +144,10 @@ class UITestCaseLoader(object):
         and add them to the given suite.
         """
 
-        for test_case_class in unittest.TestCase.__subclasses__()[1:]: # TODO: better handle this
+        for test_case_class in unittest.TestCase.__subclasses__():
+
+            if test_case_class.__name__ == "FunctionTestCase":
+                continue
 
             # Make the new class for the test-case
             # This test case should include the name of the browser it will test and inherit from
