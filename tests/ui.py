@@ -138,7 +138,7 @@ class UITestCaseLoader(object):
             raise Exception("No test cases were loaded")
 
     @classmethod
-    def add_test_classes_to_suite(cls, suite, url, username, password, browser):
+    def add_test_classes_to_suite(cls, suite, url, username, password, browser, ignore_list=None):
         """
         Create the classes with the necessary modification to perform the tests
         and add them to the given suite.
@@ -146,7 +146,9 @@ class UITestCaseLoader(object):
 
         for test_case_class in unittest.TestCase.__subclasses__():
 
-            if test_case_class.__name__ == "FunctionTestCase":
+            # Ignore any test in the ignore list
+            if ignore_list is not None and test_case_class in ignore_list:
+                print "ignoring", test_case_class
                 continue
 
             # Make the new class for the test-case
@@ -180,6 +182,10 @@ class UITestCaseLoader(object):
         # Add the browser driver to the path
         cls.add_browser_driver_to_path()
 
+        # Keep a list of the existing cases so that we can know what is new
+        # We are only going to run the next tests that were loaded from the test-case directory
+        existing_tests = unittest.TestCase.__subclasses__()
+
         # Load the modules in the directory that appear to be test cases
         cls.load_all_modules_from_dir(test_case_dir, testcase)
 
@@ -188,7 +194,7 @@ class UITestCaseLoader(object):
 
         # Add the test classes
         for browser_to_test in browser.split(","):
-            cls.add_test_classes_to_suite(suite, url, username, password, browser_to_test)
+            cls.add_test_classes_to_suite(suite, url, username, password, browser_to_test, existing_tests)
 
         return suite
 
@@ -201,8 +207,8 @@ class UITestCaseLoader(object):
 
         suite = cls.load_test_suite(url, username, password, test_case_dir, browser, testcase)
 
-        result = unittest.TextTestRunner(verbosity=2).run(suite)
-        sys.exit(not result.wasSuccessful())
+        #result = unittest.TextTestRunner(verbosity=2).run(suite)
+        #sys.exit(not result.wasSuccessful())
 
 
 def parse_args():
