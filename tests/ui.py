@@ -41,46 +41,6 @@ class SplunkTestCase(object):
         else:
             return url
 
-    @staticmethod
-    def add_browser_driver_to_path():
-        """
-        Add the browser driver to the path
-        """
-
-        driver_path = None
-
-        if sys.platform == "linux2" and platform.architecture()[0] == '64bit':
-            driver_path = "linux64"
-        elif sys.platform == "linux2":
-            driver_path = "linux32"
-        else:
-            driver_path = sys.platform
-
-        full_driver_path = os.path.join(os.getcwd(), 'browser_drivers', driver_path)
-
-        if not full_driver_path in os.environ["PATH"]:
-            os.environ["PATH"] += ":" +full_driver_path
-            #print "Updating path to include selenium driver, path=%s, working_path=%s", full_driver_path, os.getcwd())
-
-    @staticmethod
-    def load_all_modules_from_dir(dirname, test_case=None):
-        """
-        This function loads test cases from the test-case directory.
-        """
-
-        cases_loaded = 0
-
-        for (module_loader, name, ispkg) in pkgutil.iter_modules([dirname]):
-            #importlib.import_module('ui_test_cases.' + name)
-
-            #importlib.import_module('.' + name, __package__)
-            if test_case is None or name == test_case:
-                importlib.import_module('.' + name, 'ui_test_cases')
-                cases_loaded += 1
-
-        if cases_loaded == 0:
-            raise Exception("No test cases were loaded")
-
     def do_login(self):
         """
         This function performs authentication with Splunk.
@@ -132,6 +92,68 @@ class SplunkTestCase(object):
         # Now do the other things, like authenticating with Splunk
         self.do_login()
 
+class UITestCaseLoader(object):
+    """
+    This class loads test cases and patches them so that the tests can run.
+    """
+
+    @staticmethod
+    def add_browser_driver_to_path():
+        """
+        Add the browser driver to the path
+        """
+
+        driver_path = None
+
+        if sys.platform == "linux2" and platform.architecture()[0] == '64bit':
+            driver_path = "linux64"
+        elif sys.platform == "linux2":
+            driver_path = "linux32"
+        else:
+            driver_path = sys.platform
+
+        full_driver_path = os.path.join(os.getcwd(), 'browser_drivers', driver_path)
+
+        if not full_driver_path in os.environ["PATH"]:
+            os.environ["PATH"] += ":" +full_driver_path
+            #print "Updating path to include selenium driver, path=%s, working_path=%s", full_driver_path, os.getcwd())
+
+    @staticmethod
+    def load_all_modules_from_dir(dirname, test_case=None):
+        """
+        This function loads test cases from the test-case directory.
+        """
+
+        cases_loaded = 0
+
+        for (module_loader, name, ispkg) in pkgutil.iter_modules([dirname]):
+            #importlib.import_module('ui_test_cases.' + name)
+
+            #importlib.import_module('.' + name, __package__)
+            if test_case is None or name == test_case:
+                importlib.import_module('.' + name, 'ui_test_cases')
+                cases_loaded += 1
+
+        if cases_loaded == 0:
+            raise Exception("No test cases were loaded")
+
+    @classmethod
+    def add_test_classes_to_suite(cls, suite, url, username, password, browser):
+        
+        for test_case_class in unittest.TestCase.__subclasses__()[1:]: # TODO: better handle this
+
+            new_class = type(test_case_class.__name__ + browser.title(), (SplunkTestCase,test_case_class), {})
+
+            # Set up the defaults for when the test executes
+            new_class.browser_to_use = browser.lower()
+            new_class.base_url = url
+            new_class.username = username
+            new_class.password = password
+
+            # Add the test class
+            suite.addTest(unittest.makeSuite(new_class))
+
+
     @classmethod
     def load_test_suite(cls, url, username, password, test_case_dir='ui_test_cases', browser='firefox', testcase=None):
 
@@ -148,20 +170,8 @@ class SplunkTestCase(object):
         # Make a test suite
         suite = unittest.TestSuite()
 
-        for test_case_class in unittest.TestCase.__subclasses__()[1:]: # TODO: better handle this
-
-            new_class = type(test_case_class.__name__ + browser.title(), (SplunkTestCase,test_case_class), {})
-
-            # Set up the defaults for when the text executes
-            new_class.browser_to_use = browser.lower()
-            new_class.base_url = url
-            new_class.username = username
-            new_class.password = password
-
-            #print test_case_class.__name__ + browser.title()
-            #print dir(new_class)
-            #print dir(test_case_class)
-            suite.addTest(unittest.makeSuite(new_class))
+        # Add the test classes
+        cls.add_test_classes_to_suite(suite, url, username, password, browser)
 
         return suite
 
@@ -208,5 +218,5 @@ if __name__ == '__main__':
     # Parse the CLI arguments
     arguments = parse_args()
 
-    SplunkTestCase.run_test_suite(url=arguments.url, username=arguments.username, password=arguments.password, browser=arguments.browser, testcase=arguments.testcase)
+    UITestCaseLoader.run_test_suite(url=arguments.url, username=arguments.username, password=arguments.password, browser=arguments.browser, testcase=arguments.testcase)
 
