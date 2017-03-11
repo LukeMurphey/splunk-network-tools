@@ -16,6 +16,8 @@
 			<arg line="${value.deploy.splunk_password}" />
 			<arg line="--url" />
 			<arg line="${value.deploy.splunkweb_url}" />
+			<arg line="--browser" />
+			<arg line="${value.test.browser}" />
         </exec>
     </target>
 

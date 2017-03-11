@@ -20,11 +20,12 @@ import unittest
 import pkgutil
 import argparse
 
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 
-def setup_arg_parser():
+def parse_args():
     """
-    Create an argument parser for handling CLI parameters.
+    Create an argument parser for handling CLI parameters and return the parsed arguments.
     """
 
     parser = argparse.ArgumentParser(description='Run WebDriver UI tests exported by ' \
@@ -44,7 +45,11 @@ def setup_arg_parser():
     parser.add_argument('--password', help='the password to use when authenticating to Splunk',
                         default='changeme')
 
-    return parser
+    # Add the browser argument
+    parser.add_argument('--browser', help='the browser to use',
+                        default=None)
+
+    return parser.parse_args()
 
 def remove_trailing_slash(url):
     """
@@ -57,14 +62,14 @@ def remove_trailing_slash(url):
         return url
 
 # Parse the CLI arguments
-argument_parser = setup_arg_parser()
-arguments = argument_parser.parse_args()
+ARGUMENTS = parse_args()
 
 # Get the necessary parameters
-splunk_web_url = remove_trailing_slash(arguments.url)
-splunk_username = arguments.username
-splunk_password =  arguments.password
-test_case =  arguments.testcase
+SPLUNK_WEB_URL = remove_trailing_slash(ARGUMENTS.url)
+SPLUNK_USERNAME = ARGUMENTS.username
+SPLUNK_PASSWORD = ARGUMENTS.password
+TEST_CASE_TO_RUN = ARGUMENTS.testcase
+BROWSER_TO_USE = ARGUMENTS.browser
 
 def add_browser_driver_to_path():
     """
@@ -96,7 +101,7 @@ def load_all_modules_from_dir(dirname):
         #importlib.import_module('ui_test_cases.' + name)
 
         #importlib.import_module('.' + name, __package__)
-        if test_case is None or name == test_case:
+        if TEST_CASE_TO_RUN is None or name == TEST_CASE_TO_RUN:
             importlib.import_module('.' + name, 'ui_test_cases')
             cases_loaded += 1
 
@@ -109,13 +114,31 @@ def do_login(self):
     """
 
     driver = self.driver
-    driver.get(splunk_web_url + "/en-US/account/login")
+    driver.get(SPLUNK_WEB_URL + "/en-US/account/login")
     driver.find_element_by_id("username").clear()
-    driver.find_element_by_id("username").send_keys(splunk_username)
+    driver.find_element_by_id("username").send_keys(SPLUNK_USERNAME)
     driver.find_element_by_id("password").clear()
-    driver.find_element_by_id("password").send_keys(splunk_password)
+    driver.find_element_by_id("password").send_keys(SPLUNK_PASSWORD)
     driver.find_element_by_css_selector("input.splButton-primary.btn").click()
     self.assertTrue(self.is_element_present(By.CSS_SELECTOR, "a.manage-apps"))
+
+def get_browser_driver(self):
+    """
+    Makes an instance the browser driver that should be used.
+    """
+
+    if BROWSER_TO_USE is None:
+        browser_to_use = 'firefox'
+
+    self.browser_to_use = BROWSER_TO_USE.lower()
+
+    if self.browser_to_use == 'firefox':
+        self.driver = webdriver.Firefox()
+    elif self.browser_to_use == 'chrome':
+        self.driver = webdriver.Chrome()
+
+    else:
+        raise Exception('Browser "%s" not recognized' % (browser_to_use))
 
 def patch_test_case(test_class):
     """
@@ -133,7 +156,15 @@ def patch_test_case(test_class):
         """
 
         # Call the original
-        orig_setup(self)
+        #orig_setup(self)
+
+        get_browser_driver(self)
+
+        # This is the content from the original setUp function made by SeleniumIDE
+        self.driver.implicitly_wait(30)
+        self.base_url = SPLUNK_WEB_URL
+        self.verificationErrors = []
+        self.accept_next_alert = True
 
         # Now do the other things, like authenticating with Splunk
         do_login(self)
@@ -159,4 +190,4 @@ for test_case_class in unittest.TestCase.__subclasses__()[1:]: # TODO: better ha
 
 result = unittest.TextTestRunner(verbosity=2).run(suite)
 sys.exit(not result.wasSuccessful())
-print result
+
