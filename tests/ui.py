@@ -139,10 +139,18 @@ class UITestCaseLoader(object):
 
     @classmethod
     def add_test_classes_to_suite(cls, suite, url, username, password, browser):
-        
+        """
+        Create the classes with the necessary modification to perform the tests
+        and add them to the given suite.
+        """
+
         for test_case_class in unittest.TestCase.__subclasses__()[1:]: # TODO: better handle this
 
-            new_class = type(test_case_class.__name__ + browser.title(), (SplunkTestCase,test_case_class), {})
+            # Make the new class for the test-case
+            # This test case should include the name of the browser it will test and inherit from
+            # the super-class that patches the underlying functions as needed.
+            new_class = type(test_case_class.__name__ + browser.title(),
+                             (SplunkTestCase, test_case_class), {})
 
             # Set up the defaults for when the test executes
             new_class.browser_to_use = browser.lower()
@@ -155,7 +163,12 @@ class UITestCaseLoader(object):
 
 
     @classmethod
-    def load_test_suite(cls, url, username, password, test_case_dir='ui_test_cases', browser='firefox', testcase=None):
+    def load_test_suite(cls, url, username, password, test_case_dir='ui_test_cases',
+                        browser='firefox', testcase=None):
+        """
+        Load the test cases from the test-case directory and create the classes
+        with the necessary modification to perform the tests.
+        """
 
         # Use a default browser
         if browser is None:
@@ -164,19 +177,24 @@ class UITestCaseLoader(object):
         # Add the browser driver to the path
         cls.add_browser_driver_to_path()
 
-        # Load the test cases
+        # Load the modules in the directory that appear to be test cases
         cls.load_all_modules_from_dir(test_case_dir, testcase)
 
         # Make a test suite
         suite = unittest.TestSuite()
 
         # Add the test classes
-        cls.add_test_classes_to_suite(suite, url, username, password, browser)
+        for browser_to_test in browser.split(","):
+            cls.add_test_classes_to_suite(suite, url, username, password, browser_to_test)
 
         return suite
 
     @classmethod
-    def run_test_suite(cls, url='http://127.0.0.1:8000', username='admin', password='changeme', test_case_dir='ui_test_cases', browser='firefox', testcase=None):
+    def run_test_suite(cls, url='http://127.0.0.1:8000', username='admin', password='changeme',
+                       test_case_dir='ui_test_cases', browser='firefox', testcase=None):
+        """
+        Load the tests that exist in the test-case directory and execute them.
+        """
 
         suite = cls.load_test_suite(url, username, password, test_case_dir, browser, testcase)
 
