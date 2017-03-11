@@ -111,13 +111,16 @@ class UITestCaseLoader(object):
             driver_path = "linux32"
         else:
             driver_path = sys.platform
-
+        
         full_driver_path = os.path.join(os.getcwd(), 'browser_drivers', driver_path)
 
         if not full_driver_path in os.environ["PATH"]:
-            os.environ["PATH"] += ":" +full_driver_path
-            #print "Updating path to include selenium driver, path=%s, working_path=%s", full_driver_path, os.getcwd())
-
+            if sys.platform.startswith("win"):
+                os.environ["PATH"] += ";" +full_driver_path
+            else:
+                os.environ["PATH"] += ":" +full_driver_path
+            #print "Updating path to include selenium driver, path=%s, working_path=%s" % (full_driver_path, os.getcwd())
+            #print os.environ["PATH"]
     @staticmethod
     def load_all_modules_from_dir(dirname, test_case=None):
         """
