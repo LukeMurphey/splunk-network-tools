@@ -151,6 +151,9 @@ You can also use ${value.version.number} to substitute your version number in ap
 	<property name="absolute_src_path" location="${value.src.directory}"/> <!-- This is an absolute version of the file path for error messages -->
     <property name="value.temp.directory" value="${java.io.tmpdir}/${user.name}" />
     <property name="value.build.appname" value="${ant.project.name}" />
+	<property name="value.build.libraries" value="${basedir}/lib" />
+	<property name="absolute_lib_path" location="${value.build.libraries}"/>
+	<property name="value.build.package.file" value="${value.build.packageoutput.directory}/${value.build.appname}.tar.gz"/>
     
     <!-- Set up the ant classpath -->
     <path id="ant.classpath">
@@ -185,7 +188,7 @@ You can also use ${value.version.number} to substitute your version number in ap
 		
 		<!-- Get the app name -->
 		<input
-		    message="Please enter the name of the Splunk app you are creating. This should be the directory name and shouldn't include space (e.g. website_monitoring):"
+		    message="Please enter the name of the Splunk app you are creating. This should be the directory name and shouldn't include a space (e.g. website_monitoring):"
 		    addproperty="app_name"
 		/>
 		
@@ -247,25 +250,25 @@ You can customize the build process by placing properties in the default.propert
 	<target name="download_libraries">
 		
 		<!-- Make sure the directory to store the library files exists -->
-		<mkdir dir="${basedir}/lib" />
+		<mkdir dir="${absolute_lib_path}" />
 		
 		<get src="https://lukemurphey.net/attachments/download/402/ant-contrib-0.6.jar" 
-		    dest="${basedir}/lib/ant-contrib-0.6.jar" 
+		    dest="${absolute_lib_path}/ant-contrib-0.6.jar" 
 		    verbose="true"
 			skipexisting="true" />
 		
 		<get src="https://lukemurphey.net/attachments/download/403/yuicompressor-2.4.7.jar" 
-			 dest="${basedir}/lib/yuicompressor-2.4.7.jar" 
+			 dest="${absolute_lib_path}/yuicompressor-2.4.7.jar" 
 			 verbose="true"
 			 skipexisting="true" />
 		
 		<get src="https://lukemurphey.net/attachments/download/404/yuicompressor-2.4.8.jar" 
-			 dest="${basedir}/lib/yuicompressor-2.4.8.jar" 
+			 dest="${absolute_lib_path}/yuicompressor-2.4.8.jar" 
 			 verbose="true"
 			 skipexisting="true" />
 		
-		<get src="https://github.com/LukeMurphey/splunk-ant-build-script/releases/download/1.0/splunkdevtools-1.0.jar" 
-			 dest="${basedir}/lib/splunkdevtools-1.0.jar" 
+		<get src="https://github.com/LukeMurphey/splunk-ant-build-script/releases/download/1.0.1/splunkdevtools-1.0.1.jar" 
+			 dest="${absolute_lib_path}/splunkdevtools-1.0.1.jar" 
 			 verbose="true"
 			 skipexisting="true" />
 		
@@ -277,13 +280,13 @@ You can customize the build process by placing properties in the default.propert
 	<target name="initialize_libraries" depends="download_libraries">
 		<taskdef resource="net/sf/antcontrib/antlib.xml">
 		     <classpath>
-		    	<pathelement location="${basedir}/lib/ant-contrib-0.6.jar"/>
+		    	<pathelement location="${absolute_lib_path}/ant-contrib-0.6.jar"/>
 		     </classpath>
 		</taskdef>
 		
-		<taskdef name="splunkwebbump" classname="net.lukemurphey.splunkbuild.SplunkWebBump" classpath="lib/splunkdevtools-1.0.jar" />
-		<taskdef name="splunkrestart" classname="net.lukemurphey.splunkbuild.SplunkRestart" classpath="lib/splunkdevtools-1.0.jar" />
-		<taskdef name="splunkappinstall" classname="net.lukemurphey.splunkbuild.SplunkAppInstall" classpath="lib/splunkdevtools-1.0.jar" />
+		<taskdef name="splunkwebbump" classname="net.lukemurphey.splunkbuild.SplunkWebBump" classpath="${absolute_lib_path}/splunkdevtools-1.0.1.jar" />
+		<taskdef name="splunkrestart" classname="net.lukemurphey.splunkbuild.SplunkRestart" classpath="${absolute_lib_path}/splunkdevtools-1.0.1.jar" />
+		<taskdef name="splunkappinstall" classname="net.lukemurphey.splunkbuild.SplunkAppInstall" classpath="${absolute_lib_path}/splunkdevtools-1.0.1.jar" />
 	</target>
 	
     <!-- ================================= 
@@ -302,10 +305,10 @@ You can customize the build process by placing properties in the default.propert
         </delete>
     	
         <!-- Delete the downloaded build dependencies -->
-    	<delete file="${basedir}/lib/ant-contrib-0.6.jar" />
-    	<delete file="${basedir}/lib/yuicompressor-2.4.7.jar" />
-    	<delete file="${basedir}/lib/yuicompressor-2.4.8.jar" />
-    	<delete file="${basedir}/lib/splunkdevtools-1.0.jar" />
+    	<delete file="${absolute_lib_path}/ant-contrib-0.6.jar" />
+    	<delete file="${absolute_lib_path}/yuicompressor-2.4.7.jar" />
+    	<delete file="${absolute_lib_path}/yuicompressor-2.4.8.jar" />
+    	<delete file="${absolute_lib_path}/splunkdevtools-1.0.1.jar" />
         
     </target>
 	
@@ -490,7 +493,6 @@ You can customize the build process by placing properties in the default.propert
         </tar>
         
         <!-- Gzip the files -->
-		<property name="value.build.package.file" value="${value.build.packageoutput.directory}/${value.build.appname}.tar.gz"/>
         <gzip src="${value.temp.tar_package.file}" destfile="${value.build.package.file}"/>
         
         <!-- Delete the temporary location so that old files do not get streamed in -->
@@ -785,9 +787,25 @@ Below is an example of the file:
 	</target>
 
     <!-- ================================= 
+          target: verify_package
+         ================================= -->
+	<target name="verify_package"  depends="initialize_libraries">
+
+		<if>
+			<available file="${value.build.package.file}" />
+			<then>
+				<!-- Package exists, we are good -->
+			</then>
+			<else>
+				<fail message="Package file does not exist; expected it to be at ${value.build.package.file}" />
+			</else>
+		</if>
+	</target>
+
+    <!-- ================================= 
           target: splunk.install_cli
          ================================= -->
-	<target name="splunk.install_cli" description="Installs the package into Splunk" depends="verify_splunk_home,initialize_libraries">
+	<target name="splunk.install_cli" description="Installs the package into Splunk" depends="verify_splunk_home,verify_package,initialize_libraries">
 
 		<exec failonerror="true" executable="${value.deploy.splunk_home}/bin/splunk" dir="${basedir}">
         	<arg line="install" />
@@ -804,7 +822,7 @@ Below is an example of the file:
     <!-- ================================= 
           target: splunk.install_api
          ================================= -->
-	<target name="splunk.install_api" description="Installs the package into Splunk using the REST API" depends="verify_splunkd_url,initialize_libraries">
+	<target name="splunk.install_api" description="Installs the package into Splunk using the REST API" depends="verify_splunkd_url,verify_package,initialize_libraries">
 
 		<property name="absolute_package_file" location="${value.build.package.file}"/> 
 		<splunkappinstall name="${absolute_package_file}" url="${value.deploy.splunkd_url}" username="${value.deploy.splunk_username}" password="${value.deploy.splunk_password}"/>
