@@ -210,8 +210,8 @@ class UITestCaseLoader(object):
 
         suite = cls.load_test_suite(url, username, password, test_case_dir, browser, testcase)
 
-        #result = unittest.TextTestRunner(verbosity=2).run(suite)
-        #sys.exit(not result.wasSuccessful())
+        result = unittest.TextTestRunner(verbosity=2).run(suite)
+        sys.exit(not result.wasSuccessful())
 
 
 def parse_args():
