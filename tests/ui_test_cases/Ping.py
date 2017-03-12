@@ -24,6 +24,12 @@ class Ping(unittest.TestCase):
             except: pass
             time.sleep(1)
         else: self.fail("time out")
+        for i in range(60):
+            try:
+                if not driver.find_element_by_css_selector(".alert-info").is_displayed(): break
+            except: pass
+            time.sleep(1)
+        else: self.fail("time out")
         driver.find_element_by_link_text("Execute Ping").click()
         driver.find_element_by_css_selector("#server_input input").clear()
         driver.find_element_by_css_selector("#server_input input").send_keys("127.0.0.1")
