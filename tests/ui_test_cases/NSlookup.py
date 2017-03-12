@@ -20,6 +20,12 @@ class NSlookup(unittest.TestCase):
         driver.get(self.base_url + "/en-US/app/network_tools/nslookup")
         for i in range(60):
             try:
+                if driver.find_element_by_id("content1").is_displayed(): break
+            except: pass
+            time.sleep(1)
+        else: self.fail("time out")
+        for i in range(60):
+            try:
                 if not driver.find_element_by_id("tab_nslookup_controls").is_displayed(): break
             except: pass
             time.sleep(1)

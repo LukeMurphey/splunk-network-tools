@@ -20,6 +20,12 @@ class Ping(unittest.TestCase):
         driver.get(self.base_url + "/en-US/app/network_tools/ping?form.count=3")
         for i in range(60):
             try:
+                if driver.find_element_by_id("content1").is_displayed(): break
+            except: pass
+            time.sleep(1)
+        else: self.fail("time out")
+        for i in range(60):
+            try:
                 if not driver.find_element_by_id("tab_ping_controls").is_displayed(): break
             except: pass
             time.sleep(1)

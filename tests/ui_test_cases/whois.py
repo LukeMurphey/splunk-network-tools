@@ -20,6 +20,12 @@ class Whois(unittest.TestCase):
         driver.get(self.base_url + "/en-US/app/network_tools/whois")
         for i in range(60):
             try:
+                if driver.find_element_by_id("content1").is_displayed(): break
+            except: pass
+            time.sleep(1)
+        else: self.fail("time out")
+        for i in range(60):
+            try:
                 if not driver.find_element_by_id("tab_whois_controls").is_displayed(): break
             except: pass
             time.sleep(1)
@@ -49,6 +55,7 @@ class Whois(unittest.TestCase):
         else: self.fail("time out")
         # Test the result (make sure it has at least some rows)
         self.assertEqual(2, len(driver.find_elements_by_css_selector("#tab_whois_data .results-table tbody tr:nth-child(3) td")))
+        # ERROR: Caught exception [unknown command []]
     
     def is_element_present(self, how, what):
         try: self.driver.find_element(by=how, value=what)
