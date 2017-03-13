@@ -53,20 +53,29 @@
 </tr>
 <!--The following wait for the single value to change to a state of running and then back-->
 <tr>
-	<td>waitForVisible</td>
-	<td>css=#element3 .splunk-viz-msg</td>
+	<td>waitForText</td>
+	<td>css=#tab_ping_data tbody:nth-child(2) &gt; tr:nth-child(1) &gt; td:nth-child(2)</td>
+	<td>127.0.0.1</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>css=#server_input input</td>
+	<td>127.0.0.2</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=execute_input</td>
 	<td></td>
 </tr>
 <tr>
-	<td>waitForCssCount</td>
-	<td>css=#element3 .splunk-viz-msg</td>
-	<td>0</td>
+	<td>waitForText</td>
+	<td>css=#tab_ping_data tbody:nth-child(2) &gt; tr:nth-child(1) &gt; td:nth-child(2)</td>
+	<td>127.0.0.2</td>
 </tr>
-<!--Test the result-->
 <tr>
 	<td>assertText</td>
-	<td>css=#element3 text</td>
-	<td>0 %</td>
+	<td>css=#tab_ping_data tbody:nth-child(2) &gt; tr:nth-child(1) &gt; td:nth-child(2)</td>
+	<td>127.0.0.2</td>
 </tr>
 </tbody></table>
 </body>

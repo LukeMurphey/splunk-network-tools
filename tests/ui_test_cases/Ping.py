@@ -43,18 +43,20 @@ class Ping(unittest.TestCase):
         # The following wait for the single value to change to a state of running and then back
         for i in range(60):
             try:
-                if driver.find_element_by_css_selector("#element3 .splunk-viz-msg").is_displayed(): break
+                if "127.0.0.1" == driver.find_element_by_css_selector("#tab_ping_data tbody:nth-child(2) > tr:nth-child(1) > td:nth-child(2)").text: break
             except: pass
             time.sleep(1)
         else: self.fail("time out")
+        driver.find_element_by_css_selector("#server_input input").clear()
+        driver.find_element_by_css_selector("#server_input input").send_keys("127.0.0.2")
+        driver.find_element_by_id("execute_input").click()
         for i in range(60):
             try:
-                if 0 == len(driver.find_elements_by_css_selector("#element3 .splunk-viz-msg")): break
+                if "127.0.0.2" == driver.find_element_by_css_selector("#tab_ping_data tbody:nth-child(2) > tr:nth-child(1) > td:nth-child(2)").text: break
             except: pass
             time.sleep(1)
         else: self.fail("time out")
-        # Test the result
-        self.assertEqual(u"0 %", driver.find_element_by_css_selector("#element3 text").text)
+        self.assertEqual("127.0.0.2", driver.find_element_by_css_selector("#tab_ping_data tbody:nth-child(2) > tr:nth-child(1) > td:nth-child(2)").text)
     
     def is_element_present(self, how, what):
         try: self.driver.find_element(by=how, value=what)
