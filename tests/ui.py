@@ -30,6 +30,8 @@ class SplunkTestCase(object):
     base_url = 'http://127.0.0.1:8000'
     browser_to_use = 'firefox'
 
+    implicit_wait_time = 5
+
     @staticmethod
     def remove_trailing_slash(url):
         """
@@ -85,7 +87,10 @@ class SplunkTestCase(object):
         self.get_browser_driver()
 
         # This is the content from the original setUp function made by SeleniumIDE
-        self.driver.implicitly_wait(5)
+        # This was changed slightly to include a modifiable implicit wait time.
+        # The original implicit wait time of 30 seconds could cause the loops for the "waitFor"
+        # calls to take an extreme amount of time.
+        self.driver.implicitly_wait(self.implicit_wait_time)
         self.verificationErrors = []
         self.accept_next_alert = True
 
@@ -111,7 +116,7 @@ class UITestCaseLoader(object):
             driver_path = "linux32"
         else:
             driver_path = sys.platform
-        
+
         full_driver_path = os.path.join(os.getcwd(), 'browser_drivers', driver_path)
 
         if not full_driver_path in os.environ["PATH"]:
