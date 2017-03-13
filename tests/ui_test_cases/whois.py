@@ -32,7 +32,7 @@ class Whois(unittest.TestCase):
         else: self.fail("time out")
         for i in range(60):
             try:
-                if not driver.find_element_by_css_selector(".alert-info").is_displayed(): break
+                if 0 == len(driver.find_elements_by_css_selector(".alert-info")): break
             except: pass
             time.sleep(1)
         else: self.fail("time out")
@@ -43,19 +43,23 @@ class Whois(unittest.TestCase):
         # The following wait for the single value to change to a state of running and then back
         for i in range(60):
             try:
-                if not driver.find_element_by_css_selector("#tab_whois_data .results-table").is_displayed(): break
-            except: pass
-            time.sleep(1)
-        else: self.fail("time out")
-        for i in range(60):
-            try:
-                if driver.find_element_by_css_selector("#tab_whois_data .results-table").is_displayed(): break
+                if driver.find_element_by_css_selector("#tab_whois_data .results-table tbody tr:nth-child(3) td").is_displayed(): break
             except: pass
             time.sleep(1)
         else: self.fail("time out")
         # Test the result (make sure it has at least some rows)
         self.assertEqual(2, len(driver.find_elements_by_css_selector("#tab_whois_data .results-table tbody tr:nth-child(3) td")))
-        # ERROR: Caught exception [unknown command []]
+        # Now try a different site and make sure it works too
+        driver.find_element_by_css_selector("#host_input input").clear()
+        driver.find_element_by_css_selector("#host_input input").send_keys("textcritical.net")
+        driver.find_element_by_id("execute_input").click()
+        for i in range(60):
+            try:
+                if "Wadsworth" == driver.find_element_by_css_selector("#tab_whois_data tbody:nth-child(2) > tr:nth-child(1) > td:nth-child(2)").text: break
+            except: pass
+            time.sleep(1)
+        else: self.fail("time out")
+        self.assertEqual("Wadsworth", driver.find_element_by_css_selector("#tab_whois_data tbody:nth-child(2) > tr:nth-child(1) > td:nth-child(2)").text)
     
     def is_element_present(self, how, what):
         try: self.driver.find_element(by=how, value=what)

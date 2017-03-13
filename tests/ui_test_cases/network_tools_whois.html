@@ -32,9 +32,9 @@
 	<td></td>
 </tr>
 <tr>
-	<td>waitForNotVisible</td>
+	<td>waitForCssCount</td>
 	<td>css=.alert-info</td>
-	<td></td>
+	<td>0</td>
 </tr>
 <tr>
 	<td>click</td>
@@ -53,14 +53,9 @@
 </tr>
 <!--The following wait for the single value to change to a state of running and then back-->
 <tr>
-	<td>waitForNotVisible</td>
-	<td>css=#tab_whois_data .results-table</td>
-	<td></td>
-</tr>
-<tr>
 	<td>waitForVisible</td>
-	<td>css=#tab_whois_data .results-table</td>
-	<td></td>
+	<td>css=#tab_whois_data .results-table tbody tr:nth-child(3) td</td>
+	<td>2</td>
 </tr>
 <!--Test the result (make sure it has at least some rows)-->
 <tr>
@@ -68,10 +63,26 @@
 	<td>css=#tab_whois_data .results-table tbody tr:nth-child(3) td</td>
 	<td>2</td>
 </tr>
+<!--Now try a different site and make sure it works too-->
 <tr>
+	<td>type</td>
+	<td>css=#host_input input</td>
+	<td>textcritical.net</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=execute_input</td>
 	<td></td>
-	<td></td>
-	<td></td>
+</tr>
+<tr>
+	<td>waitForText</td>
+	<td>css=#tab_whois_data tbody:nth-child(2) &gt; tr:nth-child(1) &gt; td:nth-child(2)</td>
+	<td>Wadsworth</td>
+</tr>
+<tr>
+	<td>assertText</td>
+	<td>css=#tab_whois_data tbody:nth-child(2) &gt; tr:nth-child(1) &gt; td:nth-child(2)</td>
+	<td>Wadsworth</td>
 </tr>
 </tbody></table>
 </body>

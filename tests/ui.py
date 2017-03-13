@@ -85,7 +85,7 @@ class SplunkTestCase(object):
         self.get_browser_driver()
 
         # This is the content from the original setUp function made by SeleniumIDE
-        self.driver.implicitly_wait(30)
+        self.driver.implicitly_wait(5)
         self.verificationErrors = []
         self.accept_next_alert = True
 
