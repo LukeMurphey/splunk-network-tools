@@ -32,7 +32,7 @@ class NSlookup(unittest.TestCase):
         else: self.fail("time out")
         for i in range(60):
             try:
-                if not driver.find_element_by_css_selector(".alert-info").is_displayed(): break
+                if 0 == len(driver.find_elements_by_css_selector(".alert-info")): break
             except: pass
             time.sleep(1)
         else: self.fail("time out")
