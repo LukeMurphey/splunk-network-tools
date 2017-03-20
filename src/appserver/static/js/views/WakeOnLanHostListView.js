@@ -302,6 +302,9 @@ define([
   		  	$("#inputPort", this.$el).val("");
   		  	$("#inputKey", this.$el).val("");
   		  	
+			// Clear the validation state
+			this.clearAllValidators();
+
   		  	// Open the modal dialog
         	$("#add-host-modal", this.$el).modal();
         },
@@ -454,12 +457,29 @@ define([
   		  		return 1;
   		  	}
   		  	else{
-  		  		$(selector, this.$el).removeClass('error');
-  		  		$(selector + ' .help-inline', this.$el).text('');
+  		  		this.clearValidationState(selector);
   		  		return 0;
   		  	}
         },
         
+		/**
+		 * Clear the validation state for the given input.
+		 */
+		clearValidationState: function(selector){
+  		  	$(selector, this.$el).removeClass('error');
+  		  	$(selector + ' .help-inline', this.$el).text('');
+		},
+
+		/**
+		 * Clear the validation state for all of the forms.
+		 */
+		clearAllValidators: function(){
+			this.clearValidationState('.input-host-name.control-group');
+			this.clearValidationState('.input-host-mac.control-group');
+			this.clearValidationState('.input-host-ip.control-group');
+			this.clearValidationState('.input-host-port.control-group');
+		},
+
         /**
          * Validate the name field and post a message accordingly.
          */
