@@ -819,7 +819,7 @@ define([
                               null,                   // Name
                               null,                   // IP Address
                               { "searchable": false },// MAC Address
-                              { "searchable": false } // Actions
+                              { "searchable": false, "sortable": false } // Actions
                             ]
             } );
         },
