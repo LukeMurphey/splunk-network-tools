@@ -405,7 +405,7 @@ define([
          * Determine if the provided MAC address is valid.
          */
         isValidMACAddress: function(mac_address){
-        	var regex = /^[0-9a-f]{1,2}([\.:-])(?:[0-9a-f]{1,2}\1){4}[0-9a-f]{1,2}$/gmi;
+        	var regex = /^[0-9a-f]{2}([\.:-])(?:[0-9a-f]{2}\1){4}[0-9a-f]{2}$/gmi;
         	
         	return regex.test(mac_address);
         },
