@@ -184,19 +184,26 @@ def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_comma
     try:
         parsed = pingparser.parse(output)
     except Exception:
-        parsed = {}
+        parsed = {'message': 'output could not be parsed'}
 
     # Write the event as a stash new file
     if index is not None:
-        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
+        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype,
+                                file_extension=".stash_output")
 
         result = collections.OrderedDict()
         result.update(parsed)
 
-        result['dest'] = result['host']
-        del result['host']
+        if 'host' in result:
+            result['dest'] = result['host']
+            del result['host']
+
         result['return_code'] = return_code
         result['output'] = output
+
+        # Remove the jitter field on Windows since it doesn't get populated on Windows
+        if 'jitter' in result and (result['jitter'] is None or len(result['jitter']) == 0):
+            del result['jitter']
 
         # Log that we performed the ping
         if logger:
