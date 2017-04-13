@@ -35,7 +35,50 @@ import binascii
 import json
 
 # Splunk imports
+import splunk
 import splunk.rest as rest
+from splunk.models.base import SplunkAppObjModel
+from splunk.models.field import Field
+
+class NetworkToolsConfig(SplunkAppObjModel):
+    """
+    Represents the network_tools.conf custom conf file.
+    """
+
+    resource = '/admin/network_tools'
+    index = Field()
+
+def get_app_config(session_key, stanza="default"):
+    """
+    Get the app configuration
+
+    Arguments:
+    session_key -- The session key to use when connecting to the REST API
+    stanza -- The stanza to get the proxy information from (defaults to "default")
+    """
+
+    # If the stanza is empty, then just use the default
+    if stanza is None or stanza.strip() == "":
+        stanza = "default"
+ 
+    # Get the configuration
+    try:
+        app_config = NetworkToolsConfig.get(NetworkToolsConfig.build_id(stanza, "network_tools", "nobody"), sessionKey=session_key)
+    except splunk.ResourceNotFound:
+        return None
+
+    return app_config
+
+def get_default_index(session_key):
+    """
+    Get the default index to output results to.
+    """
+    app_config = get_app_config(session_key)
+
+    if app_config is None:
+        return "main"
+    else:
+        return app_config.index
 
 def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source="traceroute_search_command", logger=None, include_dest_info=True, include_raw_output=False):
     """

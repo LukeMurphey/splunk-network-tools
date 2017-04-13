@@ -5,7 +5,7 @@ The results will be indexed for later viewing if the user so wishes to see the r
 """
 
 from network_tools_app.search_command import SearchCommand
-from network_tools_app import traceroute
+from network_tools_app import traceroute, get_default_index
 
 from splunk.util import normalizeBoolean
 
@@ -15,19 +15,21 @@ class Traceroute(SearchCommand):
     """
 
     def __init__(self, host=None, include_output=False):
-        SearchCommand.__init__(self, run_in_preview=True, logger_name="traceroute_search_command")
+        SearchCommand.__init__(self, run_in_preview=False, logger_name="traceroute_search_command")
 
         self.host = host
         self.include_output = normalizeBoolean(include_output)
 
         self.logger.info("Traceroute running")
 
-    def handle_results(self, results, in_preview, session_key):
+    def handle_results(self, results, session_key, in_preview):
 
         # FYI: we ignore results since this is a generating command
 
         # Do the traceroute
-        _, return_code, result = traceroute(self.host, index="main", logger=self.logger, include_raw_output=self.include_output)
+        index = get_default_index(session_key)
+
+        _, return_code, result = traceroute(self.host, index=index, logger=self.logger, include_raw_output=self.include_output)
 
         #result['return_code'] = return_code
 

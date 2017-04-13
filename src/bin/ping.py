@@ -3,15 +3,15 @@ This module provides a Splunk search command that runs and parse the output of t
 """
 
 from network_tools_app.search_command import SearchCommand
-from network_tools_app import ping
+from network_tools_app import ping, get_default_index
 
 class Ping(SearchCommand):
     """
-    This search command provides a Splunk interface for the system/s ping command.
+    This search command provides a Splunk interface for the system's ping command.
     """
 
     def __init__(self, host=None, count=1):
-        SearchCommand.__init__(self, run_in_preview=True, logger_name="ping_search_command")
+        SearchCommand.__init__(self, run_in_preview=False, logger_name="ping_search_command")
 
         self.host = host
 
@@ -22,12 +22,14 @@ class Ping(SearchCommand):
 
         self.logger.info("Ping running")
 
-    def handle_results(self, results, in_preview, session_key):
+    def handle_results(self, results, session_key, in_preview):
 
         # FYI: we ignore results since this is a generating command
 
         # Do the ping
-        _, return_code, result = ping(self.host, self.count, index="main", logger=self.logger)
+        index = get_default_index(session_key)
+
+        _, return_code, result = ping(self.host, self.count, index=index, logger=self.logger)
 
         result['return_code'] = return_code
 
