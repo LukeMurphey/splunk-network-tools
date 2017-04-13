@@ -1,9 +1,9 @@
 <nav color="#129793">
-  <view name="speedtest" default="true" />
-  <view name="ping" />
+  <view name="ping" default="true" />
   <view name="traceroute" />
   <view name="whois" />
   <view name="nslookup" />
+  <view name="speedtest" />
   <view name="wakeonlan" />
   <collection label="Search">
   	<view name="search" />
