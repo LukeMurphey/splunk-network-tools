@@ -1,5 +1,5 @@
 """
-This class 
+This class implements a class for parsing traceroute output.
 """
 
 import re
