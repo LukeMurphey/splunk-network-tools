@@ -1,0 +1,35 @@
+<setup>
+    
+  <block title="Setup Network Toolkit for Splunk"
+         endpoint="admin/network_tools" entity="default">
+
+      <text>
+          
+          <![CDATA[          
+          <script language="javascript">
+              
+              $(document).ready(function() {
+                $('#\\/admin\\/network_tools\\/default\\/index').attr("placeholder", "e.g. main");
+              });
+              
+          </script>
+          ]]>
+      </text>
+
+      <input field="index">
+        <label>Default index for output of the search commands</label>
+        <type>text</type>
+      </input>
+      
+      <text>
+          <![CDATA[
+          <div style="color: #AAA; float:left;">
+          This app is licensed under the <a target="_blank" href="https://github.com/LukeMurphey/splunk-network-tools/blob/master/LICENSE">Apache 2.0 License</a>.
+          <br />
+          See <a target="_blank" href="https://lukemurphey.net/projects/network-tools">LukeMurphey.net</a> for more information and for support.
+          </div>
+          ]]>
+      </text>
+  </block>
+
+</setup>
