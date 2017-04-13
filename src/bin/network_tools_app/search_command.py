@@ -1,6 +1,10 @@
 """
 This class provides a base class for search commands that handles much of the Splunk-to-Python interaction necessary for making a search command.
 
+To make a search command, you will need to:
+ 1) Sub-class the search command (see below for an example)
+ 2) Declare your search command in commands.conf
+
 See below for a basic example of a class that sub-classes SearchCommand:
 
 
