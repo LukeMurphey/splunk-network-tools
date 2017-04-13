@@ -139,10 +139,16 @@ td{
 @keyframes highlighted-online {
   0% {
     background: #58c126;
+	box-shadow: 0 0 0 0 #58c126;
+  }
+
+  70% {
+	box-shadow: 0 0 0 10px rgba(204,169,44, 0);
   }
 
   100% {
     background: inherit;
+	box-shadow: 0 0 0 0 rgba(204,169,44, 0);
   }
 }
 
@@ -156,10 +162,16 @@ td{
 @keyframes highlighted-offline {
   0% {
     background: #a5a5a5;
+	box-shadow: 0 0 0 0 #a5a5a5;
+  }
+
+  70% {
+	box-shadow: 0 0 0 10px rgba(204,169,44, 0);
   }
 
   100% {
     background: inherit;
+	box-shadow: 0 0 0 0 rgba(204,169,44, 0);
   }
 }
 
