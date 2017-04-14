@@ -80,7 +80,9 @@ def get_default_index(session_key):
     else:
         return app_config.index
 
-def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source="traceroute_search_command", logger=None, include_dest_info=True, include_raw_output=False):
+def traceroute(host, unique_id=None, index=None, sourcetype="traceroute",
+               source="traceroute_search_command", logger=None, include_dest_info=True,
+               include_raw_output=False):
     """
     Performs a traceroute using the the native traceroute command and returns the output in a
     parsed, machine-readable format.
@@ -104,9 +106,9 @@ def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source
     try:
         output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
         return_code = 0
-    except subprocess.CalledProcessError as e:
-        output = e.output
-        return_code = e.returncode
+    except subprocess.CalledProcessError as exception:
+        output = exception.output
+        return_code = exception.returncode
 
     # Parse the output
     try:
@@ -118,9 +120,9 @@ def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source
         hop_idx = 0
 
         # Make an entry for each hop
-        for h in trp.hops:
+        for hop in trp.hops:
 
-            if h.probes is None or len(h.probes) == 0:
+            if hop.probes is None or len(hop.probes) == 0:
                 continue
 
             hop_idx = hop_idx + 1
@@ -130,10 +132,10 @@ def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source
             ips = []
             names = []
 
-            hop = collections.OrderedDict()
-            hop['hop'] = hop_idx
+            hop_dict = collections.OrderedDict()
+            hop_dict['hop'] = hop_idx
 
-            for probe in h.probes:
+            for probe in hop.probes:
 
                 if probe.rtt is not None:
                     rtts.append(str(probe.rtt))
@@ -144,18 +146,18 @@ def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source
                 if probe.dest is not None:
                     names.append(probe.dest)
 
-            hop['rtt'] = rtts
-            hop['ip'] = ips
-            hop['name'] = names
+            hop_dict['rtt'] = rtts
+            hop_dict['ip'] = ips
+            hop_dict['name'] = names
 
             if include_dest_info:
-                hop['dest_ip'] = trp.dest_ip
-                hop['dest_host'] = trp.dest
+                hop_dict['dest_ip'] = trp.dest_ip
+                hop_dict['dest_host'] = trp.dest
 
             if include_raw_output:
-                hop['output'] = output
+                hop_dict['output'] = output
 
-            parsed.append(hop)
+            parsed.append(hop_dict)
 
     except Exception:
 
@@ -166,7 +168,8 @@ def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source
 
     # Write the event as a stash new file
     if index is not None:
-        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
+        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype,
+                                file_extension=".stash_output")
 
         # Let's store the basic information for the traceroute that will be included with each hop
         proto = collections.OrderedDict()
@@ -181,10 +184,10 @@ def traceroute(host, unique_id=None, index=None, sourcetype="traceroute", source
 
         proto['unique_id'] = unique_id
 
-        for r in parsed:
+        for parsed_hop in parsed:
 
             result = collections.OrderedDict()
-            result.update(r)
+            result.update(parsed_hop)
             result.update(proto)
 
             # Log that we performed the traceroute
@@ -219,9 +222,9 @@ def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_comma
     try:
         output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
         return_code = 0
-    except subprocess.CalledProcessError as e:
-        output = e.output
-        return_code = e.returncode
+    except subprocess.CalledProcessError as exception:
+        output = exception.output
+        return_code = exception.returncode
 
     # Parse the output
     try:
@@ -254,27 +257,30 @@ def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_comma
 
     return output, return_code, parsed
 
-def speedtest(host, runs=2, index=None, sourcetype="speedtest", source="speedtest_search_command", logger=None):
+def speedtest(host, runs=2, index=None, sourcetype="speedtest", source="speedtest_search_command",
+              logger=None):
     """
     Performs a bandwidth speedtest and sends the results to an index.
     """
+
     # This will contain the event we will index and return
     result = {}
 
-    st = pyspeedtest.SpeedTest(host=host, runs=runs)
-    result['ping'] = round(st.ping(), 2)
+    speedtester = pyspeedtest.SpeedTest(host=host, runs=runs)
+    result['ping'] = round(speedtester.ping(), 2)
 
-    result['download'] = round(st.download(), 2)
-    result['download_readable'] = pyspeedtest.pretty_speed(st.download())
+    result['download'] = round(speedtester.download(), 2)
+    result['download_readable'] = pyspeedtest.pretty_speed(speedtester.download())
 
-    result['upload'] = round(st.upload(), 2)
-    result['upload_readable'] = pyspeedtest.pretty_speed(st.upload())
+    result['upload'] = round(speedtester.upload(), 2)
+    result['upload_readable'] = pyspeedtest.pretty_speed(speedtester.upload())
 
-    result['server'] = st.host
+    result['server'] = speedtester.host
 
     # Write the event as a stash new file
     if index is not None:
-        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
+        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype,
+                                file_extension=".stash_output")
 
         # Log that we performed the speedtest
         if logger:
@@ -283,7 +289,10 @@ def speedtest(host, runs=2, index=None, sourcetype="speedtest", source="speedtes
     # Return the result
     return result
 
-def getHost(name, session_key, logger=None):
+def get_host(name, session_key, logger=None):
+    """
+    Get the host information object for the given name.
+    """
 
     uri = '/servicesNS/nobody/network_tools/storage/collections/data/network_hosts'
 
@@ -292,7 +301,9 @@ def getHost(name, session_key, logger=None):
         'query' : '{"name":"' + name + '"}'
     }
 
-    _, host_entry = rest.simpleRequest(uri, sessionKey=session_key, getargs=getargs, raiseAllErrors=True)
+    _, host_entry = rest.simpleRequest(uri, sessionKey=session_key, getargs=getargs,
+                                       raiseAllErrors=True)
+
     host_entry = json.loads(host_entry)
 
     # Make sure we got at least one result
@@ -319,7 +330,7 @@ def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None,
     host_info = None
 
     if host is not None:
-        host_info = getHost(host, session_key)
+        host_info = get_host(host, session_key)
 
         if host_info is not None:
 
@@ -335,7 +346,6 @@ def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None,
     # Make sure we have a MAC address to perform a request on, stop if we don't
     if mac_address is None:
         raise ValueError("No MAC address was provided and unable to resolve one from the hosts table")
-        return
 
     # Do the wake-on-LAN request
     result = {}
@@ -421,7 +431,8 @@ def whois(host, index=None, sourcetype="whois", source="whois_search_command", l
 
     return result
 
-def nslookup(host, server=None, index=None, sourcetype="nslookup", source="nslookup_search_command", logger=None):
+def nslookup(host, server=None, index=None, sourcetype="nslookup",
+             source="nslookup_search_command", logger=None):
     """
     Perform a DNS lookup. If the input is an IP address, then a reverse lookup will be performed.
     """
@@ -437,11 +448,6 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup", source="nsloo
 
         addr = reversename.from_address(host)
 
-        if logger:
-            logger.info("addr=%r", addr)
-            logger.info("host=%r", resolver.query(addr, "PTR"))
-
-            logger.info("dns=%r", reversename.to_address(addr))
 
         if len(resolver.query(addr, "PTR")) > 0:
             result['host'] = str(resolver.query(addr, "PTR")[0])
@@ -463,8 +469,8 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup", source="nsloo
 
             ns_records = []
 
-            for a in answers:
-                ns_records.append(str(a))
+            for answer in answers:
+                ns_records.append(str(answer))
 
             if len(ns_records) > 0:
                 result['ns'] = ns_records
@@ -478,8 +484,8 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup", source="nsloo
 
             a_records = []
 
-            for a in answers:
-                a_records.append(str(a))
+            for answer in answers:
+                a_records.append(str(answer))
 
             if len(a_records) > 0:
                 result['a'] = a_records
@@ -492,8 +498,8 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup", source="nsloo
 
             aaaa_records = []
 
-            for a in answers:
-                aaaa_records.append(str(a))
+            for answer in answers:
+                aaaa_records.append(str(answer))
 
             if len(aaaa_records) > 0:
                 result['aaaa'] = aaaa_records
@@ -507,8 +513,8 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup", source="nsloo
 
             mx_records = []
 
-            for a in answers:
-                mx_records.append(str(a))
+            for answer in answers:
+                mx_records.append(str(answer))
 
             if len(mx_records) > 0:
                 result['mx'] = mx_records

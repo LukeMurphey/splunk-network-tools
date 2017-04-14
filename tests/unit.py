@@ -84,6 +84,15 @@ class TestNSLookup(unittest.TestCase):
 
         self.assertGreater(len(output), 0)
 
+    def test_do_nslookup_reverse(self):
+        """
+        Test performing an nslookup.
+        """
+
+        output = nslookup('172.217.6.14')
+
+        self.assertGreater(len(output), 0)
+
 class TestFlatten(unittest.TestCase):
     """
     Test the flatten module which converts a Python object to a flat dictionary.
