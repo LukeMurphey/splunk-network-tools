@@ -2,7 +2,8 @@
 require.config({
     paths: {
         text: '../app/network_tools/js/lib/text',
-        console: '../app/network_tools/js/lib/console'
+        console: '../app/network_tools/js/lib/console',
+        setup_view: '../app/network_tools/js/views/SetupView'
     }
 });
 
@@ -14,7 +15,7 @@ define([
     "splunkjs/mvc/simpleform/input/dropdown",
     "models/SplunkDBase",
     "collections/SplunkDsBase",
-    "splunkjs/mvc/simplesplunkview",
+    "setup_view",
     "text!../app/network_tools/js/templates/NetworkToolsSetupView.html",
     "util/splunkd_utils",
     "css!../app/network_tools/css/NetworkToolsSetupView.css"
@@ -26,7 +27,7 @@ define([
     DropdownInput,
     SplunkDBaseModel,
     SplunkDsBaseCollection,
-    SimpleSplunkView,
+    SetupView,
     Template,
     splunkd_utils
 ){
@@ -38,20 +39,27 @@ define([
 	    }
 	});
 
-	var AppConfig = SplunkDBaseModel.extend({
+	var NetworkToolsConfig = SplunkDBaseModel.extend({
 	    initialize: function() {
 	    	SplunkDBaseModel.prototype.initialize.apply(this, arguments);
 	    }
 	});
 
-    return SimpleSplunkView.extend({
+    return SetupView.extend({
         className: "NetworkToolsSetupView",
 
         events: {
             "click #save-config" : "saveConfig"
         },
         
+        defaults: {
+        	app_name: "network_tools"
+        },
+
         initialize: function() {
+
+            // Merge the provided options and the defaults
+        	this.options = _.extend({}, this.defaults, this.options);
 
         	// Get the indexes
         	this.indexes = new Indexes();
@@ -66,29 +74,27 @@ define([
                 }
             });
 
-            this.app_config = null;
-
-            this.capabilities = null;
-            this.is_using_free_license = null;
+            //this.app_name
+            SetupView.prototype.initialize.apply(this, [this.options]);
         },
 
         /**
          * Get the app configuration.
          */
-        getAppConfig: function(){
-	        this.app_config = new AppConfig();
+        getNetworkToolsConfig: function(){
+	        this.network_tools_config = new NetworkToolsConfig();
 	        	
-            this.app_config.fetch({
+            this.network_tools_config.fetch({
                 url: splunkd_utils.fullpath('/services/admin/network_tools/default'),
                 success: function (model, response, options) {
-                    console.info("Successfully retrieved the app configuration");
+                    console.info("Successfully retrieved the network_tools configuration");
 
                     // Set the index setting
                     mvc.Components.getInstance("index").val(model.entry.associated.content.attributes.index);
 
                 }.bind(this),
                 error: function () {
-                    console.warn("Unable to retrieve the app configuration");
+                    console.warn("Unable to retrieve the network_tools configuration");
                 }.bind(this)
             });
         },
@@ -131,14 +137,14 @@ define([
         saveConfig: function(){
 
             // Modify the model
-            this.app_config.entry.content.set({
+            this.network_tools_config.entry.content.set({
                 index: mvc.Components.getInstance("index").val()
             }, {
                 silent: true
             });
 
             // Kick off the request to edit the entry
-            var saveResponse = this.app_config.save();
+            var saveResponse = this.network_tools_config.save();
 
             // Wire up a response to tell the user if this was a success
             if (saveResponse) {
@@ -152,6 +158,10 @@ define([
                     this.showSuccessMessage("The changes were successfully saved");
                     this.$('.btn-primary').text('Save Configuration');
                     this.$('.btn-primary').attr('disabled', null);
+
+                    // Set the app as configured so that users are not forced to re-run setup.
+                    this.setConfigured();
+
                 }.bind(this))
 
                 // Otherwise, show a failure message
@@ -213,69 +223,15 @@ define([
         	
         },
 
-        /**
-         * Determine if the user has the given capability.
-         */
-        hasCapability: function(capability){
-
-        	var uri = Splunk.util.make_url("/splunkd/__raw/services/authentication/current-context?output_mode=json");
-
-        	if(this.capabilities === null){
-
-	            // Fire off the request
-	            jQuery.ajax({
-	            	url:     uri,
-	                type:    'GET',
-	                async:   false,
-	                success: function(result) {
-
-	                	if(result !== undefined){
-	                		this.capabilities = result.entry[0].content.capabilities;
-	                	}
-
-	                }.bind(this)
-	            });
-        	}
-
-			// See if the user is running the free license
-			if(this.capabilities.length === 0 && this.is_using_free_license === null){
-
-				uri = Splunk.util.make_url("/splunkd/__raw/services/licenser/groups/Free?output_mode=json");
-
-				// Do a call to see if the host is running the free license
-	            jQuery.ajax({
-	            	url:     uri,
-	                type:    'GET',
-	                async:   false,
-	                success: function(result) {
-
-	                	if(result !== undefined){
-	                		this.is_using_free_license = result.entry[0].content['is_active'];
-	                	}
-						else{
-							this.is_using_free_license = false;
-						}
-
-	                }.bind(this)
-	            });
-			}
-
-			// Determine if the user should be considered as having access
-			if(this.is_using_free_license){
-				return true;
-			}
-			else{
-				return $.inArray(capability, this.capabilities) >= 0;
-			}
-
-        },
-
         render: function () {
 
-            this.getAppConfig();
+            // Start the process of the getting the network_tools.conf settings
+            this.getNetworkToolsConfig();
 
-        	var has_permission = this.hasCapability('admin_all_objects');
+            // Determine if the user has the capability to do the setup
+        	var has_permission = this.userHasAdminAllObjects();
         	
+            // Render the HTML
         	this.$el.html(_.template(Template, {
         		'has_permission' : has_permission
         	}));
