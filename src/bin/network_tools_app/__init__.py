@@ -25,7 +25,7 @@ from network_tools_app.ipwhois import IPWhois
 from network_tools_app.pythonwhois import get_whois
 from flatten import flatten
 from ipaddr import IPAddress
-from dns import resolver
+from dns import resolver,reversename
 
 # Environment imports
 from platform import system as system_name
@@ -292,23 +292,25 @@ def getHost(name, session_key, logger=None):
         'query' : '{"name":"' + name + '"}'
     }
 
-    _, l = rest.simpleRequest(uri, sessionKey=session_key, getargs=getargs, raiseAllErrors=True)
-    l  = json.loads(l)
+    _, host_entry = rest.simpleRequest(uri, sessionKey=session_key, getargs=getargs, raiseAllErrors=True)
+    host_entry = json.loads(host_entry)
 
     # Make sure we got at least one result
-    if len(l) > 0:
+    if len(host_entry) > 0:
         if logger is not None:
             logger.info("Successfully found an entry in the table of hosts for host=%s", name)
 
-        return l[0]
+        return host_entry[0]
 
     else:
         if logger is not None:
             logger.warn("Failed to find an entry in the table of hosts for host=%s", name)
 
         return None
-    
-def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None, sourcetype="wakeonlan", source="wakeonlan_search_command", logger=None, session_key=None):
+
+def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None,
+              sourcetype="wakeonlan", source="wakeonlan_search_command", logger=None,
+              session_key=None):
     """
     Performs a wake-on-LAN request.
     """
@@ -342,31 +344,32 @@ def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None, so
         logger.info("Wake-on-LAN running against host with MAC address=%s", mac_address)
 
     # Make the kwargs
-    kw = {}
+    keyword_args = {}
 
     if port is not None and port != '':
-        kw['port'] = port
+        keyword_args['port'] = port
 
     # Only add the IP address if a port was provided. See https://lukemurphey.net/issues/1733.
-    if port in kw and ip_address is not None and ip_address != '':
-        kw['ip_address'] = ip_address
+    if port in keyword_args and ip_address is not None and ip_address != '':
+        keyword_args['ip_address'] = ip_address
 
     if logger is not None:
-        logger.debug("Arguments provided to wake-on-lan: %r", kw)
+        logger.debug("Arguments provided to wake-on-lan: %r", keyword_args)
 
     # Make the call
-    wol.send_magic_packet(mac_address, **kw)
+    wol.send_magic_packet(mac_address, **keyword_args)
 
     # Make a dictionary that indicates what happened
     result['message'] = "Wake-on-LAN request successfully sent"
     result['mac_address'] = mac_address
 
     # Add in the arguments
-    result.update(kw)
+    result.update(keyword_args)
 
     # Write the event as a stash new file
     if index is not None:
-        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
+        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype,
+                                file_extension=".stash_output")
 
         # Log that we performed the wake-on-lan request
         if logger:
@@ -375,23 +378,27 @@ def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None, so
     return result
 
 def whois(host, index=None, sourcetype="whois", source="whois_search_command", logger=None):
+    """
+    Performs a whois request. If the host is a domain-name then a normal DNS whois will be
+    performed. If the name is an IP address, then an IP whois will be done.
+    """
 
     # See if this is an IP address. If so, do an IP whois.
     try:
         # The following will throw a ValueError exception indicating that this is not an IP address
         IPAddress(host)
 
-        whoisObject = IPWhois(host)
-        resultsOrig = whoisObject.lookup_rdap(depth=1)
+        whois_object = IPWhois(host)
+        results_orig = whois_object.lookup_rdap(depth=1)
     except ValueError:
 
         # Since this isn't an IP address, run a domain whois
-        resultsOrig = get_whois(host)
+        results_orig = get_whois(host)
 
-    if 'query' not in resultsOrig:
-        resultsOrig['query'] = host
+    if 'query' not in results_orig:
+        results_orig['query'] = host
 
-    result = flatten(resultsOrig, ignore_blanks=True)
+    result = flatten(results_orig, ignore_blanks=True)
 
     # Pull out raw so that we can put it at the end. This is done in case the raw field contains
     # things that might mess up the extractions.
@@ -405,7 +412,8 @@ def whois(host, index=None, sourcetype="whois", source="whois_search_command", l
 
     # Write the event as a stash new file
     if index is not None:
-        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
+        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype,
+                                file_extension=".stash_output")
 
         # Log that we performed the whois request
         if logger:
@@ -414,87 +422,108 @@ def whois(host, index=None, sourcetype="whois", source="whois_search_command", l
     return result
 
 def nslookup(host, server=None, index=None, sourcetype="nslookup", source="nslookup_search_command", logger=None):
+    """
+    Perform a DNS lookup. If the input is an IP address, then a reverse lookup will be performed.
+    """
 
     result = collections.OrderedDict()
 
     # Add the hostname we are querying for
     result['query'] = host
 
-    # Make a resolver
-    custom_resolver = resolver.Resolver()
-
-    if server is not None:
-        custom_resolver.nameservers = [server]
-
-    # Log the server used
-    result['server'] = custom_resolver.nameservers
-
-    # NS records
+    # See if this is an IP address. If so, do a reverse lookup.
     try:
-        answers = resolver.query(host, 'NS')
+        IPAddress(host)
 
-        ns_records = []
+        addr = reversename.from_address(host)
 
-        for a in answers:
-            ns_records.append(str(a))
+        if logger:
+            logger.info("addr=%r", addr)
+            logger.info("host=%r", resolver.query(addr, "PTR"))
 
-        if len(ns_records) > 0:
-            result['ns'] = ns_records
+            logger.info("dns=%r", reversename.to_address(addr))
 
-    except resolver.NoAnswer:
-        pass
+        if len(resolver.query(addr, "PTR")) > 0:
+            result['host'] = str(resolver.query(addr, "PTR")[0])
 
-    # A
-    try:
-        answers = resolver.query(host,'A')
+    # If this isn't an IP address, handle it as a DNS name.
+    except ValueError:
+        # Make a resolver
+        custom_resolver = resolver.Resolver()
 
-        a_records = []
+        if server is not None:
+            custom_resolver.nameservers = [server]
 
-        for a in answers:
-            a_records.append(str(a))
+        # Log the server used
+        result['server'] = custom_resolver.nameservers
 
-        if len(a_records) > 0:
-            result['a'] = a_records
-    except resolver.NoAnswer:
-        pass
+        # NS records
+        try:
+            answers = resolver.query(host, 'NS')
 
-    # AAAA
-    try:
-        answers = resolver.query(host,'AAAA')
+            ns_records = []
 
-        aaaa_records = []
+            for a in answers:
+                ns_records.append(str(a))
 
-        for a in answers:
-            aaaa_records.append(str(a))
+            if len(ns_records) > 0:
+                result['ns'] = ns_records
 
-        if len(aaaa_records) > 0:
-            result['aaaa'] = aaaa_records
+        except resolver.NoAnswer:
+            pass
 
-    except resolver.NoAnswer:
-        pass
-    
-    # MX
-    try:
-        answers = resolver.query(host,'MX')
-        
-        mx_records = []
-        
-        for a in answers:
-            mx_records.append(str(a))
-            
-        if len(mx_records) > 0:
-            result['mx'] = mx_records
-        
-    except resolver.NoAnswer:
-        pass
-    
+        # A
+        try:
+            answers = resolver.query(host, 'A')
+
+            a_records = []
+
+            for a in answers:
+                a_records.append(str(a))
+
+            if len(a_records) > 0:
+                result['a'] = a_records
+        except resolver.NoAnswer:
+            pass
+
+        # AAAA
+        try:
+            answers = resolver.query(host, 'AAAA')
+
+            aaaa_records = []
+
+            for a in answers:
+                aaaa_records.append(str(a))
+
+            if len(aaaa_records) > 0:
+                result['aaaa'] = aaaa_records
+
+        except resolver.NoAnswer:
+            pass
+
+        # MX
+        try:
+            answers = resolver.query(host, 'MX')
+
+            mx_records = []
+
+            for a in answers:
+                mx_records.append(str(a))
+
+            if len(mx_records) > 0:
+                result['mx'] = mx_records
+
+        except resolver.NoAnswer:
+            pass
+
     # Write the event as a stash new file
     if index is not None:
-        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, file_extension=".stash_output")
-    
+        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype,
+                                file_extension=".stash_output")
+
         # Log the data
         if logger:
             logger.info("Wrote stash file=%s", writer.write_event(result))
-    
+
     return result
     
