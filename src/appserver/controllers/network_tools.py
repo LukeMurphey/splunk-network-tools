@@ -30,10 +30,10 @@ class NetworkToolsHelper(controllers.BaseController):
     '''
     A controller for providing backend helper functions for the Network Toolkit app.
     '''
- 
+
     DEFAULT_NAMESPACE ="network_tools"
     DEFAULT_OWNER = "nobody"
-    
+
     def render_error_json(self, msg):
         output = jsonresponse.JsonResponse()
         output.data = []
@@ -41,49 +41,49 @@ class NetworkToolsHelper(controllers.BaseController):
         output.addError(msg)
         cherrypy.response.status = 400
         return self.render_json(output, set_mime='text/plain')
- 
+
     @expose_page(must_login=True, methods=['GET', 'POST'])
     def ping(self, host):
         result = {}
-        
+
         try:
             output, return_code, data = ping(host, source="network_tools_controller", logger=logger)
-            
+
             result = {
                 'success': True,
                 'output' : output,
                 'return_code': return_code
             }
-            
+
             result.update(data)
-                        
+
         except Exception as e:
             result = {
                 'success': False,
                 'message': str(e)
             }
-            
+
             logger.exception("Wake-on-lan request failed")
-        
+
         return self.render_json(result)
-    
+
     @expose_page(must_login=True, methods=['GET', 'POST'])
     def wake(self, host):
-        
+
         try:
             result = wakeonlan(host, index="main", source="network_tools_controller", logger=logger)
-            
+
             desc = {
                 'success': True
             }
-            
+
             desc.update(result)
-                        
+
         except Exception as e:
             desc = {
                 'success': False,
                 'message': str(e)
             }
-        
+
         return self.render_json(desc)
         
