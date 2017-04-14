@@ -21,4 +21,13 @@
         </exec>
     </target>
 
+    <!-- ================================= 
+          target: splunk.refresh
+         ================================= -->
+    <target name="splunk.refresh" description="Refresh Splunk" depends="verify_splunk_home">
+    	<reload_conf endpoint="network_tools" />
+    	<reload_conf endpoint="nav" />
+    	<reload_conf endpoint="views" />
+    </target>
+
 </project>
