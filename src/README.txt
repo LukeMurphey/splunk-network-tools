@@ -41,5 +41,8 @@ Change History
 | 0.7     | Fixed issue where some invalid MAC addresses were accepted on the Wake-on-LAN page                               |
 |         | Fixed dialog on Wake-on-LAN page that would sometimes act as if the input was invalid when it wasn't             |
 |         | Fixed issue where users could sort the actions column on the wake-on-LAN dashboard                               |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 0.8     | You can now globally define a default index for results to do into                                               |
+|         | NSlookup now supports reverse DNS lookups                                                                        |
 +---------+------------------------------------------------------------------------------------------------------------------+
 
