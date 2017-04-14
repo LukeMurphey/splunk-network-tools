@@ -1,6 +1,6 @@
 <form hideEdit="true" script="nslookup.js,tabs.js" stylesheet="tabs.css,nslookup.css,status.css">
   <label>NSLookup</label>
-  <description>Perform an NSLookup to obtain information about a domain-name.</description>
+  <description>Perform an NSLookup to obtain information about a domain-name or reverse an IP address to its associated domain-name.</description>
   <search id="nslookup_search">
     <query>$nslookup_search$</query>
   </search>
