@@ -76,7 +76,7 @@ def get_default_index(session_key):
     app_config = get_app_config(session_key)
 
     if app_config is None:
-        return "main"
+        return "default"
     else:
         return app_config.index
 
