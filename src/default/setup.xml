@@ -1,5 +1,7 @@
 <setup>
     
+  <block task="setup" type="redirect" />
+  <!--
   <block title="Setup Network Toolkit for Splunk"
          endpoint="admin/network_tools" entity="default">
 
@@ -31,5 +33,5 @@
           ]]>
       </text>
   </block>
-
+  -->
 </setup>

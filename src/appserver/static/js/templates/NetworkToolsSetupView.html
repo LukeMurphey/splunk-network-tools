@@ -1,0 +1,37 @@
+<% if(!has_permission){ %>
+<div>
+	<h3>Insufficient permissions</h3>
+	<div class="alert alert-warning">
+            <i class="icon-alert"></i>
+            <div class="message">You do not have the capabilities necessary to configure this application (you need "admin_all_objects").</div>
+	</div>
+</div>
+<% } else { %>
+
+<div id="success_message" class="hide alert alert-info">
+  <i class="icon-alert"></i><span id="success_text">The changes were successfully saved</span>
+</div>
+
+<div id="failure_message" class="hide alert alert-error">
+  <i class="icon-alert"></i><span id="error_text">Changes could not be saved</span>
+</div>
+
+<form class="form-horizontal">
+    <div class="control-group">
+        <label class="control-label" for="inputIndexes">Default Index</label>
+        <div class="controls">
+            <div class="input input-dropdown" id="inputIndexes"></div>
+            <span class="hide help-inline"></span>
+            <span class="help-block">Indicates the default index to put the data created by the data generating search commands</span>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label"> </label>
+        <div class="controls">
+            <a href="#" class="btn btn-primary" id="save-config">Save Configuration</a>
+        </div>
+    </div>
+    
+</form>
+ <% } %>

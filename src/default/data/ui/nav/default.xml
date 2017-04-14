@@ -12,5 +12,5 @@
   	<view name="alerts" />
   	<view name="dashboards" />
   </collection>
-  <a href='/manager/network_tools/apps/local/network_tools/setup?action=edit'>Configuration</a>
+  <a href='setup'>Configuration</a>
 </nav>

@@ -1,0 +1,3 @@
+#inputIndexes > .splunk-choice-input{
+    margin-left: 0px; /* Make the input align with the other controls */
+}
