@@ -28,6 +28,7 @@
     	<reload_conf endpoint="network_tools" />
     	<reload_conf endpoint="nav" />
     	<reload_conf endpoint="views" />
+		<reload_conf endpoint="workflow-actions" />
     </target>
 
 </project>
