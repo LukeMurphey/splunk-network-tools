@@ -24,10 +24,10 @@ require(['jquery','underscore','splunkjs/mvc', 'bootstrap.tab', 'splunkjs/mvc/si
 		}
 	};
 	
-	var selectTab = function (e) {
+	var selectTab = function(e) {
 		
 		// Stop if the tabs have no elements
-		if( $(e.target).data("elements") === undefined ){
+		if($(e.target).data("elements") === undefined){
 			console.warn("Yikes, the clicked tab has no elements to hide!");
 			return;
 		}
@@ -60,7 +60,7 @@ require(['jquery','underscore','splunkjs/mvc', 'bootstrap.tab', 'splunkjs/mvc/si
     
     // Get the tab token for a given tab name
     var getTabTokenForTabName = function(tab_name){
-    	return tab_name; //"tab_" + 
+    	return tab_name;
     }
     
     // Get all of the possible tab control tokens

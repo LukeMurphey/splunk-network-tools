@@ -1,4 +1,4 @@
-<form hideEdit="true" script="speedtest.js,tabs.js" stylesheet="tabs.css,speedtest.css">
+<form hideEdit="true" script="tabs.js,speedtest.js" stylesheet="tabs.css,speedtest.css">
   <label>Speedtest</label>
   <description>Perform a test on the Internet connection in order to determine the latency and amount of available bandwidth</description>
   <search id="speedtest_search">
@@ -17,9 +17,9 @@
              	<li class="active">
                 	<a href="#" class="toggle-tab" data-toggle="tab" data-elements="tab_results_controls,tab_upload,tab_download,tab_ping,row_bandwidth">Results</a>
             	</li>
-		    	<li>
-					<a href="#" class="toggle-tab" data-toggle="tab" data-elements="tab_current_results,tab_ping_controls">Execute Speedtest</a>
-		    	</li>
+		    	    <li>
+					        <a href="#" class="toggle-tab results-tab" data-toggle="tab" data-elements="tab_current_results,tab_ping_controls">Execute Speedtest</a>
+		    	    </li>
 		 	</ul>
 	      </html>
 	   </panel>

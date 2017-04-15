@@ -4,8 +4,8 @@ require.config({
     }
 });
 
-require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'network_tools_cell_renderer', 'bootstrap.tab', 'splunkjs/mvc/simplexml/ready!'],
-		function($, _, mvc, TokenUtils, NetworkToolsCellRenderer){
+require(['jquery','underscore','backbone', 'splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'network_tools_cell_renderer', 'bootstrap.tab', 'splunkjs/mvc/simplexml/ready!'],
+		function($, _, Backbone, mvc, TokenUtils, NetworkToolsCellRenderer){
 	
 	// Setup the cell renderer
     var resultsTable = mvc.Components.get('element4');
@@ -15,8 +15,8 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
         tableView.table.render();
     });
 	
-	// Handle a click event from the execute button and force the search command to execute.
-	$( "#execute_input" ).click(function() {
+	// Run the test
+	var run_test = function(){
 		
 		// This will contain the parameters
 		var params = {
@@ -42,15 +42,37 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
 			return false;
 		}
 		
-		
 		// Kick off the search
 		var tokens = mvc.Components.getInstance("submitted");
 		tokens.set('ping_search', null);
 		tokens.set('ping_search', TokenUtils.replaceTokenNames('| ping $host$ $count$', params ));
-	});
+	};
+
+	// Handle a click event from the execute button and force the search command to execute.
+	$("#execute_input").click(run_test);
 	
-	// By default, show the most recent speedtest result. To do this, we will set the speedtest search token to be a historical search.
+	// By default, show the most recent result. To do this, we will set the search token to be a historical search.
 	var tokens = mvc.Components.getInstance("submitted");
 	tokens.set('ping_search', '| search sourcetype=ping | head 1 | table dest sent received packet_loss min_ping avg_ping max_ping jitter');
 	
+	// This function will start the test if the URL parameters call for it
+	var start_test_if_necessary = function(){
+	
+		// See if a host parameter was provided and run the search if necessary
+		if(Splunk.util.getParameter("host") !== null){
+
+			// Show the results tab
+			$('.results-tab').trigger('click').trigger('shown');
+
+			// Set the host
+			var server_input = mvc.Components.getInstance("server_input");
+			server_input.val(Splunk.util.getParameter("host"));
+
+			// Start the test
+			run_test();
+		}
+	};
+
+	start_test_if_necessary();
+
 });

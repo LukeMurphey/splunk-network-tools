@@ -1,4 +1,4 @@
-<form hideEdit="true" script="traceroute.js,tabs.js" stylesheet="tabs.css,traceroute.css,status.css">
+<form hideEdit="true" script="tabs.js,traceroute.js" stylesheet="tabs.css,traceroute.css,status.css">
   <label>Traceroute</label>
   <description>Perform a traceroute to identify the hops a connection takes to a remote host.</description>
   <search id="traceroute_search">
@@ -17,9 +17,9 @@
              	<li class="active">
                 	<a href="#" class="toggle-tab" data-toggle="tab" data-elements="tab_results_controls,tab_traceroute">Results</a>
             	</li>
-		    	<li>
-					<a href="#" class="toggle-tab" data-toggle="tab" data-elements="tab_current_results,tab_traceroute_controls,tab_traceroute_data">Execute Traceroute</a>
-		    	</li>
+		    	    <li>
+					        <a href="#" class="toggle-tab results-tab" data-toggle="tab" data-elements="tab_current_results,tab_traceroute_controls,tab_traceroute_data">Execute Traceroute</a>
+		    	    </li>
 		 	</ul>
 	      </html>
 	   </panel>
