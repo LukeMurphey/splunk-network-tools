@@ -17,7 +17,7 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
     });
 	
 	// Run the test
-	var run_test = $( "#execute_input" ).click(function() {
+	var run_test = function() {
 		
 		// This will contain the parameters
 		var params = {
@@ -35,7 +35,7 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
 		var tokens = mvc.Components.getInstance("submitted");
 		tokens.set('whois_search', null);
 		tokens.set('whois_search', TokenUtils.replaceTokenNames('| whois $host$', params ));
-	});
+	};
 
 	// Handle a click event from the execute button and force the search command to execute.
 	$("#execute_input").click(run_test);
