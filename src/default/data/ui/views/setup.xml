@@ -1,7 +1,7 @@
 <form hideEdit="true" script="setup.js">
   <label>Configuration</label>
   <description>Global configuration for the Network Toolkit app</description>
-	<row id="tabs">
+	<row>
 	   <panel>
 	      <html>
 	         <div id="setupView"></div>

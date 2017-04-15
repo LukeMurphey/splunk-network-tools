@@ -16,7 +16,7 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
     });
 	
 	// Run the test
-	var run_test =function() {
+	var run_test = function() {
 		
 		// This will contain the parameters
 		var params = {
