@@ -46,5 +46,9 @@ Change History
 |         | nslookup now supports reverse DNS lookups                                                                        |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 0.9     | Fixed issue where the setup page didn't recognize that you had completed setup already                           |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 0.10    | Fixed issue where the app could break the Website Input app                                                      |
+|         | Improved compatibility with Splunk 6.6                                                                           |
+|         | Added workflow actions for performing operations on hosts from the search view                                   |
 +---------+------------------------------------------------------------------------------------------------------------------+
 
