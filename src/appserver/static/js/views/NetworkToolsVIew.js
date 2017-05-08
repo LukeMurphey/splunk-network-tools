@@ -63,7 +63,7 @@ define([
             var tokens = mvc.Components.getInstance("submitted");
             tokens.set(this.options.search_token, this.options.default_search);
 
-            // Start the test if the URLs parameters acall for it.
+            // Start the test if the URLs parameters call for it.
             this.startTestIfNecessary();
 
             this.renderCellRenderer();
