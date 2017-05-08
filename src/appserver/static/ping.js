@@ -13,7 +13,10 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
 
             	default_search: '| search sourcetype=ping | head 1 | table dest sent received packet_loss min_ping avg_ping max_ping jitter',
             	fresh_search: '| ping $host$ $count$',
-            	search_token: 'ping_search'
+            	search_token: 'ping_search',
+
+				token_name : 'host',
+				token_input_id: 'host_input'
 			});
 
 			network_tools_view.getSearchParams = function(){
