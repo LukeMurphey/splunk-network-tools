@@ -16,4 +16,28 @@
 # under the License.
 
 
-__version__ = "3.4.1"
+KEY = "key"
+POINTER = "pointer"
+NONE = "none"
+SOURCE_TYPES = set([KEY, POINTER, NONE])
+
+
+class Interaction(object):
+
+    PAUSE = "pause"
+
+    def __init__(self, source):
+        self.source = source
+
+
+class Pause(Interaction):
+
+    def __init__(self, source, duration=0):
+        super(Interaction, self).__init__()
+        self.source = source
+        self.duration = duration
+
+    def encode(self):
+        output = {"type": self.PAUSE}
+        output["duration"] = self.duration * 1000
+        return output
