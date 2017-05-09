@@ -10,6 +10,15 @@ Splunk. Specifically, this runner will update the tests such that they:
 
    1) Perform authentication  to Splunk before running the test cases
    2) Allow the use of browsers other than Firefox
+
+To use this class to run tests, call it from Python like this:
+
+    python ui.py
+
+To see the options, run the command with the "--help" parameter:
+
+    python ui.py --help
+
 """
 
 import os
