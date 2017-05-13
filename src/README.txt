@@ -65,5 +65,7 @@ Change History
 | 0.10    | Fixed issue where the app could break the Website Input app                                                      |
 |         | Improved compatibility with Splunk 6.6                                                                           |
 |         | Added workflow actions for performing operations on hosts from the search view                                   |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 0.11    | Added modular input for scheduling Internet connection speedtests                                                |
 +---------+------------------------------------------------------------------------------------------------------------------+
 
