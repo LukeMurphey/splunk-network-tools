@@ -20,3 +20,6 @@ Thumbs.db
 .settings/
 /tmp/
 .vscode/*
+
+tests/browser_drivers/*
+!tests/browser_drivers/README.txt
