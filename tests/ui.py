@@ -66,6 +66,11 @@ class SplunkTestCase(object):
         driver.find_element_by_css_selector("input.splButton-primary.btn").click()
         self.assertTrue(self.is_element_present(By.CSS_SELECTOR, "a.manage-apps"))
 
+    def test_javascript_errors(self):
+        pass
+
+
+
     def get_browser_driver(self):
         """
         Makes an instance the browser driver that should be used.
@@ -105,6 +110,13 @@ class SplunkTestCase(object):
 
         # Now do the other things, like authenticating with Splunk
         self.do_login()
+
+        # Register the Javascript to detect errors
+        self.register_js_error_detection()
+
+    def register_js_error_detection(self):
+        js_code = 'window.onerror=function(msg){ $("body").attr("JSError",msg); }'
+        self.driver.execute_script(js_code);
 
 class UITestCaseLoader(object):
     """
