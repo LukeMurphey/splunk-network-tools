@@ -439,6 +439,9 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup",
 
     result = collections.OrderedDict()
 
+    if host is None or host.strip() == "":
+        raise ValueError("The host cannot be none or empty")
+
     # Add the hostname we are querying for
     result['query'] = host
 
