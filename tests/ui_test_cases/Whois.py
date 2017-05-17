@@ -37,6 +37,12 @@ class Whois(unittest.TestCase):
             time.sleep(1)
         else: self.fail("time out")
         driver.find_element_by_link_text("Execute Whois").click()
+        for i in range(60):
+            try:
+                if driver.find_element_by_id("execute_input").is_displayed(): break
+            except: pass
+            time.sleep(1)
+        else: self.fail("time out")
         driver.find_element_by_css_selector("#host_input input").clear()
         driver.find_element_by_css_selector("#host_input input").send_keys("google.com")
         driver.find_element_by_id("execute_input").click()
