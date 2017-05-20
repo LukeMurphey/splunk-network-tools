@@ -21,5 +21,7 @@ Thumbs.db
 /tmp/
 .vscode/*
 
+*.log
+
 tests/browser_drivers/*
 !tests/browser_drivers/README.txt
