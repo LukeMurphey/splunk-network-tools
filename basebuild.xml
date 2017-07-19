@@ -1035,10 +1035,15 @@ Below is an example of the entry in the file:
           target: test.run_unit
          ================================= -->
     <target name="test.run_unit" description="Run unit tests" depends="initialize_properties">
+
+		<!-- Define a default value for the tests to run. Otherwise, arguments passed from the CLI will be used (e.g. ant test.run_unit -Dtest=TestPingParser) -->
+		<property name="test" value="" />
+
         <exec failonerror="true" executable="${value.deploy.splunk_home}/bin/splunk" dir="${value.build.test.directory}">
         	<arg line="cmd" />
         	<arg line="python" />
         	<arg line="unit.py" />
+			<arg line="${test}" />
         </exec>
     </target>
 
