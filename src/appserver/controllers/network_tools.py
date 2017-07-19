@@ -48,13 +48,14 @@ class NetworkToolsHelper(controllers.BaseController):
 
         try:
             output, return_code, data = ping(host, source="network_tools_controller", logger=logger)
-
+               
             result = {
                 'success': True,
                 'output' : output,
                 'return_code': return_code
             }
 
+            # Add the data we got
             result.update(data)
 
         except Exception as e:

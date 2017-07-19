@@ -707,6 +707,9 @@ define([
 						
 						var online = false;
 
+						// Windows indicates that "Destination host unreachable" replies are actual responses (0% packet
+    					// loss). This makes no sense. If we didn't get ping statistics, then we should assume 100%
+    					// loss despite the fact that the return code acts like there was no failure.
 						if(data['return_code'] === 0 && data['min_ping'] !== 'NA'){
 							online = true;
 						}
