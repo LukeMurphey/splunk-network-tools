@@ -704,9 +704,15 @@ define([
         			
         			// On success, populate the table
         			success: function(data) {
-        				
+						
+						var online = false;
+
+						if(data['return_code'] === 0 && data['min_ping'] !== 'NA'){
+							online = true;
+						}
+
         				// Evaluate the result
-        				if(data['return_code'] == 0){
+        				if(online){
         					host_entry['online'] = true;
         					$("[data-host='" + ip_address + "']").removeClass('host-unknown')
         						.removeClass('host-offline')

@@ -121,7 +121,7 @@ def parse(ping_output):
                                                               [minmax_matcher, minmax_matcher_windows],
                                                               ['min', 'avg', 'max', 'jitter'])
     except PingParseException:
-        minping = avgping = maxping = jitter = 'NaN'
+        minping = avgping = maxping = jitter = 'NA'
 
     d = collections.OrderedDict()
     d['host'] = host
