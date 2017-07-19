@@ -1,24 +1,82 @@
 """
-This Python script loads test cases that were generated from the SeleniumIDE from a directory and
-executes them.
+This Python script loads test cases that were generated from the SeleniumIDE and executes them
+against a running Splunk install. The purpose of this script is to make it possible to run tests
+against Splunk without having to write code using WebDriver directly. Instead, the intent is that
+testers write tests in the Selenium IDE GUI. This ought to make tests easier to write and maintain.
 
-The test cases need to be exported as Python 2 unittest WebDriver cases and placed in the
-ui_test_cases directory.
+This is release under the Apache 2.0 Licence:
 
-This test runner is necessary in order to patch the test cases so that they work better with
-Splunk. Specifically, this runner will update the tests such that they:
+    https://www.apache.org/licenses/LICENSE-2.0
 
-   1) Perform authentication  to Splunk before running the test cases
-   2) Allow the use of browsers other than Firefox
+Why do I need this script?
+----------------------------
+There are several problems that tests exported from the Selenium IDE have when run against Splunk:
 
-To use this class to run tests, call it from Python like this:
+  1) The tests will not authenticate unless you manually add the authenticate steps (which means
+     you would have to hard-code the credentials)
+  2) The tests won't allow you to change which Splunk host to test against
+  3) The tests work only for Firefox
+  4) The tests have some default values that can make tests take too long (timeout is too high)
 
-    python ui.py
+This test script solves all of these problems.
+
+
+How do I use this script?
+----------------------------
+First, install Firefox install the following extensions:
+
+  1) Selenium IDE (https://mzl.la/2qZ8Z7S)
+  2) Test Suite Batch Converter (https://mzl.la/2rT7192)
+
+You may want to install "Implicit Wait" (https://mzl.la/2qexEIj) too since some have reported that
+it makes the tests in Firefox run smoother.
+
+Second, download the Python Selenium bindings (https://pypi.python.org/pypi/selenium) and put them
+in the same directory as this script. When done, you should have a directory named "selenium" in
+the same directory as this script.
+
+Third, put the necessary browser drivers in your path. Alternatively, you can place them in a
+directory named "browser_drivers" next to this script since this script will try to find the
+drivers in that directory too.
+
+Once you do all of that setup, you are ready to make your tests.
+
+Finally, setup your project with the tests:
+
+  1) Make a directory named "ui_test_cases" within the same directory as this file
+  2) Make sure the "ui_test_cases" directory has an __init__.py (i.e. make it a python module)
+  3) Make your test cases in the Selenium IDE an save them
+  4) Export your test cases or suite as "Python 2 Webdriver" tests; this should make python files
+     within the "ui_test_cases" directory
+  5) Run this script (see below for what arguments it takes)
+
+When done, you should have a directory structure like this:
+
+    splunkuitest.py
+    selenium/          (the downloaded Python bindings)
+    ui_test_cases/     (where you test case HTML files and Python test code goes)
+    browser_drivers/   (if you want the test script to load your browser drivers too)
+
+Once setup, you should be able to run tests like this:
+
+    python splunkuitest.py
 
 To see the options, run the command with the "--help" parameter:
 
-    python ui.py --help
+    python splunkuitest.py --help
 
+
+Tell me more about how this script works
+----------------------------
+This script includes a class named "SplunkTestCase" that includes some overrides to the default
+test cases exported by Selenium IDE. This script will make new tests cases out of the exported
+Selenium IDE tests that inherit from SplunkTestCase. Thus, the exported test cases are forced to
+inherit from SplunkTestCase.
+
+This script will also make copies of the test cases for each browser. Thus, if you have this test
+against both Firefox and Chrome, you will get two tests for each original test (one for Firefox and
+another for Chrome). The test case name will make it clear which browser it is testing so that you
+can determine which test failed.
 """
 
 import os
@@ -29,10 +87,24 @@ import unittest
 import pkgutil
 import argparse
 
-from selenium import webdriver
-from selenium.webdriver.common.by import By
+try:
+    from selenium import webdriver
+    from selenium.webdriver.common.by import By
+except ImportError:
+    # Detect that the user didn't make Selenium available
+    print 'Selenium could not be imported.\nMake sure to download the Python bindings' + \
+    ' (https://pypi.python.org/pypi/selenium) and put it in "' + \
+    os.path.dirname(os.path.realpath(__file__)) + \
+    '".\nWhen done, you should have a directory named "selenium" (i.e. "' + \
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), 'selenium') + '"'
+    sys.exit(1)
 
 class SplunkTestCase(object):
+    """
+    This is a test that all exported WebDriver Selenium tests will be made to inherit from.
+    Changes to this class will inherently affect all of the tests since the tests will inherit
+    these functions.
+    """
 
     username = 'admin'
     password = 'changeme'
@@ -65,11 +137,6 @@ class SplunkTestCase(object):
         driver.find_element_by_id("password").send_keys(self.password)
         driver.find_element_by_css_selector("input.splButton-primary.btn").click()
         self.assertTrue(self.is_element_present(By.CSS_SELECTOR, "a.manage-apps"))
-
-    def test_javascript_errors(self):
-        pass
-
-
 
     def get_browser_driver(self):
         """
@@ -111,17 +178,33 @@ class SplunkTestCase(object):
         # Now do the other things, like authenticating with Splunk
         self.do_login()
 
-        # Register the Javascript to detect errors
-        self.register_js_error_detection()
-
-    def register_js_error_detection(self):
-        js_code = 'window.onerror=function(msg){ $("body").attr("JSError",msg); }'
-        self.driver.execute_script(js_code);
-
 class UITestCaseLoader(object):
     """
     This class loads test cases and patches them so that the tests can run.
     """
+
+    @staticmethod
+    def add_to_path(path_to_add):
+        """
+        Add the given path to the environment path unless it was already present. Return a boolean
+        indicating if the path was updated.
+        """
+
+        if not path_to_add in os.environ["PATH"]:
+
+            # Update the path according to the OS' expectations
+            if sys.platform.startswith("win"):
+                os.environ["PATH"] += ";" +path_to_add
+            else:
+                os.environ["PATH"] += ":" +path_to_add
+
+            # Path was updated
+            return True
+
+        else:
+
+            # Path was not updated
+            return False
 
     @staticmethod
     def add_browser_driver_to_path():
@@ -129,6 +212,11 @@ class UITestCaseLoader(object):
         Add the browser driver to the path
         """
 
+        # First, add the base browser_drivers in case users didn't the drivers are not broken up
+        # by architecture
+        UITestCaseLoader.add_to_path(os.path.join(os.getcwd(), 'browser_drivers'))
+
+        # Second, add the architecture specific path
         driver_path = None
 
         if sys.platform == "linux2" and platform.architecture()[0] == '64bit':
@@ -140,13 +228,8 @@ class UITestCaseLoader(object):
 
         full_driver_path = os.path.join(os.getcwd(), 'browser_drivers', driver_path)
 
-        if not full_driver_path in os.environ["PATH"]:
-            if sys.platform.startswith("win"):
-                os.environ["PATH"] += ";" +full_driver_path
-            else:
-                os.environ["PATH"] += ":" +full_driver_path
-            #print "Updating path to include selenium driver, path=%s, working_path=%s" % (full_driver_path, os.getcwd())
-            #print os.environ["PATH"]
+        UITestCaseLoader.add_to_path(full_driver_path)
+
     @staticmethod
     def load_all_modules_from_dir(dirname, test_case=None):
         """
@@ -155,16 +238,35 @@ class UITestCaseLoader(object):
 
         cases_loaded = 0
 
-        for (module_loader, name, ispkg) in pkgutil.iter_modules([dirname]):
-            #importlib.import_module('ui_test_cases.' + name)
+        for (_, name, _) in pkgutil.iter_modules([dirname]):
 
-            #importlib.import_module('.' + name, __package__)
-            if test_case is None or name == test_case:
-                importlib.import_module('.' + name, 'ui_test_cases')
+            if test_case is None or name.lower() == test_case.lower():
+
+                try:
+                    importlib.import_module('.' + name, 'ui_test_cases')
+                except ImportError:
+                    print 'Unable to import the test case in ui_test_cases.' + name + \
+                    ', make sure that the ui_test_cases directory has an __init__.py file' + \
+                    '(i.e. "' + os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ui_test_cases', '__init__.py') + ')"'
+
+                    # Exit with a code that makes it clear we failed
+                    sys.exit(1)
+
                 cases_loaded += 1
 
         if cases_loaded == 0:
-            raise Exception("No test cases were loaded")
+
+            if test_case is None:
+                print 'No test cases were found. ' + \
+                'Make sure that the tests are exported as Python 2 WebDriver tests to ' + \
+                'the "ui_test_cases" directory (i.e. "' + \
+                os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ui_test_cases') + ')"'
+            else:
+                print 'No test cases were found. ' + \
+                'Your filter may just not match any of the tests.'
+
+            # Exit with a code that makes it clear we failed
+            sys.exit(1)
 
     @classmethod
     def add_test_classes_to_suite(cls, suite, url, username, password, browser, ignore_list=None):
@@ -223,7 +325,8 @@ class UITestCaseLoader(object):
 
         # Add the test classes
         for browser_to_test in browser.split(","):
-            cls.add_test_classes_to_suite(suite, url, username, password, browser_to_test, existing_tests)
+            cls.add_test_classes_to_suite(suite, url, username, password, browser_to_test,
+                                          existing_tests)
 
         return suite
 
@@ -272,7 +375,10 @@ def parse_args():
 if __name__ == '__main__':
 
     # Parse the CLI arguments
-    arguments = parse_args()
+    parsed_arguments = parse_args()
 
-    UITestCaseLoader.run_test_suite(url=arguments.url, username=arguments.username, password=arguments.password, browser=arguments.browser, testcase=arguments.testcase)
-
+    UITestCaseLoader.run_test_suite(url=parsed_arguments.url,
+                                    username=parsed_arguments.username,
+                                    password=parsed_arguments.password,
+                                    browser=parsed_arguments.browser,
+                                    testcase=parsed_arguments.testcase)
