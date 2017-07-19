@@ -211,6 +211,64 @@ Approximate round trip times in milli-seconds:
         self.assertEquals(parsed['max_ping'], '45')
         self.assertEquals(parsed['jitter'], None) # Windows ping currently doesn't include jitter
 
+    def test_windows_parse_host_half_unreachable(self):
+        """
+        Test parsing a ping on Windows that returns host not reachable but only for some events.
+        """
+
+        output = """
+Pinging 10.0.1.15 with 32 bytes of data:
+Request timed out.
+Request timed out.
+Reply from 10.0.1.14: Destination host unreachable.
+Reply from 10.0.1.14: Destination host unreachable.
+
+Ping statistics for 10.0.1.15:
+    Packets: Sent = 4, Received = 2, Lost = 2 (50% loss),
+        """
+
+        parsed = pingparser.parse(output)
+
+        self.assertEquals(parsed['host'], '10.0.1.15')
+        self.assertEquals(parsed['sent'], '4')
+        self.assertEquals(parsed['received'], '2')
+        self.assertEquals(parsed['packet_loss'], '50')
+
+        self.assertEquals(parsed['min_ping'], 'NA')
+        self.assertEquals(parsed['avg_ping'], 'NA')
+        self.assertEquals(parsed['max_ping'], 'NA')
+
+    def test_windows_parse_host_unreachable(self):
+        """
+        Test parsing a ping on Windows that returns host not reachable.
+        """
+
+        output = """
+Pinging 10.0.1.15 with 32 bytes of data:
+Reply from 10.0.1.14: Destination host unreachable.
+Reply from 10.0.1.14: Destination host unreachable.
+Reply from 10.0.1.14: Destination host unreachable.
+Reply from 10.0.1.14: Destination host unreachable.
+
+Ping statistics for 10.0.1.15:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+        """
+
+        parsed = pingparser.parse(output)
+
+        self.assertEquals(parsed['host'], '10.0.1.15')
+        self.assertEquals(parsed['sent'], '4')
+
+        # The following two fields accurately represent what Windows ping returns but I don't
+        # think they really make sense. This ought to 100% loss and 0 packets received.
+        # In other words, this test is valid but Windows ping is not in my opinion.
+        self.assertEquals(parsed['received'], '4')
+        self.assertEquals(parsed['packet_loss'], '0')
+
+        self.assertEquals(parsed['min_ping'], 'NA')
+        self.assertEquals(parsed['avg_ping'], 'NA')
+        self.assertEquals(parsed['max_ping'], 'NA')
+
     def test_osx_parse(self):
         """
         Test parsing ping output on OSX.
