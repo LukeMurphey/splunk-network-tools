@@ -135,15 +135,15 @@ class CustomLookup(object):
 
         # Add each field to the output
         for field in output_dict:
-            
+
             # Make sure that field is in the list of field names
             if field in fieldnames:
-                
+
                 self.logger.debug("Adding field %s with value %r", field, output_dict[field])
 
                 # If the output is a list, then include a comma deliminated list
                 if isinstance(output_dict[field], (list, tuple)) and not isinstance(output_dict[field], basestring):
-                    result_dict[field] = ",".join(output_dict[field])
+                    result_dict[field] = ", ".join(output_dict[field])
 
                 # The entry is a flat value, just include it
                 else:

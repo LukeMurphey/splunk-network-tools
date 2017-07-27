@@ -18,8 +18,8 @@ class NSLookup(CustomLookup):
         """
 
         # Here is a list of the accepted fieldnames
-        fieldnames = ['a', 'aaaa', 'query', 'mx', 'ns', 'server']
-        CustomLookup.__init__(self, fieldnames, 'nslookup_lookup_command', logging.INFO)
+        fieldnames = ['a', 'aaaa', 'query', 'mx', 'ns', 'server', 'hostname']
+        CustomLookup.__init__(self, fieldnames, 'nslookup_lookup_command', logging.DEBUG)
 
     def do_lookup(self, host):
         """
@@ -27,7 +27,12 @@ class NSLookup(CustomLookup):
         """
 
         self.logger.info("Running nslookup against host=%s", host)
-        output = nslookup(host=host, index=None)
+        output = dict(nslookup(host=host, index=None))
+
+        if 'host' in output:
+            output['hostname'] = output['host']
+            del output['host']
+            self.logger.info("output=%r", output)
         return output
 
 NSLookup.main()

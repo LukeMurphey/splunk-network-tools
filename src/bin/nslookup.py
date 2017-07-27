@@ -27,8 +27,6 @@ class NSLookup(SearchCommand):
 
         result = nslookup(host=self.host, server=self.server, index=index, logger=self.logger)
 
-        self.logger.info("%r", result)
-
         # Output the results
         self.output_results([result])
 
