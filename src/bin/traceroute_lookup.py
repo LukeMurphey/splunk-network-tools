@@ -18,7 +18,7 @@ class TracerouteLookup(CustomLookup):
         """
 
         # Here is a list of the accepted fieldnames
-        fieldnames = ['return_code', 'raw_output', ]
+        fieldnames = ['return_code', 'raw_output', 'hops']
         CustomLookup.__init__(self, fieldnames, 'traceroute_lookup_command', logging.INFO)
 
     def do_lookup(self, host):
@@ -33,6 +33,19 @@ class TracerouteLookup(CustomLookup):
         converted_output = {}
         converted_output['return_code'] = return_code
         converted_output['raw_output'] = raw_output
+
+        #Get info on each hop and make it into a field
+        hop_strings = []
+        for hop in output:
+            
+            hop_str = hop['ip'][0]
+
+            if hop['ip'][0] != hop['name'][0]:
+                hop_str += "(" + hop['name'][0] + ")"
+
+            hop_strings.append(hop_str)
+
+        converted_output['hops'] = ", ".join(hop_strings)
 
         return converted_output
 
