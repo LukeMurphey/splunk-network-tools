@@ -451,7 +451,6 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup",
 
         addr = reversename.from_address(host)
 
-
         if len(resolver.query(addr, "PTR")) > 0:
             result['host'] = str(resolver.query(addr, "PTR")[0])
 
@@ -535,4 +534,3 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup",
             logger.info("Wrote stash file=%s", writer.write_event(result))
 
     return result
-    

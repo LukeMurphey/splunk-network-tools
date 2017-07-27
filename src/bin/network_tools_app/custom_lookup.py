@@ -129,10 +129,12 @@ class CustomLookup(object):
 
         # Add each field to the output
         for field in output_dict:
-
-            # Make sure that field but only if the field is in the list of field names
+            
+            # Make sure that field is in the list of field names
             if field in fieldnames:
                 
+                self.logger.debug("Adding field %s with value %r", field, output_dict[field])
+
                 # If the output is a list, then include a comma deliminated list
                 if isinstance(output_dict[field], (list, tuple)) and not isinstance(output_dict[field], basestring):
                     result_dict[field] = ",".join(output_dict[field])
@@ -198,8 +200,8 @@ class CustomLookup(object):
 
             # Put the output in the result
             if output:
+                self.logger.debug("Got result %r", output)
                 self.add_result(result, output, fieldnames)
-                self.logger.debug("Done with result %r", result)
 
             # Write out the result
             w.writerow(result)

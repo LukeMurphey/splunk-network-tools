@@ -11,30 +11,62 @@ class Whois(SearchCommand):
     A search command for performing whois lookups.
     """
 
-    def __init__(self, host=None):
+    def __init__(self, host=None, field=None):
         SearchCommand.__init__(self, run_in_preview=False, logger_name="whois_search_command")
 
         self.host = host
 
-        self.logger.info("Whois running against host=%s", host)
+        if host is not None:
+            self.logger.info("Whois running against host=%s", host)
+
+        self.field = field
 
     def handle_results(self, results, session_key, in_preview):
 
-        # FYI: we ignore results since this is a generating command
-
-        # Do the whois
+        # Get the index to output to
         index = get_default_index(session_key)
 
-        results = whois(host=self.host, index=index, logger=self.logger)
+        if results is None or len(results) == 0:
+            # FYI: we ignore results since this is a generating command
 
-        # Convert the output to a series of rows for better output in the search output
-        processed = dict_to_table(results)
+            # Do the whois
+            output = whois(host=self.host, index=index, logger=self.logger)
 
-        # Sort the items
-        processed = sorted(processed, key=lambda e: e['attribute'])
+            # Convert the output to a series of rows for better output in the search output
+            processed = dict_to_table(output)
 
-        # Output the results
-        self.output_results(processed)
+            # Sort the items
+            processed = sorted(processed, key=lambda e: e['attribute'])
+
+            # Output the results
+            self.output_results(processed)
+        
+        else:
+            
+            # Make a cache to store previously looked up results
+            cache = {}
+
+            for result in results:
+                
+                # Process each result
+                if self.field in result:
+                    
+                    host_to_lookup = result[self.field]
+
+                    # See if we looked up the host already
+                    if host_to_lookup in cache:
+                        output = cache[host_to_lookup]
+
+                    # Otherwise, pull the host from the cache
+                    else:
+                        output = whois(host=host_to_lookup, index=index, logger=self.logger)
+                        cache[host_to_lookup] = output
+
+                    # Add the output
+                    result.update(output)
+
+            # Output the results
+            self.output_results(results)
 
 if __name__ == '__main__':
     Whois.execute()
