@@ -30,6 +30,9 @@ fields_list = host,echohost
 bin/echo_lookup.py:
 --------------------------------
 
+import logging
+from custom_lookup import CustomLookup
+
 class EchoLookup(CustomLookup):
     def __init__(self):
         CustomLookup.__init__(self, ['echohost'], 'echo_lookup_command', logging.INFO)
