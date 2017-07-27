@@ -67,5 +67,7 @@ Change History
 |         | Added workflow actions for performing operations on hosts from the search view                                   |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 1.0     | Added modular input for scheduling Internet connection speedtests                                                |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.1     | Added lookup commands for performing operations on results (see http://bit.ly/2uHxRm8)                           |
+|         | Fixed issue where hosts we sometimes disaplyed as online on the wake-on-lan list when they were not              |
 +---------+------------------------------------------------------------------------------------------------------------------+
-
