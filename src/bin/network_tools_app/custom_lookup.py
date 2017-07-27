@@ -1,6 +1,9 @@
 """
 This is a base-class for writing custom external lookups.
 
+This is licensed under the Apache License Version 2.0
+See https://www.apache.org/licenses/LICENSE-2.0.html
+
 To use this, you will need to:
 
  1) A lookup command script that implements from CustomLookup
