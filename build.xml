@@ -24,11 +24,12 @@
     <!-- ================================= 
           target: splunk.refresh
          ================================= -->
-    <target name="splunk.refresh" description="Refresh Splunk" depends="verify_splunk_home">
+    <target name="splunk.refresh" description="Refresh Splunk" depends="verify_splunk_home,define_reload_conf_macro">
     	<reload_conf endpoint="network_tools" />
     	<reload_conf endpoint="nav" />
     	<reload_conf endpoint="views" />
 		<reload_conf endpoint="workflow-actions" />
+		<reload_conf endpoint="transforms-lookup" />
     </target>
 
 </project>
