@@ -32,7 +32,7 @@ class NSLookup(CustomLookup):
         if 'host' in output:
             output['hostname'] = output['host']
             del output['host']
-            self.logger.info("output=%r", output)
+
         return output
 
 NSLookup.main()

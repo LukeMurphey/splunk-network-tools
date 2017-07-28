@@ -18,7 +18,13 @@ class WhoisLookup(CustomLookup):
         """
 
         # Here is a list of the accepted fieldnames
-        fieldnames = ['raw', 'updated_date', 'nameservers', 'registrar', 'whois_server', 'query', 'creation_date', 'emails', 'expiration_date', 'status', 'id']
+        fieldnames = ['raw', 'updated_date', 'nameservers', 'registrar', 'whois_server', 'query', 
+                      'creation_date', 'emails', 'expiration_date', 'status', 'id', 'asn',
+                      'asn_cidr', 'asn_country_code', 'asn_date', 'asn_registry', 'network.cidr',
+                      'network.end_address', 'network.ip_version', 'network.handle',
+                      'network.links', 'network.name', 'network.parent_handle',
+                      'network.start_address', 'query', 'emails', 'expiration_date',
+                      'creation_date']
         CustomLookup.__init__(self, fieldnames, 'whois_lookup_command', logging.INFO)
 
     def do_lookup(self, host):
