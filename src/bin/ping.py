@@ -26,6 +26,11 @@ class Ping(SearchCommand):
 
         # FYI: we ignore results since this is a generating command
 
+        # Make sure that the host field was provided
+        if self.host is None:
+            self.logger.warn("No host was provided")
+            return
+
         # Do the ping
         index = get_default_index(session_key)
 

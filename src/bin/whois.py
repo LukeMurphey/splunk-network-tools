@@ -26,6 +26,11 @@ class Whois(SearchCommand):
         # Get the index to output to
         index = get_default_index(session_key)
 
+        # Make sure that the host field was provided
+        if self.host is None:
+            self.logger.warn("No host was provided")
+            return
+
         if results is None or len(results) == 0:
             # FYI: we ignore results since this is a generating command
 
