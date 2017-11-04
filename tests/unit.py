@@ -3,7 +3,10 @@ import unittest
 import sys
 import os
 import json
+import errno
 import collections
+
+import HTMLTestRunner
 
 sys.path.append(os.path.join("..", "src", "bin"))
 
@@ -615,5 +618,18 @@ traceroute to edgecastcdn.net (72.21.81.13), 30 hops max, 38 byte packets
         self.assertEquals(hop.probes[1].dest_ip, '129.250.5.44')
         self.assertEquals(hop.probes[1].dest, 'ae-6.r21.sttlwa01.us.bb.gin.ntt.net')
 
-if __name__ == "__main__":
-    unittest.main()
+if __name__ == '__main__':
+    report_path = os.path.join('..', os.environ.get('TEST_OUTPUT', 'tmp/test_report.html'))
+
+    # Make the test directory
+    try:
+        os.makedirs(os.path.dirname(report_path))
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
+
+    with open(report_path, 'w') as report_file:
+        test_runner = HTMLTestRunner.HTMLTestRunner(
+            stream=report_file
+        )
+        unittest.main(testRunner=test_runner)
