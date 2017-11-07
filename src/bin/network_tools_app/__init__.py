@@ -8,6 +8,7 @@ This module includes a series of functions for performing network operations (pi
 # can make the apps override each other).
 import sys
 import os
+import errno
 import splunk.appserver.mrsparkle.lib.util as util
 
 lib_dir = os.path.join(util.get_apps_dir(), 'network_tools', 'bin', 'network_tools_app')
@@ -20,9 +21,9 @@ from event_writer import StashNewWriter
 import pyspeedtest
 import pingparser
 from tracerouteparser import Traceroute
-from network_tools_app.wakeonlan import wol
-from network_tools_app.ipwhois import IPWhois
-from network_tools_app.pythonwhois import get_whois
+from wakeonlan import wol
+from ipwhois import IPWhois
+from pythonwhois import get_whois
 from flatten import flatten
 from ipaddr import IPAddress
 from dns import resolver,reversename
@@ -39,6 +40,13 @@ import splunk
 import splunk.rest as rest
 from splunk.models.base import SplunkAppObjModel
 from splunk.models.field import Field
+
+class CommandNotFoundException(Exception):
+    """
+    Represents the inability to run a command because it could not be found.
+    """
+    def __init__(self, command):
+        super(CommandNotFoundException, self).__init__('Command could not be executed since it could not be found; make sure that "%s" is installed and in the environment\'s path' % (command))
 
 class NetworkToolsConfig(SplunkAppObjModel):
     """
@@ -109,6 +117,11 @@ def traceroute(host, unique_id=None, index=None, sourcetype="traceroute",
     except subprocess.CalledProcessError as exception:
         output = exception.output
         return_code = exception.returncode
+    except OSError as exception:
+        if exception.errno == errno.ENOENT:
+            raise CommandNotFoundException(cmd[0])
+        else:
+            raise exception
 
     # Parse the output
     try:
@@ -225,6 +238,11 @@ def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_comma
     except subprocess.CalledProcessError as exception:
         output = exception.output
         return_code = exception.returncode
+    except OSError as exception:
+        if exception.errno == errno.ENOENT:
+            raise CommandNotFoundException(cmd[0])
+        else:
+            raise exception
 
     # Parse the output
     try:
