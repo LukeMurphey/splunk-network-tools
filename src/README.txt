@@ -71,4 +71,8 @@ Change History
 | 1.1     | Added lookup commands for performing operations on results (see http://bit.ly/2uHxRm8)                           |
 |         | Fixed issue where hosts we sometimes displayed as online on the wake-on-lan list when they were not              |
 |         | Fixed issue where unnecessary fields showed up on the whois dashboard                                            |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.1.1   | Fixing some minor styling issues on Splunk 7.0                                                                   |
+|         | A more informative message is displayed if a command could not be found                                          |
+|         | Improving error messaging when the whois lookup was performed without a host field                               |
 +---------+------------------------------------------------------------------------------------------------------------------+
