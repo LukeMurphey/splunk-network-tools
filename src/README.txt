@@ -72,7 +72,11 @@ Change History
 |         | Fixed issue where hosts we sometimes displayed as online on the wake-on-lan list when they were not              |
 |         | Fixed issue where unnecessary fields showed up on the whois dashboard                                            |
 |---------|------------------------------------------------------------------------------------------------------------------|
-| 1.1.1   | Fixing some minor styling issues on Splunk 7.0                                                                   |
+| 1.1.1   | Fixed some minor styling issues on Splunk 7.0                                                                    |
 |         | A more informative message is displayed if a command could not be found                                          |
 |         | Improving error messaging when the whois lookup was performed without a host field                               |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.2     | Fixing minor styling issue where an icon was the wrong color                                                     |
+|         | Added ability to restrict the index used via a URL parameter; see http://bit.ly/2zqcN67                          |
+|         | Fixed an issue where the ping view attempted to run even when no input was provided                              |
 +---------+------------------------------------------------------------------------------------------------------------------+
