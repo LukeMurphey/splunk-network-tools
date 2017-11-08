@@ -10,11 +10,12 @@ class NSLookup(SearchCommand):
     This search command provides a Splunk interface for doing a DNS lookup.
     """
 
-    def __init__(self, host=None, server=None):
+    def __init__(self, host=None, server=None, index=None):
         SearchCommand.__init__(self, run_in_preview=False, logger_name="nslookup_search_command")
 
         self.host = host
         self.server = server
+        self.index = index
 
         self.logger.info("NSLookup running against host=%s", host)
 
@@ -27,9 +28,13 @@ class NSLookup(SearchCommand):
             self.logger.warn("No host was provided")
             return
 
-        # Do the nslookup
-        index = get_default_index(session_key)
+        # Get the index
+        if self.index is not None:
+            index = self.index
+        else:
+            index = get_default_index(session_key)
 
+        # Do the nslookup
         result = nslookup(host=self.host, server=self.server, index=index, logger=self.logger)
 
         # Output the results

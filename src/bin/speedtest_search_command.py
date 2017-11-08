@@ -6,10 +6,11 @@ class Speedtest(SearchCommand):
     A Search command for performing a speedtest.
     """
 
-    def __init__(self, runs=1, server=None):
+    def __init__(self, runs=1, server=None, index=None):
         SearchCommand.__init__(self, run_in_preview=False, logger_name="speedtest_search_command")
 
         self.server = server
+        self.index = index
 
         try:
             self.runs = int(runs)
@@ -22,9 +23,12 @@ class Speedtest(SearchCommand):
 
         # FYI: we ignore results since this is a generating command
 
-        # Do the speedtest
-        index = get_default_index(session_key)
+        if self.index is not None:
+            index = self.index
+        else:
+            index = get_default_index(session_key)
 
+        # Do the speedtest
         result = speedtest(host=self.server, runs=self.runs, index=index, logger=self.logger)
 
         # Output the results

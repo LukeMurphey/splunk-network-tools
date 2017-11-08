@@ -14,11 +14,12 @@ class Traceroute(SearchCommand):
     This class is the interface between the search command and the underlying traceroute module.
     """
 
-    def __init__(self, host=None, include_output=False):
+    def __init__(self, host=None, include_output=False, index=None):
         SearchCommand.__init__(self, run_in_preview=False, logger_name="traceroute_search_command")
 
         self.host = host
         self.include_output = normalizeBoolean(include_output)
+        self.index = index
 
         self.logger.info("Traceroute running")
 
@@ -31,9 +32,13 @@ class Traceroute(SearchCommand):
             self.logger.warn("No host was provided")
             return
 
-        # Do the traceroute
-        index = get_default_index(session_key)
+        # Get the index
+        if self.index is not None:
+            index = self.index
+        else:
+            index = get_default_index(session_key)
 
+        # Do the traceroute
         _, return_code, result = traceroute(self.host, index=index, logger=self.logger, include_raw_output=self.include_output)
 
         #result['return_code'] = return_code

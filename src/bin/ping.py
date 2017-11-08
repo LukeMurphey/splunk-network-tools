@@ -10,10 +10,11 @@ class Ping(SearchCommand):
     This search command provides a Splunk interface for the system's ping command.
     """
 
-    def __init__(self, host=None, count=1):
+    def __init__(self, host=None, count=1, index=None):
         SearchCommand.__init__(self, run_in_preview=False, logger_name="ping_search_command")
 
         self.host = host
+        self.index = index
 
         try:
             self.count = int(count)
@@ -31,9 +32,13 @@ class Ping(SearchCommand):
             self.logger.warn("No host was provided")
             return
 
-        # Do the ping
-        index = get_default_index(session_key)
+        # Get the index
+        if self.index is not None:
+            index = self.index
+        else:
+            index = get_default_index(session_key)
 
+        # Do the ping
         _, return_code, result = ping(self.host, self.count, index=index, logger=self.logger)
 
         result['return_code'] = return_code

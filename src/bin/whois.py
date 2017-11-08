@@ -11,10 +11,11 @@ class Whois(SearchCommand):
     A search command for performing whois lookups.
     """
 
-    def __init__(self, host=None, field=None):
+    def __init__(self, host=None, field=None, index=None):
         SearchCommand.__init__(self, run_in_preview=False, logger_name="whois_search_command")
 
         self.host = host
+        self.index = index
 
         if host is not None:
             self.logger.info("Whois running against host=%s", host)
@@ -33,6 +34,12 @@ class Whois(SearchCommand):
 
         if results is None or len(results) == 0:
             # FYI: we ignore results since this is a generating command
+
+            # Get the index
+            if self.index is not None:
+                index = self.index
+            else:
+                index = get_default_index(session_key)
 
             # Do the whois
             output = whois(host=self.host, index=index, logger=self.logger)
