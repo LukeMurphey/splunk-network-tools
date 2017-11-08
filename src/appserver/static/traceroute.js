@@ -11,8 +11,8 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
 				execute_button_id : "#execute_input",
 				cell_renderer_id : 'element4',
 
-            	default_search: '| search sourcetype=traceroute | head 1 | join unique_id max=300 [| search sourcetype=traceroute | eval raw=_raw] | rex field=raw "rtt=\\"(?<rtt>[.0-9]+)\\"" max_match=5 | rex field=raw "name=\\"(?<name>[.0-9]+)\\"" max_match=5 | rex field=raw "ip=\\"(?<ip>[.0-9]+)\\"" max_match=5 | stats values(rtt) as rtt values(ip) as ip values(name) as name first(dest_host) as dest_host first(dest_ip) as dest_ip by hop | sort hop',
-            	fresh_search: '| traceroute $host$',
+            	default_search: '| search sourcetype=traceroute $index$ | head 1 | join unique_id max=300 [| search sourcetype=traceroute $index$ | eval raw=_raw] | rex field=raw "rtt=\\"(?<rtt>[.0-9]+)\\"" max_match=5 | rex field=raw "name=\\"(?<name>[.0-9]+)\\"" max_match=5 | rex field=raw "ip=\\"(?<ip>[.0-9]+)\\"" max_match=5 | stats values(rtt) as rtt values(ip) as ip values(name) as name first(dest_host) as dest_host first(dest_ip) as dest_ip by hop | sort hop',
+            	fresh_search: '| traceroute $host$ $index$',
             	search_token: 'traceroute_search',
 
 				token_name : 'host',

@@ -10,8 +10,8 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
 			var network_tools_view = new NetworkToolsView({
 				execute_button_id : "#execute_speedtest_input",
 
-            	default_search: '| search sourcetype=speedtest | head 1 | table ping upload download upload_readable download_readable',
-            	fresh_search: '| speedtest $runs$ $server$',
+            	default_search: '| search sourcetype=speedtest $index$ | head 1 | table ping upload download upload_readable download_readable',
+            	fresh_search: '| speedtest $runs$ $server$ $index$',
             	search_token: 'speedtest_search'
 			});
 

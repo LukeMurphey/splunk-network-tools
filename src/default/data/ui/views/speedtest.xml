@@ -5,7 +5,7 @@
     <query>$speedtest_search$</query>
   </search>
   <search id="speedtest_data_search">
-    <query>sourcetype="speedtest"</query>
+    <query>sourcetype="speedtest" $index$</query>
     <earliest>-30d@d</earliest>
     <latest>now</latest>
     <sampleRatio>1</sampleRatio>
@@ -138,7 +138,7 @@
         </search>
         -->
         <search>
-          <query>sourcetype="speedtest" | timechart avg(ping) as ping</query>
+          <query>sourcetype="speedtest" $index$ | timechart avg(ping) as ping</query>
           <earliest>$timefield.earliest$</earliest>
           <latest>$timefield.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -181,7 +181,7 @@
           <sampleRatio>1</sampleRatio>
         </search> -->
         <search>
-          <query>sourcetype="speedtest"  | timechart avg(upload) as upload avg(download) as download</query>
+          <query>sourcetype="speedtest" $index$ | timechart avg(upload) as upload avg(download) as download</query>
           <earliest>$timefield.earliest$</earliest>
           <latest>$timefield.latest$</latest>
           <sampleRatio>1</sampleRatio>

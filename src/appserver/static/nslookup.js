@@ -11,8 +11,8 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
 				execute_button_id : "#execute_input",
 				cell_renderer_id : 'element2',
 
-            	default_search: '| search sourcetype=nslookup | head 1 | fields - _raw _time | fields query a aaaa mx ns',
-            	fresh_search: '| nslookup $host$',
+            	default_search: '| search sourcetype=nslookup $index$ | head 1 | fields - _raw _time | fields query a aaaa mx ns',
+            	fresh_search: '| nslookup $host$ $index$',
             	search_token: 'nslookup_search',
 
 				token_name : 'host',

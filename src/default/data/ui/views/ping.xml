@@ -137,7 +137,7 @@
         </search>
         -->
         <search>
-          <query>sourcetype="ping" | table dest packet_loss max_ping avg_ping min_ping jitter</query>
+          <query>sourcetype="ping" $index$ | table dest packet_loss max_ping avg_ping min_ping jitter</query>
           <earliest>$timefield.earliest$</earliest>
           <latest>$timefield.latest$</latest>
           <sampleRatio>1</sampleRatio>

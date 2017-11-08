@@ -55,7 +55,7 @@
         </search>
         -->
         <search>
-          <query>sourcetype="nslookup" | fields _time query a aaaa mx ns | fields - _raw</query>
+          <query>sourcetype="nslookup" $index$ | fields _time query a aaaa mx ns | fields - _raw</query>
           <earliest>$timefield.earliest$</earliest>
           <latest>$timefield.latest$</latest>
         </search>

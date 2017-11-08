@@ -47,21 +47,26 @@ define([
             // The name of the token to set from the input
             token_name: null,
             token_input_id: null
-
         },
-        
+
         /**
          * Initialize the class.
          */
         initialize: function() {
         	this.options = _.extend({}, this.defaults, this.options);
-        	
+            
+            // Remember the index that we were asked to search against
+            this.index = null;
+
             // Handle a click event from the execute button and force the search command to execute.
             $(this.options.execute_button_id).click(this.runTest.bind(this));
 
-            // By default, show the most recent nslookup result. To do this, we will set the nslookup search token to be a historical search.
+            // By default, show the most recent  result. To do this, we will set the search token to be a historical search.
             var tokens = mvc.Components.getInstance("submitted");
-            tokens.set(this.options.search_token, this.options.default_search);
+            tokens.set(this.options.search_token, TokenUtils.replaceTokenNames(this.options.default_search, {index: this.getIndex()}));
+
+            // Set the index token so that any searches relying on it can run
+            tokens.set('index', this.getIndex());
 
             // Start the test if the URLs parameters call for it.
             this.startTestIfNecessary();
@@ -106,6 +111,29 @@ define([
 
         },
 
+        /**
+         * Get the index that we are supposed to use.
+         */
+        getIndex: function(){
+
+            // Return the index we stored if we loaded it already
+            if(this.index !== null){
+                return this.index;
+            }
+
+            // Get the index parameter
+            var index = Splunk.util.getParameter('index');
+
+            if(index && index.length > 0){
+                this.index = 'index=' + index;
+            }
+            else{
+                this.index = '';
+            }
+
+            return this.index;
+        },
+
 	    /**
          * Run the test
          */
@@ -114,12 +142,17 @@ define([
             // This will contain the parameters
             var params = this.getSearchParams();
 
-            if(params === null){
+            if(params === null || params === undefined){
                 return;
             }
-            
-            // Kick off the search
+
+            // Set the index parameter that we got from the URL
+            params.index = this.getIndex();
+
+            // Get a reference to the tokens so that we can set them
             var tokens = mvc.Components.getInstance("submitted");
+
+            // Kick off the search
             tokens.set(this.options.search_token, null);
             tokens.set(this.options.search_token, TokenUtils.replaceTokenNames(this.options.fresh_search, params));
         },

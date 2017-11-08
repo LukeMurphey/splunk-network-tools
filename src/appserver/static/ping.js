@@ -5,14 +5,15 @@ require.config({
 });
 
 require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'network_tools_view', 'bootstrap.tab', 'splunkjs/mvc/simplexml/ready!'],
-		function($, _, mvc, TokenUtils, NetworkToolsView){
+		function($, _, mvc, TokenUtils
+			, NetworkToolsView){
 
 			var network_tools_view = new NetworkToolsView({
 				cell_renderer_id : 'element4',
 				execute_button_id : "#execute_input",
 
-            	default_search: '| search sourcetype=ping | head 1 | table dest sent received packet_loss min_ping avg_ping max_ping jitter',
-            	fresh_search: '| ping $host$ $count$',
+            	default_search: '| search sourcetype=ping $index$ | head 1 | table dest sent received packet_loss min_ping avg_ping max_ping jitter',
+            	fresh_search: '| ping $host$ $count$ $index$',
             	search_token: 'ping_search',
 
 				token_name : 'host',

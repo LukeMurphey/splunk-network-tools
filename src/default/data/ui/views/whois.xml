@@ -55,7 +55,7 @@
         </search>
         -->
         <search>
-          <query>sourcetype="whois" | table _time query</query>
+          <query>sourcetype="whois" $index$ | table _time query</query>
           <earliest>$timefield.earliest$</earliest>
           <latest>$timefield.latest$</latest>
         </search>
