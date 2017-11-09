@@ -8,3 +8,15 @@ server = <value>
 
 runs = <value>
 * The number of runs to execute
+
+[ping://default]
+* Configure an input to ping a host to ensure it is 
+
+hosts = <value>
+* A list of hosts to ping
+
+runs = <value>
+* The number of runs to execute
+
+interval = <value>
+* Indicates how often to perform the ping
