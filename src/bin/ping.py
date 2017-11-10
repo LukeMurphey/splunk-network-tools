@@ -100,7 +100,7 @@ class PingInput(ModularInput):
             # message noting the number of threads
             removed_threads = 0
 
-            # IF the thread isn't alive, prune it
+            # If the thread isn't alive, prune it
             if not self.threads[thread_stanza].isAlive():
                 removed_threads = removed_threads + 1
                 self.logger.debug("Removing inactive thread for stanza=%s, thread_count=%i", thread_stanza, len(self.threads))
