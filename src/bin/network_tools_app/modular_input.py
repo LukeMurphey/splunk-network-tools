@@ -125,8 +125,22 @@ import json
 from urlparse import urlparse
 from threading import RLock
 
-from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
-from splunk.util import normalizeBoolean as normBool
+# Try to load Splunk's libraries. An inability to do so likely means we are running on a universal
+# forwarder (since it doesn't include Python). We will proceed but will be unable to access
+# Splunk's endpoints via simple request which means we will not able to load secure credentials.
+try:
+    from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
+    from splunk.util import normalizeBoolean as normBool
+    import splunk.rest
+    uf_mode = False
+except:
+    def normBool(value):
+        if str(value).strip().lower() in ['1', 'true']:
+            return True
+        else:
+            return False
+
+    uf_mode = True
 
 class FieldValidationException(Exception):
     pass
@@ -200,13 +214,14 @@ class Field(object):
         self.required_on_create = required_on_create
         self.required_on_edit = required_on_edit
 
-    def to_python(self, value):
+    def to_python(self, value, session_key=None):
         """
         Convert the field to a Python object. Should throw a FieldValidationException if the data
         is invalid.
 
         Arguments:
         value -- The value to convert
+        session_key- The session key to access Splunk (if needed)
         """
 
         if not self.none_allowed and value is None:
@@ -228,14 +243,13 @@ class Field(object):
 
         return str(value)
 
-
 class BooleanField(Field):
     """
     A validator that converts string versions of boolean to a real boolean.
     """
 
-    def to_python(self, value):
-        Field.to_python(self, value)
+    def to_python(self, value, session_key=None):
+        Field.to_python(self, value, session_key)
 
         if value in [True, False]:
             return value
@@ -266,9 +280,9 @@ class ListField(Field):
     A validator that converts a comma seperated string to an array.
     """
 
-    def to_python(self, value):
+    def to_python(self, value, session_key=None):
 
-        Field.to_python(self, value)
+        Field.to_python(self, value, session_key)
 
         if value is not None:
             return value.split(",")
@@ -282,14 +296,46 @@ class ListField(Field):
 
         return ""
 
+class StaticListField(Field):
+    """
+    This allows you to specify a list of field values that are allowed.
+    All other values will be rejected.
+    """
+
+    _valid_values = None
+    
+    def __init__(self, name, title, description, none_allowed=False, empty_allowed=True, required_on_create=None, required_on_edit=None, valid_values=None):
+        super(StaticListField, self).__init__(name, title, description, none_allowed, empty_allowed, required_on_create, required_on_edit)
+        
+        self.valid_values = valid_values
+
+    @property
+    def valid_values(self):
+        return self._valid_values
+
+    @valid_values.setter
+    def valid_values(self, values):
+        self._valid_values = values
+
+    def to_python(self, value, session_key=None):
+
+        Field.to_python(self, value, session_key)
+
+        if value is None:
+            return None
+        elif value not in self.valid_values:
+            raise FieldValidationException('The value of the "' + self.name + '" field is invalid, it must be one of:' + ','.join(self.valid_values))
+        else:
+            return value
+
 class RegexField(Field):
     """
     A validator that validates input matches a regular expression.
     """
 
-    def to_python(self, value):
+    def to_python(self, value, session_key=None):
 
-        Field.to_python(self, value)
+        Field.to_python(self, value, session_key)
 
         if value is not None:
             try:
@@ -311,9 +357,9 @@ class IntegerField(Field):
     A validator that converts string input to an integer.
     """
 
-    def to_python(self, value):
+    def to_python(self, value, session_key=None):
 
-        Field.to_python(self, value)
+        Field.to_python(self, value, session_key)
 
         if value is not None:
             try:
@@ -338,9 +384,9 @@ class FloatField(Field):
     A validator that converts string input to a float.
     """
 
-    def to_python(self, value):
+    def to_python(self, value, session_key=None):
 
-        Field.to_python(self, value)
+        Field.to_python(self, value, session_key)
 
         if value is not None:
             try:
@@ -373,9 +419,9 @@ class RangeField(Field):
         self.low = low
         self.high = high
 
-    def to_python(self, value):
+    def to_python(self, value, session_key=None):
 
-        Field.to_python(self, value)
+        Field.to_python(self, value, session_key)
 
         if value is not None:
             try:
@@ -401,6 +447,16 @@ class URLField(Field):
     Represents a URL. The URL is converted to a Python object that was created via urlparse.
     """
 
+    require_https_on_cloud = False
+
+    def __init__(self, name, title, description, none_allowed=False, empty_allowed=True,
+                 required_on_create=None, required_on_edit=None, require_https_on_cloud=False):
+
+        super(URLField, self).__init__(name, title, description, none_allowed,
+                                       empty_allowed, required_on_create, required_on_edit)
+
+        self.require_https_on_cloud = require_https_on_cloud
+
     @classmethod
     def parse_url(cls, value, name):
         """
@@ -418,10 +474,15 @@ class URLField(Field):
 
         return parsed_value
 
-    def to_python(self, value):
-        Field.to_python(self, value)
+    def to_python(self, value, session_key=None):
+        Field.to_python(self, value, session_key)
 
-        return URLField.parse_url(value.strip(), self.name)
+        parsed_value = URLField.parse_url(value.strip(), self.name)
+
+        if self.require_https_on_cloud and parsed_value.scheme == "http" and session_key is not None and ModularInput.is_on_cloud(session_key):
+            raise FieldValidationException("The value of '%s' for the '%s' parameter must use encryption (be HTTPS not HTTP)" % (str(value), self.name))
+
+        return parsed_value
 
     def to_string(self, value):
         return value.geturl()
@@ -454,8 +515,8 @@ class DurationField(Field):
         's' : 1
     }
 
-    def to_python(self, value):
-        Field.to_python(self, value)
+    def to_python(self, value, session_key=None):
+        Field.to_python(self, value, session_key)
 
         # Parse the duration
         duration_match = DurationField.DURATION_RE.match(value)
@@ -515,11 +576,63 @@ class DeprecatedField(Field):
                                               required_on_create=required_on_create,
                                               required_on_edit=required_on_edit)
 
-    def to_python(self, value):
+    def to_python(self, value, session_key=None):
         return None
 
     def to_string(self, value):
         return ""
+
+class FilePathField(Field):
+    '''
+    Represents a path to file.
+    '''
+
+    def __init__(self, name, title, description, none_allowed=False, empty_allowed=True,
+                 required_on_create=None, required_on_edit=None, validate_file_existence=True):
+        """
+        Create the field.
+
+        Arguments:
+        name -- Set the name of the field (e.g. "database_server")
+        title -- Set the human readable title (e.g. "Database server")
+        description -- Set the human readable description of the field (e.g. "The IP or domain name
+                       of the database server")
+        none_allowed -- Is a value of none allowed?
+        empty_allowed -- Is an empty string allowed?
+        required_on_create -- Is this field required when creating?
+        required_on_edit -- Is this field required when editing?
+        validate_file_existence -- If true, this field will generate an error if the file doesn't exist
+        """
+        super(FilePathField, self).__init__(name, title, description, none_allowed, empty_allowed, required_on_create, required_on_edit)
+
+        self.validate_file_existence = validate_file_existence
+
+    def to_python(self, value, session_key=None):
+
+        Field.to_python(self, value, session_key)
+
+        # Don't bother validating if the parameter wasn't provided
+        if value is None or len(value.strip()) == 0:
+            return value
+
+        # Resolve the file path as necessary
+        resolved_path = None
+
+        if value is not None:
+            if os.path.isabs(value) or uf_mode:
+                resolved_path = value
+            else:
+                path = os.path.join(make_splunkhome_path([value]))
+                resolved_path = path
+
+        # Validate the file existence if requested
+        if self.validate_file_existence and not os.path.isfile(resolved_path):
+            raise FieldValidationException("The parameter '%s' is not a valid path; '%s' does not exist" % (self.name, resolved_path))
+
+        return resolved_path
+
+    def to_string(self, value):
+        return value
 
 class ModularInputConfig():
     """
@@ -615,6 +728,38 @@ class ModularInputConfig():
         return ModularInputConfig(server_host, server_uri, session_key, checkpoint_dir,
                                   configuration)
 
+def forgive_splunkd_outages(function):
+    """
+    Try the given function and swallow Splunkd connection exceptions until the limit is reached or
+    the function works.
+
+    Arguments:
+    function -- The function to call
+    """
+    def wrapper(*args, **kwargs):
+        """
+        This wrapper will provide the swallowing of the exception for the provided function call.
+        """
+        attempts = 6
+        attempt_delay = 5
+
+        attempts_tried = 0
+
+        while attempts_tried < attempts:
+            try:
+                return function(*args, **kwargs)
+            except splunk.SplunkdConnectionException:
+
+                # Sleep for a bit in order to let Splunk recover in case this is a temporary issue
+                time.sleep(attempt_delay)
+                attempts_tried += 1
+
+                # If we hit the limit of the attempts, then throw the exception
+                if attempts_tried >= attempts:
+                    raise
+
+    return wrapper
+
 class ModularInput():
     """
     This class functions as a base-class for modular inputs.
@@ -635,6 +780,8 @@ class ModularInput():
     use_external_validation = True
     description = ""
     streaming_mode = 'true'
+
+    server_info = None
 
     def _is_valid_param(self, name, val):
         '''Raise an error if the parameter is None or empty.'''
@@ -912,6 +1059,9 @@ class ModularInput():
 
         self.logger_name = logger_name
 
+        # Keep an instance of the server-info around to prevent unnecessary REST calls
+        self.server_info = None
+
     def addArg(self, arg):
         """
         Add a given argument to the list of arguments.
@@ -964,7 +1114,11 @@ class ModularInput():
         logger.propagate = False
         logger.setLevel(self.logger_level)
 
-        file_handler = handlers.RotatingFileHandler(make_splunkhome_path(['var', 'log', 'splunk', self.logger_name + '.log']), maxBytes=25000000, backupCount=5)
+        if uf_mode:
+            file_handler = handlers.RotatingFileHandler(os.path.join(os.environ['SPLUNK_HOME'], 'var', 'log', self.logger_name + '.log'), maxBytes=25000000, backupCount=5)
+        else:
+            file_handler = handlers.RotatingFileHandler(make_splunkhome_path(['var', 'log', 'splunk', self.logger_name + '.log']), maxBytes=25000000, backupCount=5)
+
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         file_handler.setFormatter(formatter)
 
@@ -976,6 +1130,107 @@ class ModularInput():
     @logger.setter
     def logger(self, logger):
         self._logger = logger
+
+    def escape_colons(self, string_to_escape):
+        """
+        Escape the colons. This is necessary for secure password stanzas.
+        """
+        return string_to_escape.replace(":", "\\:")
+
+    def get_secure_password_stanza(self, username, realm=""):
+        """
+        Make the stanza name for a entry in the storage/passwords endpoint from the username and
+        realm.
+        """
+        return self.escape_colons(realm) + ":" + self.escape_colons(username) + ":"
+
+    @forgive_splunkd_outages
+    def get_secure_password(self, realm, username=None, session_key=None):
+        """
+        Get the secure password that matches the given realm and username. If no username is
+        provided, the first entry with the given realm will be returned.
+        """
+
+        if uf_mode:
+            self.logger.warn("Unable to retrieve the secure credential since the input appears " +
+                             "to be running in a Univeral Forwarder")
+            # Cannot get the secure password in universal forwarder mode since we don't
+            # have access to Splunk libraries
+            return None
+
+        # Look up the entry by realm only if no username is provided.
+        if username is None or len(username) == 0:
+            return self.get_secure_password_by_realm(realm, session_key)
+
+        # Get secure password
+        stanza = self.get_secure_password_stanza(username, realm)
+        try:
+            server_response, server_content = splunk.rest.simpleRequest('/services/storage/passwords/' + stanza + '?output_mode=json', sessionKey=session_key)
+        except splunk.ResourceNotFound:
+            return None
+
+        if server_response['status'] == '404':
+            return None
+        elif server_response['status'] != '200':
+            raise Exception("Could not get the secure passwords")
+
+        passwords_content = json.loads(server_content)
+        password = passwords_content['entry']
+
+        return password[0]
+
+    @forgive_splunkd_outages
+    def get_secure_password_by_realm(self, realm, session_key):
+        """
+        Get the secure password that matches the given realm.
+        """
+
+        # Get secure passwords
+        server_response, server_content = splunk.rest.simpleRequest('/services/storage/passwords?output_mode=json', sessionKey=session_key)
+
+        if server_response['status'] != '200':
+            raise Exception("Could not get the secure passwords")
+
+        passwords_content = json.loads(server_content)
+        passwords = passwords_content['entry']
+
+        # Filter down output to the ones matching the realm
+        matching_passwords = filter(lambda x: x['content']['realm'] == realm, passwords)
+
+        if len(matching_passwords) > 0:
+            return matching_passwords[0]
+        else:
+            return None
+
+    @classmethod
+    @forgive_splunkd_outages
+    def get_server_info(cls, session_key, force_refresh=False):
+        """
+        Get the server information object.
+        """
+
+        # Use the cached server information if possible
+        if not force_refresh and cls.server_info is not None:
+            return cls.server_info
+
+        # Get the server info
+        _, server_content = splunk.rest.simpleRequest('/services/server/info/server-info?output_mode=json', sessionKey=session_key)
+
+        info_content = json.loads(server_content)
+        cls.server_info = info_content['entry'][0]
+
+        return cls.server_info
+
+    @classmethod
+    @forgive_splunkd_outages
+    def is_on_cloud(cls, session_key):
+        """
+        Determine if the host is running on cloud.
+        """
+
+        server_info = cls.get_server_info(session_key)
+
+        return server_info['content'].get('instance_type', None) == 'cloud'
 
     def bool_to_str(self, bool_value):
         """
@@ -1113,36 +1368,39 @@ class ModularInput():
         in_stream -- The stream to get the input from (defaults to standard input)
         """
 
-        data = self.get_validation_data()
+        data, session_key = self.get_validation_data()
 
         try:
-            self.validate_parameters(None, data)
+            self.validate_parameters(None, data, session_key)
             return True
         except FieldValidationException as e:
             self.print_error(str(e))
             return False
 
-    def validate(self, arguments):
+    def validate(self, arguments, session_key=None):
         """
         Validate the argument dictionary where each key is a stanza.
 
         Arguments:
         arguments -- The arguments as an dictionary where the key is the stanza and the value is a
                      dictionary of the values.
+        session_key -- The session key for accessing Splunkd
         """
 
         # Check each stanza
         for stanza, parameters in arguments.items():
-            self.validate_parameters(stanza, parameters)
+            self.validate_parameters(stanza, parameters, session_key)
+
         return True
 
-    def validate_parameters(self, stanza, parameters):
+    def validate_parameters(self, stanza, parameters, session_key=None):
         """
         Validate the parameter set for a stanza and returns a dictionary of cleaned parameters.
 
         Arguments:
         stanza -- The stanza name
         parameters -- The list of parameters
+        session_key -- The session key for accessing Splunkd
         """
 
         cleaned_params = {}
@@ -1150,18 +1408,18 @@ class ModularInput():
         # Append the arguments list such that the standard fields that Splunk provides are included
         all_args = {}
 
-        for a in self.standard_args:
-            all_args[a.name] = a
+        for argument_validator in self.standard_args:
+            all_args[argument_validator.name] = argument_validator
 
-        for a in self.args:
-            all_args[a.name] = a
+        for argument_validator in self.args:
+            all_args[argument_validator.name] = argument_validator
 
         # Convert and check the parameters
         for name, value in parameters.items():
 
             # If the argument was found, then validate and convert it
             if name in all_args:
-                cleaned_params[name] = all_args[name].to_python(value)
+                cleaned_params[name] = all_args[name].to_python(value, session_key=session_key)
 
             # Allow the interval argument since it is internal but allowed even if not explicitly
             # declared
@@ -1468,6 +1726,15 @@ class ModularInput():
         doc = xml.dom.minidom.parseString(val_str)
         root = doc.documentElement
 
+        # Parse the session key
+        session_key_node = root.getElementsByTagName("session_key")[0]
+
+        if session_key_node.firstChild and session_key_node.firstChild.nodeType == session_key_node.firstChild.TEXT_NODE:
+            session_key = session_key_node.firstChild.data
+        else:
+            session_key = None
+
+        # Parse the parameters 
         item_node = root.getElementsByTagName("item")[0]
         if item_node:
 
@@ -1482,7 +1749,7 @@ class ModularInput():
                 if name and param.firstChild and param.firstChild.nodeType == param.firstChild.TEXT_NODE:
                     val_data[name] = param.firstChild.data
 
-        return val_data
+        return val_data, session_key
 
     def validate_parameters_from_cli(self, argument_array=None):
         """
@@ -1521,18 +1788,18 @@ class ModularInput():
         """
 
         try:
-            self.logger.debug("Execute called")
+            self.logger.debug("Modular input started (execute called)")
 
             if len(sys.argv) > 1:
                 if sys.argv[1] == "--scheme":
                     self.do_scheme(out_stream)
 
                 elif sys.argv[1] == "--validate-arguments":
-                    self.logger.debug("Modular input: validate arguments called")
+                    self.logger.debug("Validate arguments called: input verifying arguments")
 
-                    # Exit with a code of -1 if validation failed
+                    # Exit with an code if validation failed
                     if self.do_validation() == False:
-                        sys.exit(-1)
+                        sys.exit(1)
 
                 else:
                     self.usage(out_stream)
