@@ -9,6 +9,7 @@ import splunk
 from splunk.models.base import SplunkAppObjModel
 from splunk.models.field import IntField as ModelIntField
 
+sys.path.insert(0, 'modular_input.zip')
 from network_tools_app.modular_input import ModularInput, IntegerField, DurationField, ListField, forgive_splunkd_outages
 from network_tools_app import ping
 

@@ -1,7 +1,8 @@
 
 import sys
 
-from network_tools_app.modular_input import Field, ModularInput, IntegerField
+sys.path.insert(0, 'modular_input.zip')
+from modular_input import Field, ModularInput, IntegerField
 
 from network_tools_app import speedtest, get_default_index
 
