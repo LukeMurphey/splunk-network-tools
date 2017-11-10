@@ -4,22 +4,13 @@ This script provides a modular input for performing pings.
 import sys
 import threading
 import time
+import json
 
 import splunk
-from splunk.models.base import SplunkAppObjModel
-from splunk.models.field import IntField as ModelIntField
 
 sys.path.insert(0, 'modular_input.zip')
 from network_tools_app.modular_input import ModularInput, IntegerField, DurationField, ListField, forgive_splunkd_outages
 from network_tools_app import ping
-
-class NetworkToolkitConfig(SplunkAppObjModel):
-    """
-    A Splunk app model that allows retrieval of the Website Monitoring app configuration file.
-    """
-
-    resource = '/admin/network_tools'
-    thread_limit = ModelIntField()
 
 class PingInput(ModularInput):
     """
@@ -67,9 +58,24 @@ class PingInput(ModularInput):
         if stanza is None or stanza.strip() == "":
             stanza = "default"
 
-        # Get the proxy configuration
+        network_tools_config = None
+
+        # Get the app configuration
         try:
-            network_toolkit_config = NetworkToolkitConfig.get(NetworkToolkitConfig.build_id(stanza, "network_toolkit", "nobody"), sessionKey=session_key)
+            uri = '/servicesNS/nobody/-/admin/network_tools/' + stanza
+
+            getargs = {
+                'output_mode': 'json'
+            }
+
+            _, entry = splunk.rest.simpleRequest(uri, sessionKey=session_key, getargs=getargs,
+                                                 raiseAllErrors=True)
+
+            network_tools_config = json.loads(entry)['entry'][0]['content']
+
+            # Convert the thread limit to an integer
+            if 'thread_limit' in network_tools_config:
+                network_tools_config['thread_limit'] = int(network_tools_config['thread_limit'])
 
             self.logger.debug("App config information loaded, stanza=%s", stanza)
 
@@ -80,9 +86,13 @@ class PingInput(ModularInput):
             self.logger.error('Unable to find the app configuration for the specified configuration stanza=%s error="splunkd connection error", see url=http://lukemurphey.net/projects/splunk-website-monitoring/wiki/Troubleshooting', stanza)
             raise
 
-        return network_toolkit_config
+        return network_tools_config
 
     def clean_old_threads(self):
+        """
+        Remove the old threads that are done.
+        """
+
         # Clean up old threads
         for thread_stanza in self.threads.keys():
 
@@ -117,7 +127,6 @@ class PingInput(ModularInput):
         hosts = cleaned_params.get("hosts", [])
         runs = cleaned_params.get("runs", 3)
 
-        """
         # Load the thread_limit if necessary
         # This should only be necessary once in the processes lifetime
         if self.default_app_config is None:
@@ -126,7 +135,7 @@ class PingInput(ModularInput):
             self.default_app_config = self.get_app_config(input_config.session_key)
 
             # Get the limit from the app config
-            loaded_thread_limit = self.default_app_config.thread_limit
+            loaded_thread_limit = self.default_app_config['thread_limit']
 
             # Ensure that the thread limit is valid
             if loaded_thread_limit is not None and loaded_thread_limit > 0:
@@ -137,7 +146,6 @@ class PingInput(ModularInput):
             # Warn that the thread limit is invalid
             else:
                 self.logger.warn("The thread limit is invalid and will be ignored, thread_limit=%r", loaded_thread_limit)
-        """
 
         # Remove old threads if necessary
         self.clean_old_threads()

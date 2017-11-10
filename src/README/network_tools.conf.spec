@@ -13,3 +13,10 @@
 index = <string>
     * Defines the default index where results will go that are created by the various search commands
     * Examples: main, networktools
+
+thread_limit = <string>
+    * Defines the maximum number of the threads that the input will run when doing pings via the ping input
+    * Raising this will increase the number of inputs that can be done at any one time
+    * Lower this value if you experience excesssive resource utilization upon startup due to the inputs trying to catch up
+    * Raise this value if you have a large number of inputs and Splunk is unable to keep up
+    * Defaults to 20
