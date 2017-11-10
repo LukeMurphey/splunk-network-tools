@@ -5,6 +5,10 @@
   <view name="nslookup" />
   <view name="speedtest" />
   <view name="wakeonlan" />
+  <collection label="Health">
+  	<view name="network_toolkit_logs" />
+  	<view name="network_toolkit_status" />
+  </collection>
   <collection label="Search">
   	<view name="search" />
   	<view name="datasets" />
