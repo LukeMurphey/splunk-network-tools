@@ -1,6 +1,7 @@
 """
 This script provides a modular input for performing pings.
 """
+import os
 import sys
 import threading
 import time
@@ -8,8 +9,11 @@ import json
 
 import splunk
 
-sys.path.insert(0, 'modular_input.zip')
-from network_tools_app.modular_input import ModularInput, IntegerField, DurationField, ListField, forgive_splunkd_outages
+path_to_mod_input_lib = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modular_input.zip')
+sys.path.insert(0, path_to_mod_input_lib)
+from modular_input import ModularInput, IntegerField, DurationField, ListField
+from modular_input.shortcuts import forgive_splunkd_outages
+
 from network_tools_app import ping
 
 class PingInput(ModularInput):
@@ -193,18 +197,4 @@ class PingInput(ModularInput):
                 self.logger.info("Added thread to the queue for stanza=%s, thread_count=%i", stanza, len(self.threads))
 
 if __name__ == '__main__':
-
-    ping_input = None
-
-    try:
-        ping_input = PingInput()
-        ping_input.execute()
-        sys.exit(0)
-    except Exception as e:
-
-        # This logs general exceptions that would have been unhandled otherwise (such as coding
-        # errors)
-        if ping_input is not None and ping_input.logger is not None:
-            ping_input.logger.exception("Unhandled exception was caught, this may be due to a defect in the script")
-        else:
-            raise e
+    PingInput.instantiate_and_execute()
