@@ -11,7 +11,7 @@ import splunk
 
 path_to_mod_input_lib = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modular_input.zip')
 sys.path.insert(0, path_to_mod_input_lib)
-from modular_input import ModularInput, IntegerField, DurationField, ListField
+from modular_input import ModularInput, IntegerField, DurationField, ListField, IPNetworkField
 from modular_input.shortcuts import forgive_splunkd_outages
 
 from network_tools_app import ping
@@ -34,7 +34,7 @@ class PingInput(ModularInput):
 
         args = [
             #Field("title", "Title", "A short description (typically just the domain name)", empty_allowed=False),
-            ListField("hosts", "Hosts", "The list of hosts to ping", empty_allowed=True, none_allowed=True, required_on_create=False, required_on_edit=False),
+            ListField("hosts", "Hosts", "The list of hosts to ping", empty_allowed=True, none_allowed=True, required_on_create=False, required_on_edit=False, instance_class=IPNetworkField),
             IntegerField("runs", "Runs", "The number of runs that should be executed", empty_allowed=False, none_allowed=False),
             DurationField("interval", "Interval", "The interval defining how often to perform the check; can include time units (e.g. 15m for 15 minutes, 8h for 8 hours)", empty_allowed=False)
         ]
@@ -164,12 +164,32 @@ class PingInput(ModularInput):
             def run_ping():
                 self.logger.info("Starting ping, stanza=%s", stanza)
 
-                for host in hosts:
-                    output, return_code, result = ping(host=host, count=runs, logger=self.logger)
+                # Get the time that the input last ran
+                last_ran = self.last_ran(input_config.checkpoint_dir, stanza)
 
-                    with self.lock:
-                        # Output the results
-                        self.output_event(result, stanza, index, sourcetype, stanza, host)
+                for host in hosts:
+
+                    if host.num_addresses == 1:
+                        output, return_code, result = ping(host=str(host.network_address), count=runs, logger=self.logger)
+
+                        with self.lock:
+                            # Output the results
+                            self.output_event(result, stanza, index, sourcetype, stanza, host)
+                    else:
+                        for next_host in host.hosts():
+                            output, return_code, result = ping(host=str(next_host), count=runs, logger=self.logger)
+
+                            with self.lock:
+                                # Output the results
+                                self.output_event(result, stanza, index, sourcetype, stanza, host)
+
+                        self.logger.info("Successfully pinged all hosts in the network=%s", str(host))
+
+                # Save the checkpoint so that we remember when we last ran the input
+                self.save_checkpoint_data(input_config.checkpoint_dir, stanza,
+                                          {
+                                              'last_run' : self.get_non_deviated_last_run(last_ran, interval, stanza)
+                                          })
 
                 self.logger.info("Ping complete, stanza=%s", stanza)
 
@@ -191,7 +211,7 @@ class PingInput(ModularInput):
 
                 # Start a thread
                 new_thread = threading.Thread(name='ping_input:' + stanza, target=run_ping)
-                self.threads[self.get_thread_name(stanza, host)] = new_thread
+                self.threads[stanza] = new_thread
                 new_thread.start()
 
                 self.logger.info("Added thread to the queue for stanza=%s, thread_count=%i", stanza, len(self.threads))
