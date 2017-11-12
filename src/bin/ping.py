@@ -34,7 +34,7 @@ class PingInput(ModularInput):
 
         args = [
             #Field("title", "Title", "A short description (typically just the domain name)", empty_allowed=False),
-            ListField("hosts", "Hosts", "The list of hosts to ping", empty_allowed=True, none_allowed=True, required_on_create=False, required_on_edit=False, instance_class=IPNetworkField),
+            ListField("hosts", "Hosts", "The list of hosts or networks to ping", empty_allowed=True, none_allowed=True, required_on_create=False, required_on_edit=False, instance_class=IPNetworkField),
             IntegerField("runs", "Runs", "The number of runs that should be executed", empty_allowed=False, none_allowed=False),
             DurationField("interval", "Interval", "The interval defining how often to perform the check; can include time units (e.g. 15m for 15 minutes, 8h for 8 hours)", empty_allowed=False)
         ]
