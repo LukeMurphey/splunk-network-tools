@@ -28,13 +28,13 @@ class PingInput(ModularInput):
 
     def __init__(self, thread_limit=None):
 
-        scheme_args = {'title': "Ping a Host",
-                       'description': "Ping a host to see if it responds",
+        scheme_args = {'title': "Ping",
+                       'description': "Ping a host or a network to see if it is online",
                        'use_single_instance': True}
 
         args = [
             #Field("title", "Title", "A short description (typically just the domain name)", empty_allowed=False),
-            ListField("hosts", "Hosts", "The list of hosts or networks to ping", empty_allowed=True, none_allowed=True, required_on_create=False, required_on_edit=False, instance_class=IPNetworkField),
+            ListField("dest", "Destination", "The list of hosts or networks to ping", empty_allowed=True, none_allowed=True, required_on_create=False, required_on_edit=False, instance_class=IPNetworkField),
             IntegerField("runs", "Runs", "The number of runs that should be executed", empty_allowed=False, none_allowed=False),
             DurationField("interval", "Interval", "The interval defining how often to perform the check; can include time units (e.g. 15m for 15 minutes, 8h for 8 hours)", empty_allowed=False)
         ]
@@ -140,7 +140,7 @@ class PingInput(ModularInput):
         index = cleaned_params.get("index", "default")
         sourcetype = cleaned_params.get("sourcetype", "ping_input")
 
-        hosts = cleaned_params.get("hosts", [])
+        dests = cleaned_params.get("dest", [])
         runs = cleaned_params.get("runs", 3)
 
         # Load the thread_limit if necessary
@@ -179,18 +179,18 @@ class PingInput(ModularInput):
                 # Get the time that the input last ran
                 last_ran = self.last_ran(input_config.checkpoint_dir, stanza)
 
-                for host in hosts:
+                for dest in dests:
 
-                    if host.num_addresses == 1:
-                        output, return_code, result = ping(host=str(host.network_address), count=runs, logger=self.logger)
+                    if dest.num_addresses == 1:
+                        _, _, result = ping(host=str(dest.network_address), count=runs, logger=self.logger)
                         self.send_result(result, stanza, index, sourcetype, host)
 
                     else:
-                        for next_host in host.hosts():
-                            output, return_code, result = ping(host=str(next_host), count=runs, logger=self.logger)
+                        for next_dest in dest.hosts():
+                            _, _, result = ping(host=str(next_dest), count=runs, logger=self.logger)
                             self.send_result(result, stanza, index, sourcetype, host)
 
-                        self.logger.info("Successfully pinged all hosts in the network=%s", str(host))
+                        self.logger.info("Successfully pinged all hosts in the network=%s", str(dest))
 
                 # Save the checkpoint so that we remember when we last ran the input
                 self.save_checkpoint_data(input_config.checkpoint_dir, stanza,

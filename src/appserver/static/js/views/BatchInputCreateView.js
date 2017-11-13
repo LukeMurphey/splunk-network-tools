@@ -50,8 +50,6 @@ define([
         initialize: function() {
         	this.options = _.extend({}, this.defaults, this.options);
         	
-        	//this.some_option = this.options.some_option;
-        	
         	// These are internal variables
         	this.processing_queue = [];
         	this.processed_queue = [];
@@ -63,7 +61,6 @@ define([
         	this.capabilities = null;
         	this.inputs = null;
         	this.existing_input_names = [];
-			this.is_on_cloud = null;
         	
         	this.getExistingInputs();
         },
@@ -113,7 +110,7 @@ define([
         /**
          * Create an input
          */
-        createInput: function(host, interval, index, count, name){
+        createInput: function(dest, interval, index, count, name){
         	
         	// Get a promise ready
         	var promise = jQuery.Deferred();
@@ -133,12 +130,12 @@ define([
         	
         	// Populate defaults for the arguments
         	if(name === null){
-        		name = this.generateStanza(host, this.existing_input_names);
+        		name = this.generateStanza(dest, this.existing_input_names);
         	}
         	
         	// Make the data that will be posted to the server
         	var data = {
-        		"hosts": host,
+        		"dest": dest,
         		"interval": interval,
         		"name": name,
         		"runs": count,
@@ -159,7 +156,7 @@ define([
         				console.info('Input created');
         				
         				// Remember that we processed this one
-        				this.processed_queue.push(host);
+        				this.processed_queue.push(dest);
         				
         				// Make sure that we add the name so that we can detect duplicated names
         				this.existing_input_names.push(name);
@@ -191,7 +188,7 @@ define([
         				}
     					
     					// Remember that we couldn't process this on
-    					this.unprocessed_queue.push(host);
+    					this.unprocessed_queue.push(dest);
     					
         			}.bind(this)
         	});
@@ -455,11 +452,9 @@ define([
 	                type:    'GET',
 	                async:   false,
 	                success: function(result) {
-
 	                	if(result !== undefined){
 	                		this.capabilities = result.entry[0].content.capabilities;
 	                	}
-
 	                }.bind(this)
 	            });
         	}
@@ -469,13 +464,13 @@ define([
         },
         
         /**
-         * Determine if the given host is already monitored.
+         * Determine if the given destination is already monitored.
          */
-        isAlreadyMonitored: function(host){
+        isAlreadyMonitored: function(dest){
         	
         	for(var c = 0; c < this.inputs.length; c++){
         		
-        		if(this.inputs[c].content.host === host){
+        		if(this.inputs[c].content.dest === dest){
         			return true;
         		}
         		
@@ -493,9 +488,9 @@ define([
 
 	        // Fire off the request
         	jQuery.ajax({
-        		url:     uri,
-        		type:    'GET',
-        		async:   false,
+        		url: uri,
+        		type: 'GET',
+        		async: false,
         		success: function(result) {
         			if(result !== undefined){
         				this.inputs = result.entry;
@@ -517,45 +512,29 @@ define([
          * Render the view.
          */
         render: function () {
-        	
-			if(this.is_on_cloud === null){
-				this.server_info = new ServerInfo();
+			// Below is the list of capabilities required
+			var capabilities_required = ['edit_modinput_ping', 'edit_tcp', 'list_inputs'];
+
+			// Find out which capabilities are missing
+			var capabilities_missing = [];
+
+			// Check each one
+			for (var c = 0; c < capabilities_required.length; c++) {
+				if (!this.hasCapability(capabilities_required[c])) {
+					capabilities_missing.push(capabilities_required[c]);
+				}
 			}
-			
-			new ServerInfo().fetch().done(function(model){
 
-				if(model.entry[0].content.instance_type){
-					this.is_on_cloud = model.entry[0].content.instance_type === 'cloud';
-				}
-				else{
-					this.is_on_cloud = false;
-				}
+			// Render the view
+			this.$el.html(_.template(Template, {
+				'has_permission': capabilities_missing.length === 0,
+				'capabilities_missing': capabilities_missing
+			}));
 
-				// Below is the list of capabilities required
-				var capabilities_required = ['edit_modinput_ping', 'edit_tcp', 'list_inputs'];
-				
-				// Find out which capabilities are missing
-				var capabilities_missing = [];
-				
-				// Check each one
-				for(var c = 0; c < capabilities_required.length; c++){
-					if(!this.hasCapability(capabilities_required[c])){
-						capabilities_missing.push(capabilities_required[c]);
-					}
-				}
+			// Render the hosts as tags
+			$("#hosts").tagsinput('items');
 
-				// Render the view
-				this.$el.html(_.template(Template, {
-					'has_permission' : capabilities_missing.length === 0,
-					'capabilities_missing' : capabilities_missing,
-					'is_on_cloud' : this.is_on_cloud
-				}));
-				
-				// Render the hosts as tags
-				$("#hosts").tagsinput('items');
-				
-				$("#hosts").on('beforeItemAdd', this.validateHost.bind(this));
-			}.bind(this));
+			$("#hosts").on('beforeItemAdd', this.validateHost.bind(this));
         }
     });
     

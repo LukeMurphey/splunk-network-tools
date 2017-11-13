@@ -12,8 +12,9 @@ runs = <value>
 [ping://default]
 * Configure an input to ping a host to ensure it is 
 
-hosts = <value>
-* A list of hosts to ping
+dest = <value>
+* A comma separated list of hosts or networks to ping
+* This field can contain CIDR ranges (e.g. 10.0.1.0/24), host names, or IP addresses 
 
 runs = <value>
 * The number of runs to execute
