@@ -1,0 +1,69 @@
+<% if(!has_permission) { %>
+	<div class="alert alert-warning">
+    	<i class="icon-alert"></i>
+		You do not have permission to make Website Monitoring inputs. You are missing the following capabilities: <%- capabilities_missing.join(", ") %>.
+    </div>
+<% } else { %>
+
+<div id="progress-modal" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+  <div class="modal-header">
+    <h3>Creating Inputs</h3>
+  </div>
+  <div class="modal-body">
+    <div class="section-header">
+    	Creating the inputs...
+    	<div class="progress">
+		  <div class="bar"></div>
+		</div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary pull-right stop-creating-inputs" data-dismiss="modal">Stop</button>
+  </div>
+</div>
+
+<form class="form-horizontal">
+
+  <h2>Create Multiple Ping Inputs</h2>
+  Use this form to create a series of inputs to ping hosts or networks. If you want to make an individual input (and configure advanced options, use the <a target="_blank" href="../../manager/network_toolkit/adddata/selectsource?modinput=1&input_type=ping&input_mode=1">Splunk Manager</a>).
+  <div>
+  You can also <a class="external" target="_blank" href="../../manager/search/data/inputs/ping">view existing inputs</a> in the Manager.
+  </div>
+  <div class="message-dialogs">
+			<div id="warning-message" class="alert alert-warning hide">
+				<i class="icon-alert"></i>
+				<div class="message">Warning!</div>
+			</div>
+			
+			<div id="info-message" class="alert alert-info hide">
+				<i class="icon-alert"></i>
+				<div class="message">Ok!</div>
+			</div>
+  </div>
+
+  <div class="control-group hosts">
+    <label class="control-label" for="hosts">Hosts</label>
+    <div class="controls">
+      <input type="text" id="hosts" placeholder="e.g. acme.net, 1.2.3.0/24">
+      <span class="help-block ">Enter a list of hosts or CIDR ranges and press enter or a comma to add another</span>
+    </div>
+  </div>
+
+  <div class="control-group interval">
+    <label class="control-label" for="interval">Interval</label>
+    <div class="controls">
+      <input type="text" id="interval" placeholder="e.g. 2h, 10m">
+      <span class="help-inline" style="display:none">Enter a valid interval such as "4h"</span>
+    </div>
+  </div>
+  
+  <div class="control-group">
+    <div class="controls">
+      <label class="checkbox">
+        <input type="checkbox" class="dont-duplicate">Don't create input if the host or network already monitored
+      </label>
+      <button type="button" class="btn btn-primary create-inputs">Create inputs</button>
+    </div>
+  </div>
+</form>
+<% } %>

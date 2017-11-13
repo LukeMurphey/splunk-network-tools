@@ -1,0 +1,31 @@
+.BatchInputCreateView .bootstrap-tagsinput > .label-info{
+	background-color: #777;
+	border: #777;
+	text-transform: none;
+}
+.BatchInputCreateView .bootstrap-tagsinput{
+	min-width: 206px;
+}
+
+.BatchInputCreateView .create-inputs{
+	margin-top: 16px;
+}
+
+.BatchInputCreateView #info-message, .BatchInputCreateView #warning-message{
+    vertical-align: top;
+    padding-bottom: 0px;
+	margin-bottom: 0px;
+}
+
+/* Reinstate the display none if the hide class is set (since the CSS about overrides this) */
+.BatchInputCreateView #info-message.hide, .BatchInputCreateView #warning-message.hide{
+	display: none;
+}
+
+.BatchInputCreateView .message-dialogs{
+	margin-bottom: 16px;
+}
+
+.BatchInputCreateView .alert{
+	margin-top: 16px;
+}
