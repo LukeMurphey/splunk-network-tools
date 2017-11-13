@@ -121,6 +121,18 @@ class PingInput(ModularInput):
 
         return stanza + ':' + host
 
+    def send_result(self, result, stanza, index, sourcetype, host):
+        """
+        Send the result.
+        """
+
+        result['dest'] = result['host']
+        del result['host']
+
+        with self.lock:
+            # Output the results
+            self.output_event(result, stanza, index, sourcetype, host)
+
     def run(self, stanza, cleaned_params, input_config):
 
         interval = cleaned_params["interval"]
@@ -171,17 +183,12 @@ class PingInput(ModularInput):
 
                     if host.num_addresses == 1:
                         output, return_code, result = ping(host=str(host.network_address), count=runs, logger=self.logger)
+                        self.send_result(result, stanza, index, sourcetype, host)
 
-                        with self.lock:
-                            # Output the results
-                            self.output_event(result, stanza, index, sourcetype, stanza, host)
                     else:
                         for next_host in host.hosts():
                             output, return_code, result = ping(host=str(next_host), count=runs, logger=self.logger)
-
-                            with self.lock:
-                                # Output the results
-                                self.output_event(result, stanza, index, sourcetype, stanza, host)
+                            self.send_result(result, stanza, index, sourcetype, host)
 
                         self.logger.info("Successfully pinged all hosts in the network=%s", str(host))
 
