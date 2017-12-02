@@ -16,21 +16,25 @@ define(['jquery', 'underscore', 'splunkjs/mvc', 'views/shared/results_table/rend
 			 // Handle the packet_loss field
 			 if( cell.field == "packet_loss" ){
 				 
-				 var int_value = parseFloat(cell.value, 10);
+				 var loss_value = parseFloat(cell.value, 10);
 				 
-				 if( int_value == 0 ){
-					 $td.addClass("success");
-					 icon = 'check';
-				 }
-				 else if( int_value <= 10 ){
-					 $td.addClass("warning");
-					 icon = 'alert';
-				 }
-				 else{
-					 $td.addClass("failure");
-					 icon = 'alert';
-				 }
-				
+				 if(loss_value == 0){
+                    $td.addClass("success");
+                    icon = 'check';
+                    cell.value = loss_value + " %";
+                }
+                else if(loss_value <= 10){
+                    $td.addClass("warning");
+                    icon = 'alert';
+                    cell.value = loss_value + " %";
+                }
+                else{
+                    $td.addClass("failure");
+                    icon = 'alert';
+					if(!isNaN(loss_value)){
+                        cell.value = loss_value + " %";
+                    }
+                }
 			 }
 			 
 			 // Handle the hops field
