@@ -59,7 +59,7 @@
         <option name="drilldown">none</option>
         <option name="numberPrecision">0.00</option>
         <option name="rangeColors">["0x65a637","0x65a637","0xf58f39","0xd93f3c"]</option>
-        <option name="rangeValues">[0,50,100]</option>
+        <option name="rangeValues">[0,500,1000]</option>
         <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
         <option name="trendColorInterpretation">standard</option>
