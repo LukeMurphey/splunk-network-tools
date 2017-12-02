@@ -84,7 +84,7 @@ define(['jquery', 'underscore', 'splunkjs/mvc', 'views/shared/results_table/rend
             }
 			 
 			 // Render the cell
-			 if(icon != null){
+			 if(icon !== null){
 				 $td.html(_.template('<i class="icon-<%- icon %>"> </i><%- value %>', {
 		            	value: cell.value,
 		                icon: icon
