@@ -5,6 +5,10 @@
   <view name="nslookup" />
   <view name="speedtest" />
   <view name="wakeonlan" />
+  <collection label="Uptime Monitoring">
+    <view name="ping_status_overview" />
+    <view name="ping_input_batch_create" />
+  </collection>
   <collection label="Health">
   	<view name="network_toolkit_logs" />
   	<view name="network_toolkit_status" />

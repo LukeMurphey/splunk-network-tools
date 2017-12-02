@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='utf-8'?>
+
+<form script="ping_status_overview.js" stylesheet="ping_status_overview.css">
+	<label>Status Overview</label>
+	
+	<fieldset autoRun="true">
+		<input type="time" searchWhenChanged="true">
+			<default>Last 24 hours</default>
+		</input>
+		
+		<input type="dropdown" token="only_enabled">
+		    <choice value=" ">Include all inputs</choice>
+		    <choice value="`filter_disabled`">Include only enabled inputs</choice>
+			<choice value="`filter_response_codes_and_response_times`">Include only failures</choice>
+			
+		    <label></label>
+		    <default> </default>
+		</input>
+	</fieldset>
+	<row>
+		<table>
+			<search>
+    			<query>sourcetype="ping_input" `ping_search_index`
+| stats sparkline(avg(avg_ping)) as sparkline_ping avg(avg_ping) as ping max(max_ping) as max_ping latest(packet_loss) as packet_loss latest(_time) as last_checked range(avg_ping) as range min(avg_ping) as min by dest
+| search 
+| eval ping=round(ping, 0)." ms"
+| eval average=round(avg_ping, 0)." ms"
+| eval maximum=round(max_ping, 0)." ms"
+| eval range=round(min, 0)." - ".round(min+range, 0)." ms"
+| table dest packet_loss last_checked ping range sparkline_ping 
+| `timesince(last_checked,last_checked)`
+| sort -ping
+    			</query>
+			</search>
+			<option name="count">20</option>
+			<option name="rowNumbers">false</option>
+		  	<format field="sparkline_ping" type="sparkline">
+		    	<option name="type">bar</option>
+		        <option name="height">20</option>
+		        <option name="barColor">#65a637</option>
+		        <option name="fillColor">#65a637</option>
+		        <option name="lineColor">#65a637</option>
+		        <option name="spotColor">#65a637</option>
+		        <option name="colorMap">
+		          <option name="800:1000">#f2b827</option>
+		          <option name="1000:">#d6563c</option>
+		        </option>
+		    </format>
+			<drilldown>
+				<link><![CDATA[/app/network_toolkit/status_history?form.title=$row.title$&earliest=$earliest$&latest=$latest$]]></link>
+			</drilldown>
+		</table>
+	</row>
+</form>
