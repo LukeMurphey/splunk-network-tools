@@ -16,10 +16,18 @@ class Ping(SearchCommand):
     This search command provides a Splunk interface for the system's ping command.
     """
 
-    def __init__(self, dest=None, count=1, index=None):
+    def __init__(self, dest=None, count=1, index=None, host=None):
         SearchCommand.__init__(self, run_in_preview=False, logger_name="ping_search_command")
 
-        self.dest = unicode(dest)
+        self.dest = None
+
+        if dest is not None:
+            self.dest = unicode(dest)
+
+        # Use the host argument if someone provided that instead (since that is the old argument)
+        elif self.dest is None and host is not None:
+            self.dest = unicode(host)
+
         self.index = index
 
         try:
