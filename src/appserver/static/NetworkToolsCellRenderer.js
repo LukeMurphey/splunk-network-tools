@@ -3,7 +3,6 @@ define(['jquery', 'underscore', 'splunkjs/mvc', 'views/shared/results_table/rend
     var NetworkToolsCellRenderer = BaseCellRenderer.extend({
     	 canRender: function(cell) {
     		 return ($.inArray(cell.field, ["avg_ping", "max_ping", "min_ping", "packet_loss", "hops", "raw"]) >= 0);
-    		 //["avg_ping", "max_ping", "min_ping", "jitter", "packet_loss", "hops"]
 		 },
 		 
 		 render: function($td, cell) {
@@ -42,11 +41,11 @@ define(['jquery', 'underscore', 'splunkjs/mvc', 'views/shared/results_table/rend
 				 
 				 var int_value = parseFloat(cell.value, 10);
 				 
-				 if( int_value > 30 ){
+				 if(int_value > 30){
 					 $td.addClass("failure");
 					 icon = 'alert';
 				 }
-				 else if( int_value >= 15 ){
+				 else if(int_value >= 15){
 					 $td.addClass("warning");
 					 icon = 'alert';
 				 }
