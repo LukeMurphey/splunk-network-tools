@@ -81,7 +81,6 @@ define(['jquery', 'underscore', 'splunkjs/mvc', 'views/shared/results_table/rend
                         cell.value = loss_value + " %";
                     }
                 }
-                
             }
 			 
 			 // Render the cell
