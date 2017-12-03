@@ -10,7 +10,8 @@
 		
 		<input type="dropdown" token="result_filter">
 		    <choice value=" ">All results</choice>
-			<choice value="packet_loss > 0">Only failures</choice>
+			<choice value="`filter_ping_failures`">Only failures (packet loss or high response time)</choice>
+			<choice value="packet_loss > 0">Only results with packet loss</choice>
 		    <label>Result Filter</label>
 		    <default> </default>
 		</input>
@@ -25,7 +26,7 @@
 | eval average=round(avg_ping, 0)." ms"
 | eval maximum=round(max_ping, 0)." ms"
 | eval range=round(min, 0)." - ".round(min+range, 0)." ms"
-| table dest packet_loss last_checked ping range sparkline_ping 
+| table dest packet_loss last_checked ping max_ping range sparkline_ping 
 | `timesince(last_checked,last_checked)`
 | sort -ping
     			</query>
@@ -45,7 +46,7 @@
 		        </option>
 		    </format>
 			<drilldown>
-				<link><![CDATA[/app/network_toolkit/status_history?form.title=$row.title$&earliest=$earliest$&latest=$latest$]]></link>
+				<link><![CDATA[/app/network_tools/ping_status_history?form.title=$row.title$&earliest=$earliest$&latest=$latest$]]></link>
 			</drilldown>
 		</table>
 	</row>
