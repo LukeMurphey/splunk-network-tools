@@ -8,12 +8,10 @@
 			<default>Last 24 hours</default>
 		</input>
 		
-		<input type="dropdown" token="only_enabled">
-		    <choice value=" ">Include all inputs</choice>
-		    <choice value="`filter_disabled`">Include only enabled inputs</choice>
-			<choice value="`filter_response_codes_and_response_times`">Include only failures</choice>
-			
-		    <label></label>
+		<input type="dropdown" token="result_filter">
+		    <choice value=" ">All results</choice>
+			<choice value="packet_loss > 0">Only failures</choice>
+		    <label>Result Filter</label>
 		    <default> </default>
 		</input>
 	</fieldset>
@@ -22,7 +20,7 @@
 			<search>
     			<query>sourcetype="ping_input" `ping_search_index`
 | stats sparkline(avg(avg_ping)) as sparkline_ping avg(avg_ping) as ping max(max_ping) as max_ping latest(packet_loss) as packet_loss latest(_time) as last_checked range(avg_ping) as range min(avg_ping) as min by dest
-| search 
+| search $result_filter$
 | eval ping=round(ping, 0)." ms"
 | eval average=round(avg_ping, 0)." ms"
 | eval maximum=round(max_ping, 0)." ms"
