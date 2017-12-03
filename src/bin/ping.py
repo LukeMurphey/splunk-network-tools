@@ -190,9 +190,9 @@ class PingInput(ModularInput):
                         Output the result
                         """
                         self.send_result(result, stanza, index, sourcetype, host)
-                    
+
                     results = ping_all(dest, count=runs, logger=self.logger, callback=output_result_callback)
-                    
+
                     if len(results) > 0:
                         self.logger.info("Successfully pinged all hosts in the network=%s", str(dest))
 
