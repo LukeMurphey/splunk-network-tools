@@ -11,10 +11,16 @@ import splunk
 
 path_to_mod_input_lib = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modular_input.zip')
 sys.path.insert(0, path_to_mod_input_lib)
-from modular_input import ModularInput, IntegerField, DurationField, ListField, IPNetworkField
+from modular_input import ModularInput, IntegerField, DurationField, ListField, IPNetworkField, DomainNameField, MultiValidatorField
 from modular_input.shortcuts import forgive_splunkd_outages
 
-from network_tools_app import ping
+from network_tools_app.ping_network import ping_all
+
+class DomainOrIPNetworkField(MultiValidatorField):
+   def __init__(self, name, title, description, none_allowed=False, empty_allowed=True,
+                 required_on_create=None, required_on_edit=None):
+    super(DomainOrIPNetworkField, self).__init__(name, title, description, none_allowed, empty_allowed, required_on_create, required_on_edit, validators=[DomainNameField, IPNetworkField])
+
 
 class PingInput(ModularInput):
     """
@@ -33,7 +39,7 @@ class PingInput(ModularInput):
                        'use_single_instance': True}
 
         args = [
-            ListField("dest", "Destination", "The list of hosts or networks to ping", empty_allowed=True, none_allowed=True, required_on_create=False, required_on_edit=False, instance_class=IPNetworkField),
+            ListField("dest", "Destination", "The list of hosts or networks to ping", empty_allowed=True, none_allowed=True, required_on_create=False, required_on_edit=False, instance_class=DomainOrIPNetworkField),
             IntegerField("runs", "Runs", "The number of runs that should be executed", empty_allowed=False, none_allowed=False),
             DurationField("interval", "Interval", "The interval defining how often to perform the check; can include time units (e.g. 15m for 15 minutes, 8h for 8 hours)", empty_allowed=False)
         ]
@@ -177,18 +183,17 @@ class PingInput(ModularInput):
 
                 # Get the time that the input last ran
                 last_ran = self.last_ran(input_config.checkpoint_dir, stanza)
-
                 for dest in dests:
 
-                    if dest.num_addresses == 1:
-                        _, _, result = ping(host=str(dest.network_address), count=runs, logger=self.logger)
+                    def output_result_callback(result):
+                        """
+                        Output the result
+                        """
                         self.send_result(result, stanza, index, sourcetype, host)
-
-                    else:
-                        for next_dest in dest.hosts():
-                            _, _, result = ping(host=str(next_dest), count=runs, logger=self.logger)
-                            self.send_result(result, stanza, index, sourcetype, host)
-
+                    
+                    results = ping_all(dest, count=runs, logger=self.logger, callback=output_result_callback)
+                    
+                    if len(results) > 0:
                         self.logger.info("Successfully pinged all hosts in the network=%s", str(dest))
 
                 # Save the checkpoint so that we remember when we last ran the input

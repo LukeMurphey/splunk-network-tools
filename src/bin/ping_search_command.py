@@ -2,14 +2,12 @@
 This module provides a Splunk search command that runs and parse the output of the ping command.
 """
 import os
+import re
 import sys
 
 from network_tools_app.search_command import SearchCommand
-from network_tools_app import ping, get_default_index
-
-path_to_mod_input_lib = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modular_input.zip')
-sys.path.insert(0, path_to_mod_input_lib)
-from modular_input.contrib import ipaddress
+from network_tools_app import get_default_index
+from network_tools_app.ping_network import ping_all
 
 class Ping(SearchCommand):
     """
@@ -52,24 +50,8 @@ class Ping(SearchCommand):
         else:
             index = get_default_index(session_key)
 
-        # Parse the ipaddress if necessary
-        dest = ipaddress.ip_network(self.dest, strict=False)
-
-        results = []
-
         # Do the ping
-        if dest.num_addresses == 1:
-            _, return_code, result = ping(str(dest.network_address), self.count, index=index, logger=self.logger)
-
-            result['return_code'] = return_code
-            results.append(result)
-        elif dest.num_addresses >= 100:
-            raise Exception("The number of addresses to ping must be less than 100 but the count requested was %s" % dest.num_addresses)
-        else:
-            for next_dest in dest.hosts():
-                _, return_code, result = ping(str(next_dest), self.count, index=index, logger=self.logger)
-                result['return_code'] = return_code
-                results.append(result)
+        results = ping_all(self.dest, self.count, index=index, logger=self.logger)
 
         # Output the results
         self.output_results(results)
