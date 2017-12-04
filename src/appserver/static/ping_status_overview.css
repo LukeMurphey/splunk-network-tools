@@ -91,27 +91,33 @@
  */
 
  /* Orange version: */
- .table-chrome.table-striped > tbody > tr > td.ping.response-100{
+ .table-chrome.table-striped > tbody > tr > td.ping.response-100,
+ .table-chrome.table-striped > tbody > tr > td.max_ping.response-100{
      background-color: #ffad00;
      color: white;
  }
  
- .table-chrome.table-striped > tbody > tr > td.ping.response-75{
+ .table-chrome.table-striped > tbody > tr > td.ping.response-75,
+ .table-chrome.table-striped > tbody > tr > td.max_ping.response-75{
      background-color: #ffd885;
  }
  
- .table-chrome.table-striped > tbody > tr > td.ping.response-100.highlighted{
+ .table-chrome.table-striped > tbody > tr > td.ping.response-100.highlighted,
+ .table-chrome.table-striped > tbody > tr > td.max_ping.response-100.highlighted{
      background-color: #ffbb2d !important;
  }
  
- .table-chrome.table-striped > tbody > tr > td.ping.response-75.highlighted{
+ .table-chrome.table-striped > tbody > tr > td.ping.response-75.highlighted,
+ .table-chrome.table-striped > tbody > tr > td.max_ping.response-75.highlighted{
      background-color: #ffd885 !important;
  }
  
- .table-chrome.table-striped > tbody > tr > td.ping.response-25{
+ .table-chrome.table-striped > tbody > tr > td.ping.response-25,
+ .table-chrome.table-striped > tbody > tr > td.max_ping.response-25{
      background-color: #dceaf5;
  }
- .table-chrome.table-striped > tbody > tr > td.ping.response-0{
+ .table-chrome.table-striped > tbody > tr > td.ping.response-0,
+ .table-chrome.table-striped > tbody > tr > td.max_ping.response-0{
      background-color: #d7f3c3;
  }
 

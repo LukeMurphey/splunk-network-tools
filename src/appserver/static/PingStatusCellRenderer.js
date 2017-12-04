@@ -2,7 +2,7 @@ define(['jquery', 'underscore', 'splunkjs/mvc', 'views/shared/results_table/rend
     
     var PingStatusCellRenderer = BaseCellRenderer.extend({
     	 canRender: function(cell) {
-    		 return ($.inArray(cell.field, ["dest", "ping", "packet_loss", "average"]) >= 0);
+    		 return ($.inArray(cell.field, ["dest", "ping", "max_ping", "packet_loss", "average"]) >= 0);
 		 },
 		 
 		 render: function($td, cell) {
@@ -13,7 +13,7 @@ define(['jquery', 'underscore', 'splunkjs/mvc', 'views/shared/results_table/rend
 			 var icon = null;
 			 
 			 // Handle the ping value
-			 if(cell.field == "ping"){
+			 if(cell.field == "ping" || cell.field == "max_ping"){
                 
                 var float_value = parseFloat(cell.value, 10);
                 
