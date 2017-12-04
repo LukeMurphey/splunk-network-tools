@@ -18,7 +18,7 @@
     <panel>
       <single>
         <search>
-          <query><![CDATA[sourcetype="ping_input" `ping_search_index` dest="$dest$"
+          <query><![CDATA[sourcetype="ping_input" dest="$dest$"
 | timechart avg(avg_ping) as response_time]]></query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
@@ -42,7 +42,7 @@
     <panel>
       <single>
         <search>
-          <query><![CDATA[sourcetype="ping_input" `ping_search_index` dest="$dest$"
+          <query><![CDATA[sourcetype="ping_input" dest="$dest$"
 | stats max(avg_ping) as response_time]]></query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
@@ -89,7 +89,7 @@
     <panel>
       <single>
         <search>
-          <query><![CDATA[sourcetype="ping_input" `ping_search_index` dest="$dest$"
+          <query><![CDATA[sourcetype="ping_input" dest="$dest$"
 | eval success=case(packet_loss > 0, 0, max_ping >= 1000, 0)
 | fillnull value=1 success
 | chart count as total, sum(success) as successes
@@ -117,7 +117,7 @@
     <panel>
       <single>
         <search>
-          <query><![CDATA[sourcetype="ping_input" `ping_search_index` dest="$dest$" `filter_ping_failures`
+          <query><![CDATA[sourcetype="ping_input" dest="$dest$" `filter_ping_failures`
 | stats count as count]]></query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
@@ -142,7 +142,7 @@
 	<row>
 		<table>
 			<search>
-          <query><![CDATA[sourcetype="ping_input" `ping_search_index` dest="$dest$" `filter_ping_failures`
+          <query><![CDATA[sourcetype="ping_input" dest="$dest$" `filter_ping_failures`
 | eval time=_time
 | convert ctime(time)
 | fields - _raw _time
@@ -154,7 +154,7 @@
 			<option name="count">10</option>
 			<option name="rowNumbers">true</option>
 			<drilldown>
-				<link><![CDATA[/app/network_tools/search/?q=search%20sourcetype%ping_input%20title%3D"$form.title$"%20%60filter_inoperable%60%20%60ping_search_index%60%20%7C%20%60format_events_raw%60&earliest=$earliest$&latest=$latest$]]></link>
+				<link><![CDATA[/app/network_tools/search/?q=search%20sourcetype%ping_input%20title%3D"$form.title$"%20%60filter_inoperable%60%20%7C%20%60format_events_raw%60&earliest=$earliest$&latest=$latest$]]></link>
 			</drilldown>
 		</table>
 	</row>

@@ -19,7 +19,7 @@
 	<row>
 		<table>
 			<search>
-    			<query>sourcetype="ping_input" `ping_search_index`
+    			<query>sourcetype="ping_input"
 | stats sparkline(avg(avg_ping)) as sparkline_ping avg(avg_ping) as ping max(max_ping) as max_ping latest(packet_loss) as packet_loss latest(_time) as last_checked range(avg_ping) as range min(avg_ping) as min by dest
 | search $result_filter$
 | eval ping=round(ping, 0)." ms"
