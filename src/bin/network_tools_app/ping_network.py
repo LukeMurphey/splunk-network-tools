@@ -1,6 +1,8 @@
+"""
+This module provides a wrapper around the ping module but adds the ability to scan network ranges.
+"""
 import os
 import re
-import sys
 import zipimport
 
 from . import ping
