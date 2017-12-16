@@ -1,12 +1,18 @@
 import os
 import re
 import sys
+import zipimport
 
 from . import ping
 
+# This will import the ipaddress library from the modular input library
+# Note that the normal import from a zip file didn't work for me on all platforms (Windows and
+# Linux) since it wouldn't import sub-modules (like modular_input.contrib). Thus, I had to rely on
+# the zipimport method instead. See https://lukemurphey.net/issues/2173
 path_to_mod_input_lib = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../modular_input.zip')
-sys.path.insert(0, path_to_mod_input_lib)
-from modular_input.contrib import ipaddress
+importer = zipimport.zipimporter(path_to_mod_input_lib)
+modular_input = importer.load_module('modular_input')
+ipaddress = modular_input.contrib.ipaddress
 
 DOMAIN_NAME_RE = re.compile('^((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\.(xn--)?([a-z0-9\-]{1,61}|[a-z0-9-]{1,30}\.[a-z]{2,})$')
 
