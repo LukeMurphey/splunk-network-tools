@@ -1,7 +1,8 @@
-
+import os
 import sys
 
-sys.path.insert(0, 'modular_input.zip')
+path_to_mod_input_lib = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modular_input.zip')
+sys.path.insert(0, path_to_mod_input_lib)
 from modular_input import Field, ModularInput, IntegerField
 
 from network_tools_app import speedtest, get_default_index
@@ -46,11 +47,11 @@ if __name__ == '__main__':
         speedtest_input = SpeedtestInput()
         speedtest_input.execute()
         sys.exit(0)
-    except Exception as e:
+    except Exception as exception:
 
         # This logs general exceptions that would have been unhandled otherwise (such as coding
         # errors)
         if speedtest_input is not None and speedtest_input.logger is not None:
             speedtest_input.logger.exception("Unhandled exception was caught, this may be due to a defect in the script")
         else:
-            raise e
+            raise exception
