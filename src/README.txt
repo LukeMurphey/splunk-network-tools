@@ -80,4 +80,7 @@ Change History
 |         | Added ability to restrict the index used via a URL parameter; see http://bit.ly/2zqcN67                          |
 |         | Fixed an issue where the ping view attempted to run even when no input was provided                              |
 |         | Added ping modular input and related dashboards so that you can monitor system uptime                            |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.2.1   | Fixing issue where some needed macros were not included                                                          |
+|         | Minor enhancements to the batch input UI                                                                         |
 +---------+------------------------------------------------------------------------------------------------------------------+
