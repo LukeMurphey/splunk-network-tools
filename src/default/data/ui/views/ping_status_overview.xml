@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 
-<form script="ping_status_overview.js" stylesheet="ping_status_overview.css">
+<form refresh="30" script="ping_status_overview.js" stylesheet="ping_status_overview.css">
 	<label>Status Overview</label>
 	
 	<fieldset autoRun="true">
