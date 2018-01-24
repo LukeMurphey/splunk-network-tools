@@ -83,4 +83,7 @@ Change History
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 1.2.1   | Fixing issue where some needed macros were not included                                                          |
 |         | Minor enhancements to the batch input UI                                                                         |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.2.2   | Fixing issue where batch creation of inputs could fail                                                           |
+|         | Status overiew dashboard now refreshes every 30 seconds                                                          |
 +---------+------------------------------------------------------------------------------------------------------------------+
