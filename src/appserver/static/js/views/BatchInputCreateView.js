@@ -78,8 +78,9 @@ define([
         	if(existing_stanzas.length === 0){
             	return host;
         	}
-        	
-        	var possible_stanza = host;
+			
+			var stanza_base = host;
+        	var possible_stanza = stanza_base;
         	var stanza_suffix_offset = 0;
         	var collision_found = false;
         	
@@ -484,7 +485,7 @@ define([
          */
         getExistingInputs: function(){
 
-        	var uri = splunkd_utils.fullpath("/servicesNS/nobody/search/data/inputs/ping?output_mode=json");
+        	var uri = splunkd_utils.fullpath("/servicesNS/nobody/search/data/inputs/ping?output_mode=json&count=-1");
 
 	        // Fire off the request
         	jQuery.ajax({
