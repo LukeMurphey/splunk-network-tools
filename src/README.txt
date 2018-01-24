@@ -85,5 +85,5 @@ Change History
 |         | Minor enhancements to the batch input UI                                                                         |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 1.2.2   | Fixing issue where batch creation of inputs could fail                                                           |
-|         | Status overiew dashboard now refreshes every 30 seconds                                                          |
+|         | Status overview dashboard now refreshes every 30 seconds                                                         |
 +---------+------------------------------------------------------------------------------------------------------------------+
