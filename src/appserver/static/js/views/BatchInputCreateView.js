@@ -127,7 +127,10 @@ define([
         	
         	if( typeof index == 'undefined' ){
         		index = null;
-        	}
+			}
+			
+			// Trim the destination (https://lukemurphey.net/issues/2182)
+			dest = dest.trim();
         	
         	// Populate defaults for the arguments
         	if(name === null){
@@ -344,6 +347,7 @@ define([
 
 			// If none matched, then reject the input
 			if(!matched){
+				debugger;
 				event.cancel = true;
 			}
 
