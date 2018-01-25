@@ -86,4 +86,6 @@ Change History
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 1.2.2   | Fixing issue where batch creation of inputs could fail                                                           |
 |         | Status overview dashboard now refreshes every 30 seconds                                                         |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.2.3   | Fixing overly conservative domain name validation that rejected some valid domain names                          |
 +---------+------------------------------------------------------------------------------------------------------------------+
