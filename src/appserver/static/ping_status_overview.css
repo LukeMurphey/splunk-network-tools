@@ -86,6 +86,19 @@
     font-weight: bold;
 }
 
+.table-chrome.table-striped > tbody > tr > td.ping.failure,
+.table-chrome.table-striped > tbody > tr > td.max_ping.failure{
+    background-color:  #e66146;
+    color: white;
+}
+
+.table-chrome.table-striped > tbody > tr > td.ping.failure.highlighted,
+.table-chrome.table-striped > tbody > tr > td.max_ping.failure.highlighted{
+    background-color:  #e66146 !important;
+    color: white;
+}
+
+
 /*
  * Style the cells in the table that are high but not so as to be considered a failure.
  */
