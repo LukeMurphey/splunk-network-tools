@@ -31,19 +31,8 @@ def ping_all(dest, count=1, index=None, sourcetype="ping", source="ping_search_c
     # Convert the entry to unicode since 
     dest = unicode(dest)
 
-    # Treat this as a domain if it appears to be a domain name
-    if DOMAIN_NAME_RE.match(dest):
-        _, return_code, result = ping(str(dest), count, sourcetype=sourcetype, source=source, index=index, logger=logger)
-
-        result['return_code'] = return_code
-
-        if callback:
-            callback(result)
-
-        results.append(result)
-
-    # Treat this as an IP address otherwise
-    else:
+    # Try to treat this as an IP address by default
+    try:
         # Parse the ipaddress if necessary
         dest_network = ipaddress.ip_network(dest, strict=False)
 
@@ -67,5 +56,15 @@ def ping_all(dest, count=1, index=None, sourcetype="ping", source="ping_search_c
                     callback(result)
 
                 results.append(result)
+    except ValueError:
+        # Otherwise, treat this as a domain if it appears to be a domain name
+        _, return_code, result = ping(str(dest), count, sourcetype=sourcetype, source=source, index=index, logger=logger)
+
+        result['return_code'] = return_code
+
+        if callback:
+            callback(result)
+
+        results.append(result)
 
     return results
