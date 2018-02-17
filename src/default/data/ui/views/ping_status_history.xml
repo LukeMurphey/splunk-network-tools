@@ -90,7 +90,7 @@
       <single>
         <search>
           <query><![CDATA[sourcetype="ping_input" dest="$dest$"
-| eval success=case(packet_loss > 0, 0, max_ping >= 1000, 0)
+| eval success=case(packet_loss > 0, 0, max_ping == "NA", 0, max_ping >= 1000, 0)
 | fillnull value=1 success
 | chart count as total, sum(success) as successes
 | eval availability=round(100*(successes/total),2)
