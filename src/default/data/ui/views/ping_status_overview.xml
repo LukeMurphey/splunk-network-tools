@@ -46,7 +46,7 @@
 		        </option>
 		    </format>
 			<drilldown>
-				<link><![CDATA[/app/network_tools/ping_status_history?form.dest=$row.dest$&form.timefield.earliest=$earliest$&form.timefield.latest=$latest$]]></link>
+				<link><![CDATA[/app/network_tools/ping_status_history?form.dest=$row.dest$&earliest=$earliest$&latest=$latest$]]></link>
 			</drilldown>
 		</table>
 	</row>
