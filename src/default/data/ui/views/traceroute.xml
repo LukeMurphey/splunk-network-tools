@@ -117,7 +117,7 @@
         <drilldown>
         	<link>
         	<![CDATA[
-        	search?q=search%20sourcetype%3D"traceroute"%20unique_id%3D$row.unique_id$%20%7C%20rex%20field%3D_raw%20"rtt%3D%5C"(%3F<rtt>%5B.0-9%5D%2B)%5C""%20max_match%3D5%20%7C%20rex%20field%3D_raw%20"name%3D%5C"(%3F<name>%5B.0-9%5D%2B)%5C""%20max_match%3D5%20%7C%20rex%20field%3D_raw%20"ip%3D%5C"(%3F<ip>%5B.0-9%5D%2B)%5C""%20max_match%3D5%20%7C%20stats%20values(rtt)%20as%20rtt%20values(ip)%20as%20ip%20values(name)%20as%20name%20first(dest_host)%20as%20dest_host%20first(dest_ip)%20as%20dest_ip%20by%20hop%20%7C%20sort%20hop
+        	search?earliest=$earliest$&latest=$latest$&q=search%20sourcetype%3D"traceroute"%20unique_id%3D$row.unique_id$%20%7C%20rex%20field%3D_raw%20"rtt%3D%5C"(%3F<rtt>%5B.0-9%5D%2B)%5C""%20max_match%3D5%20%7C%20rex%20field%3D_raw%20"name%3D%5C"(%3F<name>%5B.0-9%5D%2B)%5C""%20max_match%3D5%20%7C%20rex%20field%3D_raw%20"ip%3D%5C"(%3F<ip>%5B.0-9%5D%2B)%5C""%20max_match%3D5%20%7C%20stats%20values(rtt)%20as%20rtt%20values(ip)%20as%20ip%20values(name)%20as%20name%20first(dest_host)%20as%20dest_host%20first(dest_ip)%20as%20dest_ip%20by%20hop%20%7C%20sort%20hop
         	]]>
         	</link>
         </drilldown>
