@@ -485,7 +485,7 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup",
 
         # NS records
         try:
-            answers = resolver.query(host, 'NS')
+            answers = custom_resolver.query(host, 'NS')
 
             ns_records = []
 
@@ -500,7 +500,7 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup",
 
         # A
         try:
-            answers = resolver.query(host, 'A')
+            answers = custom_resolver.query(host, 'A')
 
             a_records = []
 
@@ -514,7 +514,7 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup",
 
         # AAAA
         try:
-            answers = resolver.query(host, 'AAAA')
+            answers = custom_resolver.query(host, 'AAAA')
 
             aaaa_records = []
 
@@ -529,7 +529,7 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup",
 
         # MX
         try:
-            answers = resolver.query(host, 'MX')
+            answers = custom_resolver.query(host, 'MX')
 
             mx_records = []
 
