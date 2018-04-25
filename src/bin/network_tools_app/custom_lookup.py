@@ -206,7 +206,6 @@ class CustomLookup(object):
 
             # Put the output in the result
             if output:
-                self.logger.debug("Got result %r", output)
                 self.add_result(result, output, fieldnames)
 
             # Write out the result
