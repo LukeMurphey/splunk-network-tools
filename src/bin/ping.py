@@ -131,8 +131,11 @@ class PingInput(ModularInput):
         Send the result.
         """
 
-        result['dest'] = result['host']
-        del result['host']
+        if 'dest' not in result and 'host' in result:
+            result['dest'] = result['host']
+
+        if 'host' in result:
+            del result['host']
 
         with self.lock:
             # Output the results

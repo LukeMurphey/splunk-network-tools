@@ -41,6 +41,10 @@ def ping_all(dest, count=1, index=None, sourcetype="ping", source="ping_search_c
 
             result['return_code'] = return_code
 
+            # Make sure that the destination is present
+            if 'dest' not in result:
+                result['dest'] = str(dest)
+
             if callback:
                 callback(result)
 
@@ -52,6 +56,10 @@ def ping_all(dest, count=1, index=None, sourcetype="ping", source="ping_search_c
                 _, return_code, result = ping(str(next_dest), count, index=index, logger=logger)
                 result['return_code'] = return_code
 
+                # Make sure that the destination is present
+                if 'dest' not in result:
+                    result['dest'] = str(dest)
+
                 if callback:
                     callback(result)
 
@@ -61,6 +69,10 @@ def ping_all(dest, count=1, index=None, sourcetype="ping", source="ping_search_c
         _, return_code, result = ping(str(dest), count, sourcetype=sourcetype, source=source, index=index, logger=logger)
 
         result['return_code'] = return_code
+
+        # Make sure that the destination is present
+        if 'dest' not in result:
+            result['dest'] = str(dest)
 
         if callback:
             callback(result)
