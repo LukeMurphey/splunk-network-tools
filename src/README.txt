@@ -88,4 +88,10 @@ Change History
 |         | Status overview dashboard now refreshes every 30 seconds                                                         |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 1.2.3   | Fixing overly conservative domain name validation that rejected some valid domain names                          |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.2.4   | Fixing issue where ping search command was too restrictive with domain name validation                           |
+|         | Fixed uptime monitoring failing to record a response when the DNS name cannot be resolved                        |
+|         | NSlookup search command now correctly uses the DNS server option                                                 |
+|         | Drilldown from the Status Overview dashboard now correctly carries the time-range to the search page             |
+|         | Fixed uptime calculation which didn't consider DNS resolution failures as ping failures                          |
 +---------+------------------------------------------------------------------------------------------------------------------+
