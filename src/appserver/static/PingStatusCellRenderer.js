@@ -80,6 +80,9 @@ define(['jquery', 'underscore', 'splunkjs/mvc', 'views/shared/results_table/rend
                     if(!isNaN(loss_value)){
                         cell.value = loss_value + " %";
                     }
+                    else{
+                        cell.value = 'Connection Failure';
+                    }
                 }
             }
 			 
