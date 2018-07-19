@@ -94,4 +94,6 @@ Change History
 |         | NSlookup search command now correctly uses the DNS server option                                                 |
 |         | Drilldown from the Status Overview dashboard now correctly carries the time-range to the search page             |
 |         | Fixed uptime calculation which didn't consider DNS resolution failures as ping failures                          |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.2.5   | Fixing issue where setup page didn't include all indexes                                                         |
 +---------+------------------------------------------------------------------------------------------------------------------+
