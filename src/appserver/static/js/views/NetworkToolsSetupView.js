@@ -33,7 +33,7 @@ define([
 ){
 
 	var Indexes = SplunkDsBaseCollection.extend({
-	    url: "data/indexes",
+	    url: "data/indexes?count=0",
 	    initialize: function() {
 	      SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
 	    }
