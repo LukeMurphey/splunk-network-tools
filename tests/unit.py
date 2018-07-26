@@ -11,6 +11,7 @@ import HTMLTestRunner
 sys.path.append(os.path.join("..", "src", "bin"))
 
 from network_tools_app import ping, traceroute, whois, nslookup
+from network_tools_app.dict_translate import translate, is_array, merge_values, translate_key, prepare_translation_rules
 from network_tools_app.flatten import flatten, flatten_to_table
 from network_tools_app import pingparser, tracerouteparser
 
@@ -150,6 +151,71 @@ class TestFlatten(unittest.TestCase):
         flattened = flatten(json.loads(dictionary))
 
         self.assertGreaterEqual(len(flattened['configuration']), 3)
+
+class TestDictTranslate(unittest.TestCase):
+    """
+    Test the dict_translate module which converts a Python object to a flat dictionary.
+    """
+
+    def test_translate_remove_parts(self):
+        """
+        This tests conversion of field names.
+        """
+
+        dictionary = {
+            'objects.LINOD.contact.name' : 'Luke Murphey'
+        }
+
+        translation_rules = [
+            ('objects.*.contact.name', 'contact.name'),
+        ]
+
+        translated_dict = translate(dictionary, translation_rules)
+
+        self.assertEquals(translated_dict['contact.name'], 'Luke Murphey')
+
+    def test_is_array(self):
+        """
+        This tests whether or the item is an array.
+        """
+
+        self.assertEquals(is_array([]), True)
+        self.assertEquals(is_array("almost an array"), False)
+        self.assertEquals(is_array(u"almost an array"), False)
+        self.assertEquals(is_array(['A']), True)
+        self.assertEquals(is_array(None), False)
+
+    def test_merge_values_one_none(self):
+        self.assertEquals(merge_values(['A'], None), ['A'])
+        self.assertEquals(merge_values(None, ['A']), ['A'])
+
+    def test_merge_values_one_array(self):
+        self.assertEquals(merge_values(['A'], 'B'), ['A', 'B'])
+        self.assertEquals(merge_values('A', ['B']), ['A', 'B'])
+
+    def test_merge_values_both_arrays(self):
+        self.assertEquals(merge_values(['A', 'B'], ['C', 'D']), ['A', 'B', 'C', 'D'])
+
+    def test_translate_key_escaped(self):
+        translation_rules = [
+            ('objects\\..*\\.contact\\.name', 'contact.name'),
+        ]
+
+        self.assertEquals(translate_key('objects.LINOD.contact.name', translation_rules), 'contact.name')
+
+    def test_translate_key2(self):
+        translation_rules = [
+            ('AAAAA.*BBBBB', 'contact.name'),
+        ]
+
+        self.assertEquals(translate_key('AAAAAcontactBBBBB', translation_rules), 'contact.name')
+
+    def test_prepare_translation_rules(self):
+        translation_rules = [
+            ('objects.*.contact.name', 'contact.name'),
+        ]
+
+        self.assertEquals(prepare_translation_rules(translation_rules)[0][0], 'objects\\..*\\.contact\\.name')
 
 class TestPingParser(unittest.TestCase):
     """

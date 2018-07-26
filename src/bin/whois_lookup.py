@@ -6,11 +6,26 @@ import logging
 
 from network_tools_app import whois
 from network_tools_app.custom_lookup import CustomLookup
+from network_tools_app.dict_translate import translate
 
 class WhoisLookup(CustomLookup):
     """
     This class implements the functionality necessary to make a custom search command.
     """
+
+    TRANSLATION_RULES = [
+        # Contact name
+        ('objects.*.contact.name', 'contact.name'),
+
+        # Contact email
+        ('objects.*.contact.email.*.value', 'contact.email'),
+
+        # Contact phone
+        ('objects.*.contact.phone.*.value', 'contact.phone'),
+
+        # Contact address
+        ('objects.*.contact.address.*.value', 'contact.address'),
+    ]
 
     def __init__(self):
         """
@@ -25,6 +40,11 @@ class WhoisLookup(CustomLookup):
                       'network.links', 'network.name', 'network.parent_handle',
                       'network.start_address', 'query', 'emails', 'expiration_date',
                       'creation_date']
+
+        # Add in the field names from the translation rules
+        for rule in self.TRANSLATION_RULES:
+            fieldnames.append(rule[1])
+    
         CustomLookup.__init__(self, fieldnames, 'whois_lookup_command', logging.INFO)
 
     def do_lookup(self, host):
@@ -34,6 +54,7 @@ class WhoisLookup(CustomLookup):
 
         self.logger.info("Running whois against host=%s", host)
         output = whois(host=host, index=None)
-        return output
+
+        return translate(output, self.TRANSLATION_RULES)
 
 WhoisLookup.main()
