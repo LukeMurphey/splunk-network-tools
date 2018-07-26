@@ -104,7 +104,6 @@ def merge_values(first_value, second_value):
 
 def translate_key(existing_key, re_rules):
     for rule in re_rules:
-        print rule[0], existing_key, re.match(rule[0], existing_key)
         if re.match(rule[0], existing_key):
             return rule[1]
 
