@@ -56,6 +56,10 @@ def prepare_translation_rules(translation_rules=None):
     return escaped_translation_rules
 
 def is_array(value):
+    """
+    Indicate if the given item is an array but not a string.
+    """
+
     if isinstance(value, list) and not isinstance(value, (str, unicode)):
         return True
     else:
@@ -64,8 +68,6 @@ def is_array(value):
 def merge_values(first_value, second_value):
     """
     Merge the two provided values and creating an array as necessary to hold both values.
-
-
     """
 
     # Case 1: if one of the values are none, then just return the other one
@@ -103,6 +105,10 @@ def merge_values(first_value, second_value):
     return [first_value, second_value]
 
 def translate_key(existing_key, re_rules):
+    """
+    Take the existing key and change it according to the given set of rules.
+    """
+
     for rule in re_rules:
         if re.match(rule[0], existing_key):
             return rule[1]
@@ -110,7 +116,10 @@ def translate_key(existing_key, re_rules):
     return None
 
 def translate(dictionary=None, translation_rules=None):
-    
+    """
+    Take the provided dictionary and translate it according to the provided rules.
+    """
+
     # Prepare the translation rules so that they are now wild-cards
     escaped_translation_rules = prepare_translation_rules(translation_rules)
 
