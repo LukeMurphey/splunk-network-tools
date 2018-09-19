@@ -347,7 +347,6 @@ define([
 
 			// If none matched, then reject the input
 			if(!matched){
-				debugger;
 				event.cancel = true;
 			}
 
