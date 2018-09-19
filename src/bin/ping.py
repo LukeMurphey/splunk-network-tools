@@ -112,7 +112,7 @@ class PingInput(ModularInput):
             # If the thread isn't alive, prune it
             if not self.threads[thread_stanza].isAlive():
                 removed_threads = removed_threads + 1
-                self.logger.debug("Removing inactive thread for stanza=%s, thread_count=%i", thread_stanza, len(self.threads))
+                self.logger.info("Removing inactive thread for stanza=%s, thread_count=%i", thread_stanza, len(self.threads))
                 del self.threads[thread_stanza]
 
             # If we removed threads, note the updated count in the logs so that it can be tracked
@@ -182,7 +182,7 @@ class PingInput(ModularInput):
         elif self.needs_another_run(input_config.checkpoint_dir, stanza, interval):
 
             def run_ping():
-                self.logger.info("Starting ping, stanza=%s", stanza)
+                self.logger.debug("Starting ping, stanza=%s", stanza)
 
                 # Get the time that the input last ran
                 last_ran = self.last_ran(input_config.checkpoint_dir, stanza)
@@ -196,7 +196,9 @@ class PingInput(ModularInput):
 
                     results = ping_all(dest, count=runs, logger=self.logger, callback=output_result_callback)
 
-                    if len(results) > 0:
+                    if len(results) == 1:
+                        self.logger.debug("Successfully pinged the host=%s", str(dest))
+                    elif len(results) > 1:
                         self.logger.info("Successfully pinged all hosts in the network=%s", str(dest))
 
                 # Save the checkpoint so that we remember when we last ran the input
@@ -205,7 +207,7 @@ class PingInput(ModularInput):
                                               'last_run' : self.get_non_deviated_last_run(last_ran, interval, stanza)
                                           })
 
-                self.logger.info("Ping complete, stanza=%s", stanza)
+                self.logger.debug("Ping complete, stanza=%s", stanza)
 
             # If this is not running in multi-threading mode, then run it now in the main thread
             if self.thread_limit <= 1:
@@ -217,7 +219,7 @@ class PingInput(ModularInput):
                 self.logger.warn("Thread limit has been reached and thus this execution will be skipped for stanza=%s, thread_count=%i", stanza, len(self.threads))
 
                 # Give some time for the inputs to catch up. This prevents spamming the logs with tons
-                # of logs as the input tries to check evety input even though the threads are maxed out
+                # of logs as the input tries to check every input even though the threads are maxed out
                 time.sleep(1)
 
             # Execute the input as a separate thread

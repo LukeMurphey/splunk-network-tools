@@ -205,7 +205,7 @@ def traceroute(host, unique_id=None, index=None, sourcetype="traceroute",
 
             # Log that we performed the traceroute
             if logger:
-                logger.info("Wrote stash file=%s", writer.write_event(result))
+                logger.debug("Wrote stash file=%s", writer.write_event(result))
 
     return output, return_code, parsed
 
@@ -271,7 +271,7 @@ def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_comma
 
         # Log that we performed the ping
         if logger:
-            logger.info("Wrote stash file=%s", writer.write_event(result))
+            logger.debug("Wrote stash file=%s", writer.write_event(result))
 
     return output, return_code, parsed
 
@@ -302,7 +302,7 @@ def speedtest(host, runs=2, index=None, sourcetype="speedtest", source="speedtes
 
         # Log that we performed the speedtest
         if logger:
-            logger.info("Wrote stash file=%s", writer.write_event(result))
+            logger.debug("Wrote stash file=%s", writer.write_event(result))
 
     # Return the result
     return result
@@ -327,7 +327,7 @@ def get_host(name, session_key, logger=None):
     # Make sure we got at least one result
     if len(host_entry) > 0:
         if logger is not None:
-            logger.info("Successfully found an entry in the table of hosts for host=%s", name)
+            logger.debug("Successfully found an entry in the table of hosts for host=%s", name)
 
         return host_entry[0]
 
@@ -401,7 +401,7 @@ def wakeonlan(host, mac_address=None, ip_address=None, port=None, index=None,
 
         # Log that we performed the wake-on-lan request
         if logger:
-            logger.info("Wrote stash file=%s", writer.write_event(result))
+            logger.debug("Wrote stash file=%s", writer.write_event(result))
 
     return result
 
@@ -445,7 +445,7 @@ def whois(host, index=None, sourcetype="whois", source="whois_search_command", l
 
         # Log that we performed the whois request
         if logger:
-            logger.info("Wrote stash file=%s", writer.write_event(result))
+            logger.debug("Wrote stash file=%s", writer.write_event(result))
 
     return result
 
@@ -549,6 +549,6 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup",
 
         # Log the data
         if logger:
-            logger.info("Wrote stash file=%s", writer.write_event(result))
+            logger.debug("Wrote stash file=%s", writer.write_event(result))
 
     return result
