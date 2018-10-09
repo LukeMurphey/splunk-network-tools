@@ -1,10 +1,3 @@
-/*
- * Make the execute button show up closer to the other controls.
- */
-#panel2 .fieldset{
-	float:left;
-}
-
 #panel2 .panel-element-row{
 	display: inline-block;
 	margin-top: 20px;
@@ -28,14 +21,6 @@
 	border-right: 1px solid #ccc;
 }
 
-/*
- * This makes the tabs jive with the edges of the panels better (only works on 6.5)
- */
-.dashboard-layout-row-column{
-	border-left: 1px solid #ccc;
-	border-right: 1px solid #ccc;
-}
-
 #runs_input{
 	margin-right: 0px;
 	padding-right: 0px;
@@ -44,22 +29,6 @@
 #panel2 > .dashboard-panel{
 	margin-bottom: 2px;
 }
-
-
-/*
- * For making the dashboard go to the edges
- */
-/*
-.main-section-body.dashboard-body{
-	padding-left:0px;
-	padding-right:0px;
-}
-
-.dashboard-header{
-	padding-left:10px;
-	padding-right:10px;
-}
-*/
 
 /*
  * Remove the extra space between the time-range selector and the panel.

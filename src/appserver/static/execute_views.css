@@ -1,0 +1,26 @@
+
+/**
+ * Align the execute button with the other controls
+ */
+ .btn-execute{
+	margin-top: 5px;
+}
+
+#panel2 > .dashboard-panel{
+	margin-bottom: 2px;
+}
+
+/*
+ * This makes the tabs jive with the edges of the panels better (only works on 6.5)
+ */
+ .dashboard-layout-row-column{
+	border-left: 1px solid #ccc;
+	border-right: 1px solid #ccc;
+}
+
+/*
+ * Make the execute button show up closer to the other controls.
+ */
+ #panel2 .fieldset{
+	float:left;
+}

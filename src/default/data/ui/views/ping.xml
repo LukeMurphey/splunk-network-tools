@@ -1,4 +1,4 @@
-<form hideEdit="true" script="tabs.js,ping.js" stylesheet="tabs.css,ping.css,status.css">
+<form hideEdit="true" script="tabs.js,ping.js" stylesheet="tabs.css,ping.css,status.css,execute_views.css">
   <label>Ping</label>
   <description>Perform a ping to determine if a host is up.</description>
   <search id="ping_search">
@@ -44,7 +44,7 @@
 	      <default>5</default>
 	    </input>
 	    <html>
-		    <a href="#" id="execute_input" class="btn btn-primary">Execute Ping</a>
+		    <a href="#" id="execute_input" class="btn btn-primary btn-execute">Execute Ping</a>
 	    </html>
 	</panel>
   </row>

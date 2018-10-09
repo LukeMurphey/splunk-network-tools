@@ -1,4 +1,4 @@
-<form hideEdit="true" script="tabs.js,whois.js" stylesheet="tabs.css,whois.css,status.css">
+<form hideEdit="true" script="tabs.js,whois.js" stylesheet="tabs.css,whois.css,status.css,execute_views.css">
   <label>Whois</label>
   <description>Perform a whois request to get information about the owner and operator of an IP address or domain name.</description>
   <search id="whois_search">
@@ -30,7 +30,7 @@
 	      <label>Host</label>
 	    </input>
 	    <html>
-		    <a href="#" id="execute_input" class="btn btn-primary">Execute Whois</a>
+		    <a href="#" id="execute_input" class="btn btn-primary btn-execute">Execute Whois</a>
 	    </html>
 	</panel>
   </row>

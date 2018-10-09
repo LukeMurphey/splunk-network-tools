@@ -1,7 +1,3 @@
-#panel2-fieldset{
-	float: left;
-}
-
 #panel2-fieldset + .panel-element-row{
 	display: inline-block;
 	margin-top: 20px;
@@ -12,39 +8,12 @@
 	padding-right: 0px;
 }
 
-#panel2 > .dashboard-panel{
-	margin-bottom: 2px;
-}
-
-/*
- * This makes the tabs jive with the edges of the panels better
- */
-.dashboard-layout-row-column{
-	border-left: 1px solid #ccc;
-	border-right: 1px solid #ccc;
-}
-
 /*
  * Make sure that the icon is white (needed for Splunk 6.6)
  */
 #statistics .icon-check{
 	color: white;
 }
-
-/*
- * For making the dashboard go to the edges
- */
-/*
-.main-section-body.dashboard-body{
-	padding-left:0px;
-	padding-right:0px;
-}
-
-.dashboard-header{
-	padding-left:10px;
-	padding-right:10px;
-}
-*/
 
 /*
  * Remove the extra space between the time-range selector and the panel.

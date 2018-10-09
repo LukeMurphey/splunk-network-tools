@@ -1,4 +1,4 @@
-<form hideEdit="true" script="tabs.js,nslookup.js" stylesheet="tabs.css,nslookup.css,status.css">
+<form hideEdit="true" script="tabs.js,nslookup.js" stylesheet="tabs.css,nslookup.css,status.css,execute_views.css">
   <label>NSLookup</label>
   <description>Perform an NSLookup to obtain information about a domain-name or reverse an IP address to its associated domain-name.</description>
   <search id="nslookup_search">
@@ -30,7 +30,7 @@
 	      <label>Host</label>
 	    </input>
 	    <html>
-		    <a href="#" id="execute_input" class="btn btn-primary">Execute NSLookup</a>
+		    <a href="#" id="execute_input" class="btn btn-primary btn-execute">Execute NSLookup</a>
 	    </html>
 	</panel>
   </row>
