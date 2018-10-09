@@ -100,4 +100,8 @@ Change History
 | 1.2.6   | Adding contact fields to the whois lookup                                                                        |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 1.2.7   | Reducing the number of informational log messages                                                                |
+|         | Added contact information for the whois command                                                                  |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.2.8   | Fixed speedtest command which no longer worked                                                                   |
+|         | Improived styling for Splunk 7.1 and 7.2                                                                         |
 +---------+------------------------------------------------------------------------------------------------------------------+
