@@ -103,5 +103,5 @@ Change History
 |         | Added contact information for the whois command                                                                  |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 1.2.8   | Fixed speedtest command which no longer worked                                                                   |
-|         | Improived styling for Splunk 7.1 and 7.2                                                                         |
+|         | Improved styling for Splunk 7.1 and 7.2                                                                          |
 +---------+------------------------------------------------------------------------------------------------------------------+
