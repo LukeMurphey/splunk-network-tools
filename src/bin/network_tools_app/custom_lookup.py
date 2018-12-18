@@ -124,7 +124,7 @@ class CustomLookup(object):
         fieldnames.extend(self.fieldnames)
         return set(fieldnames)
 
-    def add_result(self, result_dict, output_dict, fieldnames):
+    def add_result(self, result_dict, output_dict, fieldnames, only_overwrite_empty=True):
         """
         Merge the output into the result dictionary but don't merge in fields that aren't listed in
         fieldnames.
@@ -136,8 +136,14 @@ class CustomLookup(object):
         # Add each field to the output
         for field in output_dict:
 
+            # Don't overwrite fields with an existing value since this could cause Splunk to not
+            # be able to match the results with the original values.
+            # see https://lukemurphey.net/issues/2348
+            if only_overwrite_empty and output_dict[field] == '':
+                pass
+
             # Make sure that field is in the list of field names
-            if field in fieldnames:
+            elif field in fieldnames:
 
                 self.logger.debug("Adding field %s with value %r", field, output_dict[field])
 

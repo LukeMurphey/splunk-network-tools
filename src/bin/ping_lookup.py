@@ -4,6 +4,7 @@ This is a search command for doing ping lookups on results.
 
 import logging
 
+
 from network_tools_app import ping
 from network_tools_app.custom_lookup import CustomLookup
 
@@ -18,7 +19,8 @@ class PingLookup(CustomLookup):
         """
 
         # Here is a list of the accepted fieldnames
-        fieldnames = ['sent', 'received', 'packet_loss', 'min_ping', 'max_ping', 'avg_ping', 'jitter', 'return_code', 'raw_output']
+        fieldnames = ['sent', 'received', 'packet_loss', 'min_ping', 'max_ping', 'avg_ping',
+                      'jitter', 'return_code', 'raw_output']
         CustomLookup.__init__(self, fieldnames, 'ping_lookup_command', logging.INFO)
 
     def do_lookup(self, host):
