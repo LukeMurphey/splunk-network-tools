@@ -193,6 +193,10 @@ class CustomLookup(object):
         infile = sys.stdin
         r = csv.DictReader(infile)
         # fieldnames = self.extend_fieldnames(r.fieldnames)
+        # We need to use the original header because Splunk gets confused if you add fields to the
+        # header that it didn't already have. It then fails to match up the input with the output
+        # fields.
+        # see https://lukemurphey.net/issues/2348
         fieldnames = r.fieldnames
 
         # Initialize the output for the results
@@ -214,7 +218,7 @@ class CustomLookup(object):
 
             # Put the output in the result
             if output:
-                self.add_result(result, output, fieldnames, True)
+                self.add_result(result, output, fieldnames, False)
 
             # Write out the result
             w.writerow(result)
