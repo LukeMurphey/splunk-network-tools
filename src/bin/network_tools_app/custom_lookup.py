@@ -124,7 +124,7 @@ class CustomLookup(object):
         fieldnames.extend(self.fieldnames)
         return set(fieldnames)
 
-    def add_result(self, result_dict, output_dict, fieldnames, only_overwrite_empty=True):
+    def add_result(self, result_dict, output_dict, fieldnames, only_overwrite_empty=False):
         """
         Merge the output into the result dictionary but don't merge in fields that aren't listed in
         fieldnames.
@@ -134,26 +134,27 @@ class CustomLookup(object):
         start_invalid_fields_len = len(self.invalid_fields)
 
         # Add each field to the output
-        for field in output_dict:
+        for field, value in output_dict.items():
 
             # Don't overwrite fields with an existing value since this could cause Splunk to not
             # be able to match the results with the original values.
             # see https://lukemurphey.net/issues/2348
-            if only_overwrite_empty and output_dict[field] == '':
+            if only_overwrite_empty and result_dict.get(field, 'DOESNT EXIST YET') not in ['', None]:
+                self.logger.debug("Skipping blank field %r ", field)
                 pass
 
             # Make sure that field is in the list of field names
             elif field in fieldnames:
 
-                self.logger.debug("Adding field %s with value %r", field, output_dict[field])
+                self.logger.debug("Adding field %s with value %r", field, value)
 
                 # If the output is a list, then include a comma deliminated list
-                if isinstance(output_dict[field], (list, tuple)) and not isinstance(output_dict[field], basestring):
-                    result_dict[field] = ", ".join(output_dict[field])
+                if isinstance(value, (list, tuple)) and not isinstance(value, basestring):
+                    result_dict[field] = ", ".join(value)
 
                 # The entry is a flat value, just include it
                 else:
-                    result_dict[field] = output_dict[field]
+                    result_dict[field] = value
 
             # Detected an unexpected value, log it
             else:
@@ -191,7 +192,8 @@ class CustomLookup(object):
         # Initialize the input for the results
         infile = sys.stdin
         r = csv.DictReader(infile)
-        fieldnames = self.extend_fieldnames(r.fieldnames)
+        # fieldnames = self.extend_fieldnames(r.fieldnames)
+        fieldnames = r.fieldnames
 
         # Initialize the output for the results
         outfile = sys.stdout
@@ -212,7 +214,7 @@ class CustomLookup(object):
 
             # Put the output in the result
             if output:
-                self.add_result(result, output, fieldnames)
+                self.add_result(result, output, fieldnames, True)
 
             # Write out the result
             w.writerow(result)
