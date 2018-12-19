@@ -248,7 +248,10 @@ def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_comma
     try:
         parsed = pingparser.parse(output)
     except Exception:
-        parsed = {'message': 'output could not be parsed'}
+        parsed = {
+            'message': 'output could not be parsed',
+            'output': output
+        }
 
     # Write the event as a stash new file
     if index is not None:
