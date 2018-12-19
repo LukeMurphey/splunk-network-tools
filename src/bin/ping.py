@@ -11,7 +11,7 @@ import splunk
 
 path_to_mod_input_lib = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modular_input.zip')
 sys.path.insert(0, path_to_mod_input_lib)
-from modular_input import ModularInput, IntegerField, DurationField, ListField, IPNetworkField, DomainNameField, MultiValidatorField
+from modular_input import ModularInput, IntegerField, DurationField, ListField, IPNetworkField, DomainNameField, MultiValidatorField, RangeField
 from modular_input.shortcuts import forgive_splunkd_outages
 
 from network_tools_app.ping_network import ping_all
@@ -40,7 +40,7 @@ class PingInput(ModularInput):
 
         args = [
             ListField("dest", "Destination", "The list of hosts or networks to ping", empty_allowed=True, none_allowed=True, required_on_create=False, required_on_edit=False, instance_class=DomainOrIPNetworkField),
-            IntegerField("runs", "Runs", "The number of runs that should be executed", empty_allowed=False, none_allowed=False),
+            RangeField("runs", "Runs", "The number of runs that should be executed", low=1, high=100, empty_allowed=False, none_allowed=False),
             DurationField("interval", "Interval", "The interval defining how often to perform the check; can include time units (e.g. 15m for 15 minutes, 8h for 8 hours)", empty_allowed=False)
         ]
 
