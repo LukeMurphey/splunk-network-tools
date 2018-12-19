@@ -126,7 +126,7 @@ class PingInput(ModularInput):
 
         return stanza + ':' + host
 
-    def send_result(self, result, stanza, index, sourcetype, host):
+    def send_result(self, result, stanza, index, sourcetype, host, source):
         """
         Send the result.
         """
@@ -139,7 +139,7 @@ class PingInput(ModularInput):
 
         with self.lock:
             # Output the results
-            self.output_event(result, stanza, index, sourcetype, host)
+            self.output_event(result, stanza=stanza, index=index, sourcetype=sourcetype, host=host, source=source)
 
     def run(self, stanza, cleaned_params, input_config):
 
@@ -147,6 +147,7 @@ class PingInput(ModularInput):
         host = cleaned_params.get("host", None)
         index = cleaned_params.get("index", "default")
         sourcetype = cleaned_params.get("sourcetype", "ping_input")
+        source = cleaned_params.get("source", None)
 
         dests = cleaned_params.get("dest", [])
         runs = cleaned_params.get("runs", 3)
@@ -192,7 +193,7 @@ class PingInput(ModularInput):
                         """
                         Output the result
                         """
-                        self.send_result(result, stanza, index, sourcetype, host)
+                        self.send_result(result, stanza, index, sourcetype, host, source)
 
                     results = ping_all(dest, count=runs, logger=self.logger, callback=output_result_callback)
 
