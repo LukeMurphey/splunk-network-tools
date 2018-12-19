@@ -27,6 +27,7 @@ class SpeedtestInput(ModularInput):
         host = cleaned_params.get("host", None)
         index = cleaned_params.get("index", "default")
         sourcetype = cleaned_params.get("sourcetype", "speedtest")
+        source = cleaned_params.get("source", stanza)
 
         server = cleaned_params.get("server", None)
         runs = cleaned_params.get("runs", 3)
@@ -35,7 +36,7 @@ class SpeedtestInput(ModularInput):
         result = speedtest(host=server, runs=runs, index=index, logger=self.logger)
 
         # Output the results
-        self.output_event(result, stanza, index, sourcetype, stanza, host)
+        self.output_event(result, stanza=stanza, index=index, sourcetype=sourcetype, host=host, source=source)
 
         self.logger.info("Speedtest complete, stanza=%s", stanza)
 
