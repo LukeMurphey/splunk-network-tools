@@ -19,6 +19,8 @@ Install this app into Splunk by doing the following:
 
 Once the app is installed, you can use can open the "Network Toolkit" app from the main launcher.
 
+This app is not compatible with TA-Connectivity (https://splunkbase.splunk.com/app/1473/).
+
 
 
 ================================================
