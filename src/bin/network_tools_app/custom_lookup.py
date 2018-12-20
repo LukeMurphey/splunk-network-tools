@@ -180,8 +180,6 @@ class CustomLookup(object):
             lookup_command = cls()
             lookup_command.execute()
 
-            lookup_command.logger.info("Starting lookup execution")
-
         except Exception as e:
 
             # This logs general exceptions that would have been unhandled otherwise (such as coding
@@ -224,6 +222,8 @@ class CustomLookup(object):
         Execute the lookup command based on the values from standard input and output.
         """
 
+        self.logger.info("Starting lookup execution")
+
         # Record the start time
         start_time = time.time()
 
@@ -248,11 +248,12 @@ class CustomLookup(object):
             if self.thread_limit <= 1:
                 self.execute_lookup(result, w, fieldnames)
             else:
-                def do_lookup():
+
+                def do_lookup(result):
                     self.execute_lookup(result, w, fieldnames)
 
                 # Start a thread
-                new_thread = threading.Thread(name='ping_lookup', target=do_lookup)
+                new_thread = threading.Thread(name='ping_lookup', target=do_lookup, args=[result])
                 self.threads.append(new_thread)
                 new_thread.start()
 
