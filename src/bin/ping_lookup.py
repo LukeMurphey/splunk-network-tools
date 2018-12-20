@@ -4,7 +4,6 @@ This is a search command for doing ping lookups on results.
 
 import logging
 
-
 from network_tools_app import ping
 from network_tools_app.custom_lookup import CustomLookup
 
