@@ -45,14 +45,16 @@ EchoLookup.main()
 
 import csv
 import sys
+import time
 import logging
 from logging import handlers
+import threading
 
 from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
 
 class CustomLookup(object):
 
-    def __init__(self, fieldnames=None, logger_name='custom_lookup_command', log_level=logging.INFO):
+    def __init__(self, fieldnames=None, logger_name='custom_lookup_command', log_level=logging.INFO, thread_limit=25):
         """
         Constructs an instance of the lookup command.
 
@@ -80,6 +82,12 @@ class CustomLookup(object):
 
         # Here is a list of the accepted fieldnames
         self.fieldnames = fieldnames
+
+        # Use threading if requested
+        self.thread_limit = thread_limit
+        self.threads = []
+        self.lock = threading.RLock()
+        self.semaphore = threading.BoundedSemaphore(self.thread_limit)
 
     @property
     def logger(self):
@@ -172,6 +180,8 @@ class CustomLookup(object):
             lookup_command = cls()
             lookup_command.execute()
 
+            lookup_command.logger.info("Starting lookup execution")
+
         except Exception as e:
 
             # This logs general exceptions that would have been unhandled otherwise (such as coding
@@ -181,18 +191,46 @@ class CustomLookup(object):
             else:
                 raise e
 
+    def execute_lookup(self, input_row, output_csv, fieldnames):
+        """
+        Execute the lookup command on the given row and put the result in the output
+        """
+
+        # Try to acquire the semaphore which enforces the thread limit
+        with self.semaphore:
+
+            # This contains a list of the fields to perform an operation on (like "host")
+            args = sys.argv[1:]
+
+            # Make up the arguments for the lookup call
+            keyword_arguments = {}
+
+            for parameter_name in args:
+                keyword_arguments[parameter_name] = input_row.get(parameter_name, None)
+
+            # Perform the lookup
+            output = self.do_lookup(**keyword_arguments)
+
+            # Put the output in the result
+            if output:
+                self.add_result(input_row, output, fieldnames, False)
+
+            # Write out the result
+            with self.lock:
+                output_csv.writerow(input_row)
+
     def execute(self):
         """
         Execute the lookup command based on the values from standard input and output.
         """
 
-        # This contains a list of the fields to perform an operation on (like "host")
-        args = sys.argv[1:]
+        # Record the start time
+        start_time = time.time()
 
         # Initialize the input for the results
         infile = sys.stdin
         r = csv.DictReader(infile)
-        # fieldnames = self.extend_fieldnames(r.fieldnames)
+    
         # We need to use the original header because Splunk gets confused if you add fields to the
         # header that it didn't already have. It then fails to match up the input with the output
         # fields.
@@ -206,19 +244,20 @@ class CustomLookup(object):
 
         # Process each result
         for result in r:
+  
+            if self.thread_limit <= 1:
+                self.execute_lookup(result, w, fieldnames)
+            else:
+                def do_lookup():
+                    self.execute_lookup(result, w, fieldnames)
 
-            # Make up the arguments for the lookup call
-            keyword_arguments = {}
+                # Start a thread
+                new_thread = threading.Thread(name='ping_lookup', target=do_lookup)
+                self.threads.append(new_thread)
+                new_thread.start()
 
-            for parameter_name in args:
-                keyword_arguments[parameter_name] = result.get(parameter_name, None)
+        # Wait for the threads to complete before moving on
+        for thread in self.threads:
+            thread.join()
 
-            # Perform the lookup
-            output = self.do_lookup(**keyword_arguments)
-
-            # Put the output in the result
-            if output:
-                self.add_result(result, output, fieldnames, False)
-
-            # Write out the result
-            w.writerow(result)
+        self.logger.info("Lookup completed, runtime=%ss", round(time.time() - start_time, 2))
