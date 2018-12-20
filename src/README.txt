@@ -110,4 +110,5 @@ Change History
 | 1.2.9   | Fixed issue where the ping input accepted a value of "0" for the number of runs                                  |
 |         | Fixed ping lookup which didn't work on Splunk 7.2.1                                                              |
 |         | Updated modular input library to 2.1.4                                                                           |
+|         | Lookup commands are now multi-threaded in order to gain a dramatic performance improvement                       |
 +---------+------------------------------------------------------------------------------------------------------------------+
