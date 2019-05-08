@@ -5,7 +5,7 @@ import os
 import re
 import zipimport
 
-from . import ping
+from . import ping, tcp_ping
 
 # This will import the ipaddress library from the modular input library
 # Note that the normal import from a zip file didn't work for me on all platforms (Windows and
@@ -28,7 +28,7 @@ def ping_all(dest, count=1, index=None, sourcetype="ping", source="ping_search_c
     """
     results = []
 
-    # Convert the entry to unicode since 
+    # Convert the entry to unicode since this is what the ipaddress library expects 
     dest = unicode(dest)
 
     # Try to treat this as an IP address by default
@@ -73,6 +73,52 @@ def ping_all(dest, count=1, index=None, sourcetype="ping", source="ping_search_c
         # Make sure that the destination is present
         if 'dest' not in result:
             result['dest'] = str(dest)
+
+        if callback:
+            callback(result)
+
+        results.append(result)
+
+    return results
+
+def tcp_ping_all(dest, port, count=1, index=None, sourcetype="ping", source="ping_search_command", logger=None, callback=None):
+    """
+    Pings the host using the native ping command on the platform and returns a tuple consisting of:
+
+     1) the output string
+     2) the return code (0 is the expected return code)
+     3) parsed output from the ping command
+    """
+    results = []
+
+    # Convert the entry to unicode since this is what the ipaddress library expects 
+    dest = unicode(dest)
+
+    # Try to treat this as an IP address by default
+    try:
+        # Parse the ipaddress if necessary
+        dest_network = ipaddress.ip_network(dest, strict=False)
+
+        if dest_network.num_addresses == 1:
+            result = tcp_ping(str(dest_network.network_address), port, count, index=index, logger=logger)
+
+            if callback:
+                callback(result)
+
+            results.append(result)
+        elif dest_network.num_addresses >= 100:
+            raise Exception("The number of addresses to ping must be less than 100 but the count requested was %s" % dest_network.num_addresses)
+        else:
+            for next_dest in dest_network.hosts():
+                result = tcp_ping(str(next_dest), port, count, index=index, logger=logger)
+
+                if callback:
+                    callback(result)
+
+                results.append(result)
+    except ValueError:
+        # Otherwise, treat this as a domain if it appears to be a domain name
+        result = tcp_ping(str(dest), port, count, sourcetype=sourcetype, source=source, index=index, logger=logger)
 
         if callback:
             callback(result)

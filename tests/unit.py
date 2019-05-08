@@ -11,6 +11,7 @@ The following test cases are included:
 * TestPingParser
 * TestTracerouteParser
 * TestTCPPing
+* TestPingNetwork
 '''
 
 import unittest
@@ -28,6 +29,7 @@ from network_tools_app import ping, traceroute, whois, nslookup, tcp_ping
 from network_tools_app.dict_translate import translate, is_array, merge_values, translate_key, prepare_translation_rules
 from network_tools_app.flatten import flatten, flatten_to_table
 from network_tools_app import pingparser, tracerouteparser
+from network_tools_app.ping_network import ping_all, tcp_ping_all
 
 class TestPing(unittest.TestCase):
 
@@ -714,6 +716,24 @@ class TestTCPPing(unittest.TestCase):
         self.assertGreaterEqual(result['min_ping'], 0)
         self.assertGreaterEqual(result['max_ping'], 0)
         self.assertGreaterEqual(result['avg_ping'], 0)
+
+class TestPingNetwork(unittest.TestCase):
+    """
+    Test pinging using TCP.
+    """
+
+    def test_tcp_ping_all(self):
+        result = tcp_ping_all('textcritical.net', port=80, count=5)
+
+        self.assertEquals(len(result), 1)
+        self.assertEquals(result[0]['dest'], 'textcritical.net')
+        self.assertEquals(result[0]['sent'], 5)
+        self.assertEquals(result[0]['received'], 5)
+
+        self.assertGreaterEqual(result[0]['jitter'], 0)
+        self.assertGreaterEqual(result[0]['min_ping'], 0)
+        self.assertGreaterEqual(result[0]['max_ping'], 0)
+        self.assertGreaterEqual(result[0]['avg_ping'], 0)
 
 if __name__ == '__main__':
     report_path = os.path.join('..', os.environ.get('TEST_OUTPUT', 'tmp/test_report.html'))

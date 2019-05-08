@@ -7,14 +7,14 @@ import sys
 
 from network_tools_app.search_command import SearchCommand
 from network_tools_app import get_default_index
-from network_tools_app.ping_network import ping_all
+from network_tools_app.ping_network import ping_all, tcp_ping_all
 
 class Ping(SearchCommand):
     """
     This search command provides a Splunk interface for the system's ping command.
     """
 
-    def __init__(self, dest=None, count=1, index=None, host=None):
+    def __init__(self, dest=None, count=1, port=None, index=None, host=None):
         SearchCommand.__init__(self, run_in_preview=False, logger_name="ping_search_command")
 
         self.dest = None
@@ -32,6 +32,15 @@ class Ping(SearchCommand):
             self.count = int(count)
         except ValueError:
             raise ValueError('The count parameter must be an integer')
+
+        if port is not None:
+            try:
+                self.port = int(port)
+            except ValueError:
+                raise ValueError('The port parameter must be an integer')
+
+            if self.port < 1 or self.port > 65535:
+                raise ValueError('The port parameter must be an integer from 1 to 65535')
 
         self.logger.info("Ping running")
 
@@ -51,7 +60,10 @@ class Ping(SearchCommand):
             index = get_default_index(session_key)
 
         # Do the ping
-        results = ping_all(self.dest, self.count, index=index, logger=self.logger)
+        if self.port is None:
+            results = ping_all(self.dest, self.count, index=index, logger=self.logger)
+        else:
+            results = tcp_ping_all(self.dest, self.port, self.count, index=index, logger=self.logger)
 
         # Output the results
         self.output_results(results)
