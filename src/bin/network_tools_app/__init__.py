@@ -34,6 +34,8 @@ import subprocess
 import collections
 import binascii
 import json
+from timeit import default_timer as timer
+import socket
 
 # Splunk imports
 import splunk
@@ -208,6 +210,121 @@ def traceroute(host, unique_id=None, index=None, sourcetype="traceroute",
                 logger.debug("Wrote stash file=%s", writer.write_event(result))
 
     return output, return_code, parsed
+
+def tcp_ping(host, port=80, count=1, index=None, sourcetype="ping", source="ping_search_command", logger=None):
+    """
+    Pings the host using TCP and returns a tuple consisting of:
+
+     1) the output string
+     2) the return code (0 is the expected return code)
+     3) parsed output from the ping command
+    """
+    sent = 0
+    packet_loss = 0
+    output = []
+    received = 0
+    response_times = []
+
+    for i in range(0, count):
+        success = False
+
+        # New Socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        # 1 sec Timeout
+        sock.settimeout(1)
+
+        # Start a timer
+        timer_start = timer()
+
+        # Try to Connect
+        try:
+            sock.connect((host, int(port)))
+            sent += 1
+            sock.shutdown(socket.SHUT_RD)
+            success = True
+        
+        # Connection Time Out
+        except socket.timeout:
+            output.append("Connection timeout to %s[%s]" % (host, port))
+            packet_loss += 1
+        # Connection Time Out
+        except OSError as e:
+            output.append("Error when connecting to %s[%s]: %r" % (host, port, str(e)))
+            packet_loss += 1
+
+        # Stop Timer
+        timer_stop = timer()
+        total_runtime = float("%.2f" % (1000 * (timer_stop - timer_start)))
+        response_times.append(total_runtime)
+
+        if success:
+            output.append("Connected to %s[%s]: tcp_seq=%s time=%.2f ms" % (host, port, i, total_runtime))
+            received += 1
+    
+    # Calculate the jitter
+    diff = 0
+    prev_response_time = None
+    for response_time in response_times:
+        if prev_response_time is not None:
+            diff = abs(prev_response_time - response_time)
+        
+        prev_response_time = response_time
+
+    jitter = (diff * 0.0) / len(response_times)
+
+    # Calculate the min_ping, max_ping, avg_ping
+    min_ping = None
+    max_ping = None
+    total = 0
+
+    for response_time in response_times:
+        # Figure out min_ping
+        if min_ping is None:
+            min_ping = response_time
+
+        if response_time < min_ping:
+            min_ping = response_time
+    
+        # Figure out max_ping
+        if max_ping is None:
+            max_ping = response_time
+
+        if response_time > max_ping:
+            max_ping = response_time
+
+        # Total up the value for the average calculation
+        total += response_time
+
+    avg_ping = total / len(response_times)
+
+    output.append("\n--- %s ping statistics ---" % host)
+    output.append("%i packets transmitted, %i packets received, %i packets lost" % (sent, received, packet_loss))
+    output.append("round-trip min/avg/max/jitter = %.2f/%.2f/%.2f/%.2f ms" % (min_ping, avg_ping, max_ping, jitter))
+
+    # Make the summary dictionary
+    result = collections.OrderedDict()
+    result['dest'] = host
+    result['output'] = "\n".join(output)
+    result['sent'] = sent
+    result['received'] = received
+    result['packet_loss'] = packet_loss
+    result['jitter'] = jitter
+    result['min_ping'] = min_ping
+    result['max_ping'] = max_ping
+    result['avg_ping'] = avg_ping
+
+    # Write the event as a stash new file
+    if index is not None:
+        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype,
+                                file_extension=".stash_output")
+
+        # Log that we performed the ping
+        if logger:
+            logger.debug("Wrote stash file=%s", writer.write_event(result))
+
+    return result
+        
 
 def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_command", logger=None):
     """

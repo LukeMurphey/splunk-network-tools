@@ -1,4 +1,18 @@
 # coding=utf-8
+'''
+The following test cases are included:
+
+* TestPing
+* TestTraceroute
+* TestWhois
+* TestNSLookup
+* TestFlatten
+* TestDictTranslate
+* TestPingParser
+* TestTracerouteParser
+* TestTCPPing
+'''
+
 import unittest
 import sys
 import os
@@ -10,7 +24,7 @@ import HTMLTestRunner
 
 sys.path.append(os.path.join("..", "src", "bin"))
 
-from network_tools_app import ping, traceroute, whois, nslookup
+from network_tools_app import ping, traceroute, whois, nslookup, tcp_ping
 from network_tools_app.dict_translate import translate, is_array, merge_values, translate_key, prepare_translation_rules
 from network_tools_app.flatten import flatten, flatten_to_table
 from network_tools_app import pingparser, tracerouteparser
@@ -683,6 +697,23 @@ traceroute to edgecastcdn.net (72.21.81.13), 30 hops max, 38 byte packets
 
         self.assertEquals(hop.probes[1].dest_ip, '129.250.5.44')
         self.assertEquals(hop.probes[1].dest, 'ae-6.r21.sttlwa01.us.bb.gin.ntt.net')
+
+class TestTCPPing(unittest.TestCase):
+    """
+    Test pinging using TCP.
+    """
+
+    def test_ping(self):
+        result = tcp_ping('textcritical.net', port=80, count=5)
+        print result['output']
+        self.assertEquals(result['dest'], 'textcritical.net')
+        self.assertEquals(result['sent'], 5)
+        self.assertEquals(result['received'], 5)
+
+        self.assertGreaterEqual(result['jitter'], 0)
+        self.assertGreaterEqual(result['min_ping'], 0)
+        self.assertGreaterEqual(result['max_ping'], 0)
+        self.assertGreaterEqual(result['avg_ping'], 0)
 
 if __name__ == '__main__':
     report_path = os.path.join('..', os.environ.get('TEST_OUTPUT', 'tmp/test_report.html'))
