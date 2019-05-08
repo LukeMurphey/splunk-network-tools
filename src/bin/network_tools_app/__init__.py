@@ -267,11 +267,11 @@ def tcp_ping(host, port=80, count=1, index=None, sourcetype="ping", source="ping
     prev_response_time = None
     for response_time in response_times:
         if prev_response_time is not None:
-            diff = abs(prev_response_time - response_time)
+            diff += abs(prev_response_time - response_time)
         
         prev_response_time = response_time
 
-    jitter = (diff * 0.0) / len(response_times)
+    jitter = (diff * 1.0) / len(response_times)
 
     # Calculate the min_ping, max_ping, avg_ping
     min_ping = None
