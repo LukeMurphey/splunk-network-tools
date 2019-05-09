@@ -154,7 +154,7 @@
 			<option name="count">10</option>
 			<option name="rowNumbers">true</option>
 			<drilldown>
-				<link><![CDATA[/app/network_tools/search/?q=search%20sourcetype%ping_input%20title%3D"$form.title$"%20%60filter_inoperable%60%20%7C%20%60format_events_raw%60&earliest=$earliest$&latest=$latest$]]></link>
+				<link><![CDATA[/app/network_tools/search/?q=search%20sourcetype%20ping_input%20title%3D"$form.title$"%20%60filter_inoperable%60%20%7C%20%60format_events_raw%60&earliest=$earliest$&latest=$latest$]]></link>
 			</drilldown>
 		</table>
 	</row>
