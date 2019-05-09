@@ -247,10 +247,12 @@ def tcp_ping(host, port=80, count=1, index=None, sourcetype="ping", source="ping
         # Connection Time Out
         except socket.timeout:
             output.append("Connection timeout to %s[%s]" % (host, port))
+            sent += 1
             packet_loss += 1
         # Connection Time Out
         except OSError as e:
             output.append("Error when connecting to %s[%s]: %r" % (host, port, str(e)))
+            sent += 1
             packet_loss += 1
 
         # Stop Timer
@@ -296,11 +298,16 @@ def tcp_ping(host, port=80, count=1, index=None, sourcetype="ping", source="ping
         # Total up the value for the average calculation
         total += response_time
 
+    # Calculate the packet loss as a percent
+    if sent > 0:
+        packet_loss_percent = round(100*(packet_loss/sent), 0)
+    else:
+        packet_loss_percent = 0
+
     avg_ping = total / len(response_times)
 
     output.append("\n--- %s ping statistics ---" % host)
-    output.append("%i packets transmitted, %i packets received, %i packets lost" % (sent, received, packet_loss))
-    output.append("round-trip min/avg/max/jitter = %.2f/%.2f/%.2f/%.2f ms" % (min_ping, avg_ping, max_ping, jitter))
+    output.append("%i packets transmitted, %i packets received, %i%% packet loss" % (sent, received, packet_loss_percent))
 
     # Make the summary dictionary
     result = collections.OrderedDict()
@@ -308,7 +315,7 @@ def tcp_ping(host, port=80, count=1, index=None, sourcetype="ping", source="ping
     result['output'] = "\n".join(output)
     result['sent'] = sent
     result['received'] = received
-    result['packet_loss'] = packet_loss
+    result['packet_loss'] = packet_loss_percent
     result['jitter'] = jitter
     result['min_ping'] = min_ping
     result['max_ping'] = max_ping
