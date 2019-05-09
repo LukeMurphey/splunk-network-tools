@@ -111,4 +111,6 @@ Change History
 |         | Fixed ping lookup which didn't work on Splunk 7.2.1                                                              |
 |         | Updated modular input library to 2.1.4                                                                           |
 |         | Lookup commands are now multi-threaded in order to gain a dramatic performance improvement                       |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.3     | Adding ability to perform TCP pings                                                                              |
 +---------+------------------------------------------------------------------------------------------------------------------+
