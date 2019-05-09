@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 import json
+import logging
 
 import splunk
 
@@ -14,7 +15,7 @@ sys.path.insert(0, path_to_mod_input_lib)
 from modular_input import ModularInput, IntegerField, DurationField, ListField, IPNetworkField, DomainNameField, MultiValidatorField, RangeField
 from modular_input.shortcuts import forgive_splunkd_outages
 
-from network_tools_app.ping_network import ping_all
+from network_tools_app.ping_network import ping_all, tcp_ping_all
 
 class DomainOrIPNetworkField(MultiValidatorField):
    def __init__(self, name, title, description, none_allowed=False, empty_allowed=True,
@@ -39,12 +40,13 @@ class PingInput(ModularInput):
                        'use_single_instance': True}
 
         args = [
-            ListField("dest", "Destination", "The list of hosts or networks to ping", empty_allowed=True, none_allowed=True, required_on_create=False, required_on_edit=False, instance_class=DomainOrIPNetworkField),
+            ListField("dest", "Destination", "The list of hosts or networks to ping", empty_allowed=True, none_allowed=True, required_on_create=True, required_on_edit=True, instance_class=DomainOrIPNetworkField),
+            RangeField("port", "Port", "The TCP port to use (leave blank to use ICMP instead)", low=1, high=65535, empty_allowed=True, none_allowed=True, required_on_create=False, required_on_edit=False),
             RangeField("runs", "Runs", "The number of runs that should be executed", low=1, high=100, empty_allowed=False, none_allowed=False),
             DurationField("interval", "Interval", "The interval defining how often to perform the check; can include time units (e.g. 15m for 15 minutes, 8h for 8 hours)", empty_allowed=False)
         ]
 
-        ModularInput.__init__(self, scheme_args, args, logger_name='ping_modular_input')
+        ModularInput.__init__(self, scheme_args, args, logger_name='ping_modular_input', logger_level=logging.INFO)
 
         if thread_limit is None:
             self.thread_limit = PingInput.DEFAULT_THREAD_LIMIT
@@ -151,6 +153,7 @@ class PingInput(ModularInput):
 
         dests = cleaned_params.get("dest", [])
         runs = cleaned_params.get("runs", 3)
+        port = cleaned_params.get("port", None)
 
         # Load the thread_limit if necessary
         # This should only be necessary once in the processes lifetime
@@ -195,7 +198,10 @@ class PingInput(ModularInput):
                         """
                         self.send_result(result, stanza, index, sourcetype, host, source)
 
-                    results = ping_all(dest, count=runs, logger=self.logger, callback=output_result_callback)
+                    if port not in [None, ""]:
+                        results = tcp_ping_all(dest, port, count=runs, logger=self.logger, callback=output_result_callback)
+                    else:
+                        results = ping_all(dest, count=runs, logger=self.logger, callback=output_result_callback)
 
                     if len(results) == 1:
                         self.logger.debug("Successfully pinged the host=%s", str(dest))

@@ -21,3 +21,7 @@ runs = <value>
 
 interval = <value>
 * Indicates how often to perform the ping
+
+port = <value>
+* Indicates which port to use if using TCP
+* Leave this blank in order to use ICMP
