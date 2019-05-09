@@ -13,7 +13,7 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
 				execute_button_id : "#execute_input",
 
             	default_search: '| search sourcetype=ping $index$ | head 1 | table dest sent received packet_loss min_ping avg_ping max_ping jitter',
-            	fresh_search: '| ping $host$ $count$ $index$',
+            	fresh_search: '| ping $host$ $port$ $count$ $index$',
             	search_token: 'ping_search',
 
 				token_name : 'host',
@@ -22,8 +22,9 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
 
 			network_tools_view.getSearchParams = function(){
 				var params = {
-						'count' : '',
-						'host' : ''
+					'count' : '',
+					'host' : '',
+					'port' : '',
 				};
 				
 				// Get the number of runs
@@ -42,6 +43,13 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
 				else{
 					alert("Please enter the name of a host to perform the ping against");
 					return;
+				}
+
+				// Get the server to use (if provided)
+				var port_input = mvc.Components.getInstance("port_input");
+				
+				if(port_input && port_input.val() && port_input.val().length > 0){
+					params['port'] = 'port=' + port_input.val();
 				}
 
 				return params;

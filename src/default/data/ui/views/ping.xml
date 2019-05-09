@@ -26,8 +26,11 @@
 	</row>
   <row id="tab_ping_controls">
   	<panel>
-      	<input id="server_input" type="text" token="host" searchWhenChanged="false">
+      <input id="server_input" type="text" token="host" searchWhenChanged="false">
 	      <label>Host</label>
+	    </input>
+      <input id="port_input" type="text" token="port" searchWhenChanged="false">
+	      <label>Port (optional, to ping using TCP)</label>
 	    </input>
 	    <input id="runs_input" type="dropdown" token="count" searchWhenChanged="false">
 	      <label>Runs</label>

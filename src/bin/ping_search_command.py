@@ -42,6 +42,9 @@ class Ping(SearchCommand):
             if self.port < 1 or self.port > 65535:
                 raise ValueError('The port parameter must be an integer from 1 to 65535')
 
+        else:
+            self.port = None
+
         self.logger.info("Ping running")
 
     def handle_results(self, results, session_key, in_preview):
