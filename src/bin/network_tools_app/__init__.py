@@ -300,7 +300,7 @@ def tcp_ping(host, port=80, count=1, index=None, sourcetype="ping", source="ping
 
     # Calculate the packet loss as a percent
     if sent > 0:
-        packet_loss_percent = round(100*(packet_loss/sent), 0)
+        packet_loss_percent = 100 * (packet_loss / sent)
     else:
         packet_loss_percent = 0
 
@@ -315,11 +315,11 @@ def tcp_ping(host, port=80, count=1, index=None, sourcetype="ping", source="ping
     result['output'] = "\n".join(output)
     result['sent'] = sent
     result['received'] = received
-    result['packet_loss'] = packet_loss_percent
-    result['jitter'] = jitter
-    result['min_ping'] = min_ping
-    result['max_ping'] = max_ping
-    result['avg_ping'] = avg_ping
+    result['packet_loss'] = int(round(packet_loss_percent, 0))
+    result['jitter'] = round(jitter, 2)
+    result['min_ping'] = round(min_ping, 2)
+    result['max_ping'] = round(max_ping, 2)
+    result['avg_ping'] = round(avg_ping, 2)
 
     # Write the event as a stash new file
     if index is not None:
