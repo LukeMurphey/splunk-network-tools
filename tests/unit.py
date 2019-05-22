@@ -760,6 +760,20 @@ class TestSplitIntSet(unittest.TestCase):
 
         self.assertEquals(len(result), 11)
 
+    def test_extra_spaces(self):
+        result = parseIntSet(" 80-90 , 8443 ")
+
+        self.assertEquals(len(result), 12)
+        self.assertEquals(result, set([80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 8443]))
+
+    def test_error_reporting(self):
+        with self.assertRaises(ValueError):
+            parseIntSet("80-90 , tree", True)
+
+        result = parseIntSet("80-81, tree")
+        self.assertEquals(len(result), 2)
+        self.assertEquals(result, set([80, 81]))
+
 class TestPortScan(unittest.TestCase):
     """
     Test port scanning using TCP.

@@ -7,7 +7,7 @@ import os
 # 1,2,3,4,6
 # as expected...
 
-def parseIntSet(nputstr=""):
+def parseIntSet(nputstr, throw_exception_on_invalid=False):
   selection = set()
   invalid = set()
   # tokens are comma seperated values
@@ -31,6 +31,8 @@ def parseIntSet(nputstr=""):
         except:
            # not an int and not a range...
            invalid.add(i)
-  # Report invalid tokens before returning valid selection
-  print "Invalid set: " + str(invalid)
+
+  if len(invalid) > 0 and throw_exception_on_invalid:
+     raise ValueError("Invalid input provided: %s", ",".join(invalid))
+
   return selection
