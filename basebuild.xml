@@ -1062,7 +1062,7 @@ Below is an example of the entry in the file:
     <!-- ================================= 
           target: test.run_unit
          ================================= -->
-    <target name="test.run_unit">
+    <target name="test.run_unit" depends="test.setup">
 
 		<!-- Define a default value for the tests to run. Otherwise, arguments passed from the CLI will be used (e.g. ant test.run_unit -Dtest=TestPingParser) -->
 		<property name="test" value="" />
