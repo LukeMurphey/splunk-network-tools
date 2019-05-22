@@ -30,6 +30,8 @@ from network_tools_app.dict_translate import translate, is_array, merge_values, 
 from network_tools_app.flatten import flatten, flatten_to_table
 from network_tools_app import pingparser, tracerouteparser
 from network_tools_app.ping_network import ping_all, tcp_ping_all
+from network_tools_app.pyscan import port_scan
+from network_tools_app.parseintset import parseIntSet
 
 class TestPing(unittest.TestCase):
 
@@ -734,6 +736,41 @@ class TestPingNetwork(unittest.TestCase):
         self.assertGreaterEqual(result[0]['min_ping'], 0)
         self.assertGreaterEqual(result[0]['max_ping'], 0)
         self.assertGreaterEqual(result[0]['avg_ping'], 0)
+
+class TestSplitIntSet(unittest.TestCase):
+    """
+    Test splitting of a list of integers.
+    """
+
+    def test_combination(self):
+        result = parseIntSet("80-90,8443")
+
+        self.assertEquals(len(result), 12)
+        self.assertEquals(result, set([80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 8443]))
+
+    def test_single(self):
+        result = parseIntSet("80")
+
+        self.assertEquals(len(result), 1)
+        self.assertEquals(result, set([80]))
+
+    def test_duplicates(self):
+        result = parseIntSet("80-90,89")
+        self.assertEquals(result, set([80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90]))
+
+        self.assertEquals(len(result), 11)
+
+class TestPortScan(unittest.TestCase):
+    """
+    Test port scanning using TCP.
+    """
+
+    def test_port_scan(self):
+        result = port_scan('textcritical.net', 80, 81)
+        self.assertEquals(len(result), 2)
+
+        self.assertEquals(result[('textcritical.net', 80)], 'open')
+        self.assertEquals(result[('textcritical.net', 81)], 'closed')
 
 if __name__ == '__main__':
     report_path = os.path.join('..', os.environ.get('TEST_OUTPUT', 'tmp/test_report.html'))
