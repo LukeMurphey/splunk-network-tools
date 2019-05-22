@@ -766,7 +766,7 @@ class TestPortScan(unittest.TestCase):
     """
 
     def test_port_scan(self):
-        result = port_scan('textcritical.net', 80, 81)
+        result = port_scan('textcritical.net', "80-81")
         self.assertEquals(len(result), 2)
 
         self.assertEquals(result[('textcritical.net', 80)], 'open')
