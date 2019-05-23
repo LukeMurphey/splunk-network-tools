@@ -684,7 +684,7 @@ def portscan(host, ports="22,80,443,3389", index=None, sourcetype="portscan", so
     """
     Perform a port scan against the given host
     """
-    data = port_scan(host, ports)
+    results = port_scan(host, ports)
 
     # Write the event as a stash new file
     if index is not None:
@@ -692,7 +692,10 @@ def portscan(host, ports="22,80,443,3389", index=None, sourcetype="portscan", so
                                 file_extension=".stash_output")
 
         # Log that we performed the scan
-        if logger:
-            logger.debug("Wrote stash file=%s", writer.write_event(result))
+        for result in results:
+            if logger:
+                logger.debug("Wrote stash file=%s", writer.write_event(result))
+            else:
+                writer.write_event(result)
 
-    return data
+    return results

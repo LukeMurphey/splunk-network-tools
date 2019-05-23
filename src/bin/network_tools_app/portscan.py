@@ -37,8 +37,11 @@ class Scanner(threading.Thread):
                 sock_instance.close()
 
 def port_scan(host, ports, thread_count=DEFAULT_THREAD_LIMIT, callback=None):
-    # Parse the ports
-    parsed_ports = parseintset.parseIntSet(ports)
+    # Parse the ports if necessary
+    if isinstance(ports, (str, unicode)):
+        parsed_ports = parseintset.parseIntSet(ports)
+    else:
+        parsed_ports = ports
 
     # Setup the queues
     to_scan = Queue.Queue()

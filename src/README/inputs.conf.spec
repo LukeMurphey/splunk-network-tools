@@ -10,7 +10,7 @@ runs = <value>
 * The number of runs to execute
 
 [ping://default]
-* Configure an input to ping a host to ensure it is 
+* Configure an input to ping a host to ensure it is up
 
 dest = <value>
 * A comma separated list of hosts or networks to ping
@@ -25,3 +25,15 @@ interval = <value>
 port = <value>
 * Indicates which port to use if using TCP
 * Leave this blank in order to use ICMP
+
+[portscan://default]
+* Configure an input to port scan a host to identify open ports
+
+dest = <value>
+* A comma separated list of hosts or networks to ping
+
+interval = <value>
+* Indicates how often to perform the ping
+
+ports = <value>
+* Indicates which ports to scan
