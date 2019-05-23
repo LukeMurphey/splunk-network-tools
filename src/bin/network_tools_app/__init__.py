@@ -27,6 +27,7 @@ from pythonwhois import get_whois
 from flatten import flatten
 from ipaddr import IPAddress
 from dns import resolver,reversename
+from portscan import port_scan
 
 # Environment imports
 from platform import system as system_name
@@ -331,7 +332,6 @@ def tcp_ping(host, port=80, count=1, index=None, sourcetype="ping", source="ping
             logger.debug("Wrote stash file=%s", writer.write_event(result))
 
     return result
-        
 
 def ping(host, count=1, index=None, sourcetype="ping", source="ping_search_command", logger=None):
     """
@@ -679,3 +679,20 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup",
             logger.debug("Wrote stash file=%s", writer.write_event(result))
 
     return result
+
+def portscan(host, ports="22,80,443,3389", index=None, sourcetype="portscan", source="portscan_search_command", logger=None):
+    """
+    Perform a port scan against the given host
+    """
+    data = port_scan(host, ports)
+
+    # Write the event as a stash new file
+    if index is not None:
+        writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype,
+                                file_extension=".stash_output")
+
+        # Log that we performed the scan
+        if logger:
+            logger.debug("Wrote stash file=%s", writer.write_event(result))
+
+    return data

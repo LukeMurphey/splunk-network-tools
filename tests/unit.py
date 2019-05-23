@@ -30,7 +30,7 @@ from network_tools_app.dict_translate import translate, is_array, merge_values, 
 from network_tools_app.flatten import flatten, flatten_to_table
 from network_tools_app import pingparser, tracerouteparser
 from network_tools_app.ping_network import ping_all, tcp_ping_all
-from network_tools_app.pyscan import port_scan
+from network_tools_app.portscan import port_scan
 from network_tools_app.parseintset import parseIntSet
 
 class TestPing(unittest.TestCase):
@@ -778,13 +778,18 @@ class TestPortScan(unittest.TestCase):
     """
     Test port scanning using TCP.
     """
-
+    # 
     def test_port_scan(self):
-        result = port_scan('textcritical.net', "80-81")
-        self.assertEquals(len(result), 2)
+        results = port_scan('textcritical.net', '80-81')
+        self.assertEquals(len(results), 2)
 
-        self.assertEquals(result[('textcritical.net', 80)], 'open')
-        self.assertEquals(result[('textcritical.net', 81)], 'closed')
+    def test_port_scan_single(self):
+        results = port_scan('textcritical.net', '80')
+        self.assertEquals(len(results), 1)
+
+        self.assertEquals(result[0]['status'], 'open')
+        self.assertEquals(result[0]['dest'], 'textcritical.net')
+        self.assertEquals(result[0]['port'], '80')
 
 if __name__ == '__main__':
     report_path = os.path.join('..', os.environ.get('TEST_OUTPUT', 'tmp/test_report.html'))

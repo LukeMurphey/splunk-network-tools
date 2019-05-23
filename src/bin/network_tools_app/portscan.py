@@ -1,8 +1,8 @@
 import socket
 import sys
 import threading, Queue
-
-from .. import parseintset
+from collections import OrderedDict
+import parseintset
 
 DEFAULT_THREAD_LIMIT = 100
 CLOSED_STATUS = 'closed'
@@ -18,11 +18,13 @@ class Scanner(threading.Thread):
         self.output_queue = output_queue
 
     def run(self):
+        # This loop will exit when the input_queue generates an exception because all of the threads are complete
         while 1:
             host, port = self.input_queue.get()
 
             # Make the socket for performing the scan
-            sock_instance = socket.socket(socket.AF_INET, socket.SOCK_STREAM)        
+            sock_instance = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
             try:
                 # Connect to the host via TCP
                 sock_instance.connect((host, port))
@@ -52,19 +54,30 @@ def port_scan(host, ports, thread_count=DEFAULT_THREAD_LIMIT, callback=None):
     for host_port in host_ports:
         to_scan.put(host_port)
 
+    # This will store the list of successfully executed host/port combiations
     results = {}
+
+    # This will contain the resulting data
+    data = []
+
     for host, port in host_ports:
         while (host, port) not in results:
-            nhost, nport, nstatus = scanned.get()
-            results[(nhost, nport)] = nstatus
-        status = results[(host, port)]
+            # Get the queued thread: this will block if necessary
+            scanned_host, scanned_port, scan_status = scanned.get()
+
+            # Log that that we performed the scan
+            results[(scanned_host, scanned_port)] = scan_status
+
+            # Append the data
+            data.append(OrderedDict({
+                'dest' : scanned_host,
+                'port' : 'TCP\\' + str(scanned_port),
+                'status': scan_status
+            }))
 
         # Run the callback if one is present
-        if callback:
-            callback(host, port, status)
+        if callback is not None:
+            callback(scanned_host, scanned_port, scan_status)
 
-        if status != CLOSED_STATUS:
-            print '%s:%d %s' % (host, port, status)
-
-    return results
+    return data
 
