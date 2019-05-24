@@ -11,16 +11,21 @@ OPEN_STATUS = 'open'
 class Scanner(threading.Thread):
     def __init__(self, input_queue, output_queue):
         threading.Thread.__init__(self)
-        self.setDaemon(1)
 
         # These are the scan queues
         self.input_queue = input_queue
         self.output_queue = output_queue
 
+        self.keep_running = True
+
     def run(self):
         # This loop will exit when the input_queue generates an exception because all of the threads are complete
-        while 1:
-            host, port = self.input_queue.get()
+        while self.keep_running:
+
+            try:
+                host, port = self.input_queue.get(timeout=5)
+            except Queue.Empty:
+                continue
 
             # Make the socket for performing the scan
             sock_instance = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -36,6 +41,12 @@ class Scanner(threading.Thread):
                 self.output_queue.put((host, port, OPEN_STATUS))
                 sock_instance.close()
 
+            self.input_queue.task_done()
+            self.output_queue.task_done()
+
+    def stop_running(self):
+        self.keep_running = False
+
 def port_scan(host, ports, thread_count=DEFAULT_THREAD_LIMIT, callback=None):
     # Parse the ports if necessary
     if isinstance(ports, (str, unicode)):
@@ -48,7 +59,9 @@ def port_scan(host, ports, thread_count=DEFAULT_THREAD_LIMIT, callback=None):
     scanned = Queue.Queue()
 
     # Prepare the scanners
-    scanners = [Scanner(to_scan, scanned) for i in range(thread_count)]
+    # These scanners will monitor the input queue for new things to scan, scan them, and them put
+    # them in the output queue
+    scanners = [Scanner(to_scan, scanned) for i in range(min(thread_count,len(ports)))]
     for scanner in scanners:
         scanner.start()
 
@@ -81,6 +94,10 @@ def port_scan(host, ports, thread_count=DEFAULT_THREAD_LIMIT, callback=None):
         # Run the callback if one is present
         if callback is not None:
             callback(scanned_host, scanned_port, scan_status)
+
+    # Stop the threads
+    for scanner in scanners:
+        scanner.stop_running()
 
     return data
 
