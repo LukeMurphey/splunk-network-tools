@@ -75,7 +75,7 @@ define([
         },
 
         /**
-         * Render the ell renderer
+         * Render the cell renderer
          */
         renderCellRenderer: function(){
 

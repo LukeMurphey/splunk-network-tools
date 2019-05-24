@@ -2,7 +2,7 @@ define(['jquery', 'underscore', 'splunkjs/mvc', 'views/shared/results_table/rend
     
     var NetworkToolsCellRenderer = BaseCellRenderer.extend({
     	 canRender: function(cell) {
-    		 return ($.inArray(cell.field, ["avg_ping", "max_ping", "min_ping", "packet_loss", "hops", "raw"]) >= 0);
+    		 return ($.inArray(cell.field, ["avg_ping", "max_ping", "min_ping", "packet_loss", "hops", "raw", "status"]) >= 0);
 		 },
 		 
 		 render: function($td, cell) {
@@ -56,6 +56,18 @@ define(['jquery', 'underscore', 'splunkjs/mvc', 'views/shared/results_table/rend
 				
 			 }
 			 
+			 // Handle the status field
+			 if( cell.field == "status" ){
+				if(cell.value == 'open'){
+				   $td.addClass("success");
+				   icon = 'check';
+			   }
+			   else if(cell.value == 'closed'){
+				   $td.addClass("failure");
+				   icon = 'alert';
+			   }
+			}
+
 			 // Handle the raw field (expand the newlines to HTML breaks)
 			 if( cell.field == "raw" ){
 				 

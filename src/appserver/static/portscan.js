@@ -1,12 +1,13 @@
 require.config({
     paths: {
-    	network_tools_view: '../app/network_tools/js/views/NetworkToolsView'
+		network_tools_view: '../app/network_tools/js/views/NetworkToolsView',
+		network_tools_cell_renderer: '../app/network_tools/NetworkToolsCellRenderer'
     }
 });
 
-require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'network_tools_view', 'bootstrap.tab', 'splunkjs/mvc/simplexml/ready!'],
+require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'network_tools_view', 'network_tools_cell_renderer', 'bootstrap.tab', 'splunkjs/mvc/simplexml/ready!'],
 		function($, _, mvc, TokenUtils
-			, NetworkToolsView){
+			, NetworkToolsView, NetworkToolsCellRenderer){
 
 			var network_tools_view = new NetworkToolsView({
 				cell_renderer_id : 'element4',
@@ -18,6 +19,14 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
 
 				token_name : 'dest',
 				token_input_id: 'dest_input'
+			});
+
+			// Setup the cell renderer
+			var priorResultsTable = mvc.Components.get('element3');
+			
+			priorResultsTable.getVisualization(function(tableView){
+				tableView.table.addCellRenderer(new NetworkToolsCellRenderer());
+				tableView.table.render();
 			});
 
 			network_tools_view.getSearchParams = function(){
