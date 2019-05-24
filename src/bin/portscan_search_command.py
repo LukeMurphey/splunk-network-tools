@@ -7,7 +7,7 @@ import sys
 
 from network_tools_app.search_command import SearchCommand
 from network_tools_app import get_default_index
-from network_tools_app.portscan import port_scan
+from network_tools_app import portscan
 from network_tools_app.parseintset import parseIntSet
 
 class PortScan(SearchCommand):
@@ -54,7 +54,7 @@ class PortScan(SearchCommand):
             index = get_default_index(session_key)
 
         # Do the port scan
-        results = port_scan(self.dest, self.ports)
+        results = portscan(self.dest, self.ports, index=index)
 
         # Output the results
         self.output_results(results)

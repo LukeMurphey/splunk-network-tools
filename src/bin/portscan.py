@@ -73,7 +73,7 @@ class PortScanInput(ModularInput):
             DurationField("interval", "Interval", "The interval defining how often to perform the check; can include time units (e.g. 15m for 15 minutes, 8h for 8 hours)", empty_allowed=False)
         ]
 
-        ModularInput.__init__(self, scheme_args, args, logger_name='portscan_modular_input', logger_level=logging.INFO)
+        ModularInput.__init__(self, scheme_args, args, logger_name='portscan_modular_input', logger_level=logging.DEBUG)
 
         if thread_limit is None:
             self.thread_limit = PortScanInput.DEFAULT_THREAD_LIMIT
