@@ -1,0 +1,23 @@
+#panel2-fieldset + .panel-element-row{
+	display: inline-block;
+	margin-top: 20px;
+}
+
+#ports_input{
+	margin-right: 0px;
+	padding-right: 0px;
+}
+
+/*
+ * Make sure that the icon is white (needed for Splunk 6.6)
+ */
+#statistics .icon-check{
+	color: white;
+}
+
+/*
+ * Remove the extra space between the time-range selector and the panel.
+ */
+#panel6 > .dashboard-panel{
+	margin-bottom: 0px;
+}

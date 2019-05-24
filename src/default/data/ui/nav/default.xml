@@ -4,6 +4,7 @@
   <view name="whois" />
   <view name="nslookup" />
   <view name="speedtest" />
+  <view name="portscan" />
   <view name="wakeonlan" />
   <collection label="Uptime Monitoring">
     <view name="ping_status_overview" />

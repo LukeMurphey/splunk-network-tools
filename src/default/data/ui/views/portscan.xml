@@ -1,0 +1,135 @@
+<form hideEdit="true" script="tabs.js,portscan.js" stylesheet="tabs.css,portscan.css,status.css,execute_views.css">
+  <label>Port Scan</label>
+  <description>Perform a port scan to determine what ports are open on a host.</description>
+  <search id="portscan_search">
+    <query>$portscan_search$</query>
+  </search>
+  <search id="portscan_data_search">
+    <query>sourcetype="portscan"</query>
+    <earliest>-30d@d</earliest>
+    <latest>now</latest>
+    <sampleRatio>1</sampleRatio>
+  </search>
+	<row id="tabs">
+	   <panel>
+	      <html>
+	         <ul id="tabs" class="nav nav-tabs">
+            <li class="active">
+                <a href="#" class="toggle-tab" data-toggle="tab" data-elements="tab_results_controls,tab_upload,tab_download,tab_portscan,row_bandwidth">Results</a>
+            </li>
+		    	  <li>
+					    <a href="#" class="toggle-tab results-tab" data-toggle="tab" data-elements="tab_current_results,tab_portscan_controls,tab_portscan_data">Execute Port Scan</a>
+		    	  </li>
+		 	    </ul>
+	      </html>
+	   </panel>
+	</row>
+  <row id="tab_portscan_controls">
+  	<panel>
+      <input id="dest_input" type="text" token="dest" searchWhenChanged="false">
+	      <label>Host</label>
+	    </input>
+      <input id="ports_input" type="text" token="ports" searchWhenChanged="false">
+	      <label>Ports</label>
+	    </input>
+	    <html>
+		    <a href="#" id="execute_input" class="btn btn-primary btn-execute">Execute Port Scan</a>
+	    </html>
+	</panel>
+  </row>
+  <row id="tab_current_results">
+    <panel>
+      <single>
+        <search base="portscan_search">
+          <query>| search status="open" | stats count(status) as count</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x818d99","0x65a637","0x65a637"]</option>
+        <option name="rangeValues">[0,1]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">Open Ports</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search base="portscan_search">
+          <query>| search status="closed" | stats count(status) as count</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x818d99","0xd93f3c","0xd93f3c"]</option>
+        <option name="rangeValues">[0,1]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">Closed Ports</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  
+  <row id="tab_results_controls">
+  	<panel>
+  		<input type="time" token="timefield" searchWhenChanged="true">
+			<label></label>
+		    <default>
+		    	<earliest>-30d@d</earliest>
+		        <latest>now</latest>
+		    </default>
+		</input>
+  	</panel>
+  </row>
+  <row id="tab_portscan">
+    <panel>
+      <table>
+        <!--
+        <search base="speedtest_data_search">>
+          <query>timechart avg(ping) as ping</query>
+        </search>
+        -->
+        <search>
+          <query>sourcetype="portscan" $index$ | table dest port status</query>
+          <earliest>$timefield.earliest$</earliest>
+          <latest>$timefield.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  
+  <row id="tab_portscan_data">
+    <panel>
+      <table>
+        <search base="portscan_search">
+          <query>| eval dest=if(isnull(dest),host,dest) | fields dest port status</query>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    </row>
+</form>
