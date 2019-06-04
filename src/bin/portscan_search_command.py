@@ -15,7 +15,7 @@ class PortScan(SearchCommand):
     This search command provides a Splunk interface for performing port scans.
     """
 
-    def __init__(self, dest=None, ports=None, index=None, host=None):
+    def __init__(self, dest=None, ports=None, index=None, host=None, timeout=5):
         SearchCommand.__init__(self, run_in_preview=False, logger_name="portscan_search_command")
 
         self.dest = dest
@@ -36,6 +36,14 @@ class PortScan(SearchCommand):
 
         self.ports = ports
 
+        try:
+            self.timeout = int(timeout)
+        except ValueError:
+            raise ValueError('The must be a valid integer')
+
+        if self.timeout <= 0:
+            raise ValueError('The must be a valid positive integer (greater than zero)')
+
         self.logger.info("Port scan running")
 
     def handle_results(self, results, session_key, in_preview):
@@ -54,7 +62,9 @@ class PortScan(SearchCommand):
             index = get_default_index(session_key)
 
         # Do the port scan
-        results = portscan(self.dest, self.ports, index=index)
+        results = portscan(self.dest, self.ports, index=index, timeout=self.timeout)
+
+        self.logger.info("Port scan complete")
 
         # Output the results
         self.output_results(results)

@@ -680,11 +680,11 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup",
 
     return result
 
-def portscan(host, ports="22,80,443,3389", index=None, sourcetype="portscan", source="portscan_search_command", logger=None):
+def portscan(host, ports="22,80,443,3389", index=None, sourcetype="portscan", source="portscan_search_command", logger=None, timeout=5):
     """
     Perform a port scan against the given host
     """
-    results = port_scan(host, ports)
+    results = port_scan(host, ports, timeout=timeout)
 
     # Write the event as a stash new file
     if index is not None:

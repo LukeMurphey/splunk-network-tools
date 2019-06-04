@@ -9,7 +9,7 @@ CLOSED_STATUS = 'closed'
 OPEN_STATUS = 'open'
 
 class Scanner(threading.Thread):
-    def __init__(self, input_queue, output_queue):
+    def __init__(self, input_queue, output_queue, timeout=5):
         threading.Thread.__init__(self)
 
         # These are the scan queues
@@ -17,6 +17,7 @@ class Scanner(threading.Thread):
         self.output_queue = output_queue
 
         self.keep_running = True
+        self.timeout = timeout
 
     def run(self):
         # This loop will exit when the input_queue generates an exception because all of the threads are complete
@@ -29,6 +30,7 @@ class Scanner(threading.Thread):
 
             # Make the socket for performing the scan
             sock_instance = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock_instance.settimeout(self.timeout)
 
             try:
                 # Connect to the host via TCP
@@ -47,7 +49,7 @@ class Scanner(threading.Thread):
     def stop_running(self):
         self.keep_running = False
 
-def port_scan(host, ports, thread_count=DEFAULT_THREAD_LIMIT, callback=None):
+def port_scan(host, ports, thread_count=DEFAULT_THREAD_LIMIT, callback=None, timeout=5):
     # Parse the ports if necessary
     if isinstance(ports, (str, unicode)):
         parsed_ports = parseintset.parseIntSet(ports)
@@ -61,7 +63,7 @@ def port_scan(host, ports, thread_count=DEFAULT_THREAD_LIMIT, callback=None):
     # Prepare the scanners
     # These scanners will monitor the input queue for new things to scan, scan them, and them put
     # them in the output queue
-    scanners = [Scanner(to_scan, scanned) for i in range(min(thread_count,len(ports)))]
+    scanners = [Scanner(to_scan, scanned, timeout) for i in range(min(thread_count,len(ports)))]
     for scanner in scanners:
         scanner.start()
 
