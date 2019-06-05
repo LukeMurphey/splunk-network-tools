@@ -32,6 +32,9 @@
       <input id="ports_input" type="text" token="ports" searchWhenChanged="false">
 	      <label>Ports</label>
 	    </input>
+      <input id="timeout_input" type="text" token="timeout" searchWhenChanged="false">
+	      <label>Timeout</label>
+	    </input>
 	    <html>
 		    <a href="#" id="execute_input" class="btn btn-primary btn-execute">Execute Port Scan</a>
 	    </html>

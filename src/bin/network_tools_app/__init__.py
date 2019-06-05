@@ -684,6 +684,7 @@ def portscan(host, ports="22,80,443,3389", index=None, sourcetype="portscan", so
     """
     Perform a port scan against the given host
     """
+
     results = port_scan(host, ports, timeout=timeout)
 
     # Write the event as a stash new file

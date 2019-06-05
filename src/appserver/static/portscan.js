@@ -14,7 +14,7 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
 				execute_button_id : "#execute_input",
 
             	default_search: '| search sourcetype=portscan $index$ | head 1 | table dest port status',
-            	fresh_search: '| portscan $dest$ $ports$ $index$',
+            	fresh_search: '| portscan $dest$ $ports$ $index$ $timeout$',
             	search_token: 'portscan_search',
 
 				token_name : 'dest',
@@ -33,6 +33,7 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
 				var params = {
 					'dest' : '',
 					'ports' : '',
+					'timeout' : '',
 				};
 				
 				// Get the server to use (if provided)
@@ -51,6 +52,13 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
 				
 				if(port_input && port_input.val() && port_input.val().length > 0){
 					params['ports'] = 'ports="' + port_input.val() + '"';
+				}
+
+				// Get the timeout to use
+				var timeout_input = mvc.Components.getInstance("timeout_input");
+			
+				if(timeout_input && timeout_input.val() && timeout_input.val().length > 0){
+					params['timeout'] = 'timeout="' + timeout_input.val() + '"';
 				}
 
 				return params;

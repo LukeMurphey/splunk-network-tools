@@ -62,7 +62,7 @@ class PortScan(SearchCommand):
             index = get_default_index(session_key)
 
         # Do the port scan
-        results = portscan(self.dest, self.ports, index=index, timeout=self.timeout)
+        results = portscan(self.dest, self.ports, index=index, timeout=self.timeout, logger=self.logger)
 
         self.logger.info("Port scan complete")
 
