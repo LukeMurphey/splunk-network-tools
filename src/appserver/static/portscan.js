@@ -12,8 +12,8 @@ require(['jquery','underscore','splunkjs/mvc', 'splunkjs/mvc/tokenutils', 'netwo
 			var network_tools_view = new NetworkToolsView({
 				cell_renderer_id : 'element4',
 				execute_button_id : "#execute_input",
-
-            	default_search: '| search sourcetype=portscan $index$ | head 1 | table dest port status',
+				
+            	default_search: '| search sourcetype=portscan | head 1 | join unique_id max=10000 [| search sourcetype=portscan | eval raw=_raw]| table dest port status',
             	fresh_search: '| portscan $dest$ $ports$ $index$ $timeout$',
             	search_token: 'portscan_search',
 

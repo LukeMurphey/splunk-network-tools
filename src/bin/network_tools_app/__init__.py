@@ -680,7 +680,7 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup",
 
     return result
 
-def portscan(host, ports="22,80,443,3389", index=None, sourcetype="portscan", source="portscan_search_command", logger=None, timeout=5):
+def portscan(host, ports="22,80,443,3389", index=None, sourcetype="portscan", source="portscan_search_command", logger=None, timeout=5, unique_id=None):
     """
     Perform a port scan against the given host
     """
@@ -692,8 +692,12 @@ def portscan(host, ports="22,80,443,3389", index=None, sourcetype="portscan", so
         writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype,
                                 file_extension=".stash_output")
 
+        if unique_id is None:
+            unique_id = binascii.b2a_hex(os.urandom(4))
+
         # Log that we performed the scan
         for result in results:
+            result['unique_id'] = unique_id
             if logger:
                 logger.debug("Wrote stash file=%s", writer.write_event(result))
             else:

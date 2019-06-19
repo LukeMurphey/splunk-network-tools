@@ -4,7 +4,7 @@ import threading, Queue
 from collections import OrderedDict
 import parseintset
 
-DEFAULT_THREAD_LIMIT = 100
+DEFAULT_THREAD_LIMIT = 200
 CLOSED_STATUS = 'closed'
 OPEN_STATUS = 'open'
 
@@ -20,7 +20,8 @@ class Scanner(threading.Thread):
         self.timeout = timeout
 
     def run(self):
-        # This loop will exit when the input_queue generates an exception because all of the threads are complete
+        # This loop will exit when the input_queue generates an exception because all of the threads
+        # are complete
         while self.keep_running:
 
             try:
