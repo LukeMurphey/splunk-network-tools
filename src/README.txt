@@ -113,4 +113,7 @@ Change History
 |         | Lookup commands are now multi-threaded in order to gain a dramatic performance improvement                       |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 1.3     | Adding ability to perform TCP pings                                                                              |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.4     | Added ability to perform port scans                                                                              |
+|         | Added colorization of historical results on the history page                                                     |
 +---------+------------------------------------------------------------------------------------------------------------------+
