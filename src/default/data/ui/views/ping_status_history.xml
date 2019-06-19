@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 
-<form>
+<form script="ping_status_history.js" stylesheet="ping_status_cell_renderer.css">
 	<label>Status History</label>
 	
 	<fieldset autoRun="true">

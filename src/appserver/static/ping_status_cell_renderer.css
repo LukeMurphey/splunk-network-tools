@@ -1,0 +1,160 @@
+
+/*
+ * Make sure that the icon is white (needed for Splunk 6.6)
+ */
+ #statistics .icon-check{
+	color: white;
+}
+
+/*
+ * The following sets the color of the row indicating if the packet loss indicates a problem or not.
+ */
+.table-chrome.table-striped > tbody > tr > td.packet_loss.success{
+	background-color: #65A636; /* #3677a6 */
+    color: white;
+    font-weight: bold;
+}
+
+.table-chrome.table-striped > tbody > tr > td.packet_loss.success.highlighted{
+	background-color: #74b744 !important;
+}
+
+.table-chrome.table-striped > tbody > tr > td.packet_loss.failure{
+	background-color: #d6563c;
+    color: white;
+    font-weight: bold;
+}
+
+.table-chrome.table-striped > tbody > tr > td.packet_loss.failure.highlighted{
+	background-color: #e66146 !important;
+}
+
+.table-chrome.table-striped > tbody > tr > td.packet_loss.failure{
+	/* http://bit.ly/2feBevo */
+	background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAANElEQVQYV2NcpszxnwENGBibMDCiS4AEL5w9gyoBEwQZANeBLAiXQBcES1wLs/kPMhMdAACG5Bp+pY2rpgAAAABJRU5ErkJggg==);
+    color: white;
+    font-weight: bold;
+}
+
+.table-chrome.table-striped > tbody > tr > td.ping.failure,
+.table-chrome.table-striped > tbody > tr > td.max_ping.failure{
+    background-color:  #e66146;
+    color: white;
+}
+
+.table-chrome.table-striped > tbody > tr > td.ping.failure.highlighted,
+.table-chrome.table-striped > tbody > tr > td.max_ping.failure.highlighted{
+    background-color:  #e66146 !important;
+    color: white;
+}
+
+
+/*
+ * Style the cells in the table that are high but not so as to be considered a failure.
+ */
+
+ /* Orange version: */
+ .table-chrome.table-striped > tbody > tr > td.ping.response-100,
+ .table-chrome.table-striped > tbody > tr > td.max_ping.response-100{
+     background-color: #ffad00;
+     color: white;
+ }
+ 
+ .table-chrome.table-striped > tbody > tr > td.ping.response-75,
+ .table-chrome.table-striped > tbody > tr > td.max_ping.response-75{
+     background-color: #ffd885;
+ }
+ 
+ .table-chrome.table-striped > tbody > tr > td.ping.response-100.highlighted,
+ .table-chrome.table-striped > tbody > tr > td.max_ping.response-100.highlighted{
+     background-color: #ffbb2d !important;
+ }
+ 
+ .table-chrome.table-striped > tbody > tr > td.ping.response-75.highlighted,
+ .table-chrome.table-striped > tbody > tr > td.max_ping.response-75.highlighted{
+     background-color: #ffd885 !important;
+ }
+ 
+ .table-chrome.table-striped > tbody > tr > td.ping.response-25,
+ .table-chrome.table-striped > tbody > tr > td.max_ping.response-25{
+     background-color: #dceaf5;
+ }
+ .table-chrome.table-striped > tbody > tr > td.ping.response-0,
+ .table-chrome.table-striped > tbody > tr > td.max_ping.response-0{
+     background-color: #d7f3c3;
+ }
+
+/*
+ * This makes the stopwatch icons and the status icons line up
+ */
+.ping.failure > i, .average.failure > i{
+	margin-right: 3px;
+}
+
+/*
+ * Setting background color of the cells indicating success or failure.
+ */
+.packet_loss-failure{
+	background-color: #C42323;
+}
+
+.packet_loss-success{
+	background-color: #61a035; /* #00a009; */
+}
+
+/*
+ * Font icons below
+ */
+ @font-face {
+  font-family: 'stopwatch';
+  src: url('font/stopwatch.eot?53462084');
+  src: url('font/stopwatch.eot?53462084#iefix') format('embedded-opentype'),
+       url('font/stopwatch.woff2?53462084') format('woff2'),
+       url('font/stopwatch.woff?53462084') format('woff'),
+       url('font/stopwatch.ttf?53462084') format('truetype'),
+       url('font/stopwatch.svg?53462084#stopwatch') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+/* Chrome hack: SVG is rendered more smooth in Windozze. 100% magic, uncomment if you need it. */
+/* Note, that will break hinting! In other OS-es font will be not as sharp as it could be */
+/*
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  @font-face {
+    font-family: 'stopwatch';
+    src: url('../font/stopwatch.svg?53462084#stopwatch') format('svg');
+  }
+}
+*/
+ 
+ [class^="stopwatch-icon-"]:before, [class*=" stopwatch-icon-"]:before {
+  font-family: "stopwatch";
+  font-style: normal;
+  font-weight: normal;
+  speak: none;
+ 
+  display: inline-block;
+  text-decoration: inherit;
+  width: 1em;
+  text-align: center;
+ 
+  /* For safety - reset parent styles, that can break glyph codes*/
+  font-variant: normal;
+  text-transform: none;
+ 
+  /* fix buttons height, for twitter bootstrap */
+  line-height: 1em;
+ 
+  /* Font smoothing. That was taken from TWBS */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+ 
+  /* Uncomment for 3D effect */
+  /* text-shadow: 1px 1px 1px rgba(127, 127, 127, 0.3); */
+}
+ 
+.stopwatch-icon-0:before { content: '\e800'; } /* '' */
+.stopwatch-icon-25:before { content: '\e801'; } /* '' */
+.stopwatch-icon-50:before { content: '\e802'; } /* '' */
+.stopwatch-icon-75:before { content: '\e803'; } /* '' */
+.stopwatch-icon-100:before { content: '\e804'; } /* '' */
