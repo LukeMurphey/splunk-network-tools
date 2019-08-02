@@ -4,7 +4,7 @@ This is a search command for doing whois lookups on results.
 
 import logging
 
-from network_tools_app import whois
+from network_tools_app import whois, get_default_index
 from network_tools_app.custom_lookup import CustomLookup
 from network_tools_app.dict_translate import translate
 
@@ -52,8 +52,9 @@ class WhoisLookup(CustomLookup):
         Perform a whois lookup against the given host.
         """
 
-        self.logger.info("Running whois against host=%s", host)
-        output = whois(host=host, index=None)
+        index = get_default_index()
+        self.logger.info("Running whois against host=%s using index=%s", host, index)
+        output = whois(host=host, index=index, logger=self.logger)
 
         return translate(output, self.TRANSLATION_RULES)
 

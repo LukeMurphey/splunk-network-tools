@@ -9,6 +9,7 @@ This module includes a series of functions for performing network operations (pi
 import sys
 import os
 import errno
+import ConfigParser
 import splunk.appserver.mrsparkle.lib.util as util
 
 lib_dir = os.path.join(util.get_apps_dir(), 'network_tools', 'bin', 'network_tools_app')
@@ -59,28 +60,55 @@ class NetworkToolsConfig(SplunkAppObjModel):
     resource = '/admin/network_tools'
     index = Field()
 
+class AttrDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(AttrDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self
+
 def get_app_config(session_key, stanza="default"):
     """
     Get the app configuration
-
+    
     Arguments:
     session_key -- The session key to use when connecting to the REST API
     stanza -- The stanza to get the proxy information from (defaults to "default")
     """
-
+    
     # If the stanza is empty, then just use the default
     if stanza is None or stanza.strip() == "":
         stanza = "default"
- 
+    
     # Get the configuration
-    try:
-        app_config = NetworkToolsConfig.get(NetworkToolsConfig.build_id(stanza, "network_tools", "nobody"), sessionKey=session_key)
-    except splunk.ResourceNotFound:
-        return None
-
+    if session_key == None:
+        # Scripted lookups don't get a session key
+        default_conf = os.path.join(os.environ['SPLUNK_HOME'], 'etc', 'apps', 'network_tools', 'default', 'network_tools.conf')
+        local_conf =   os.path.join(os.environ['SPLUNK_HOME'], 'etc', 'apps', 'network_tools', 'local', 'network_tools.conf')
+        system_local_conf = os.path.join(os.environ['SPLUNK_HOME'], 'etc', 'system', 'local', 'network_tools.conf')
+        
+        conf = ConfigParser.SafeConfigParser()
+        try:
+            # Create an empty object with AttrDict type
+            app_config = AttrDict()
+            
+            # Read the default, then local config for this app + system/local
+            for f in [default_conf, local_conf, system_local_conf]:
+                if os.path.isfile(f):
+                    conf.read(f)
+                    options = conf.options(stanza)
+                    for o in options:
+                        app_config.update({o: conf.get(stanza, o)})
+        except BaseException, e:
+            # Could not read configuration file(s)
+            app_config = None
+    else:
+        try:
+            app_config = NetworkToolsConfig.get(NetworkToolsConfig.build_id(stanza, "network_tools", "nobody"), sessionKey=session_key)
+        except splunk.ResourceNotFound:
+            return None
+    
     return app_config
 
-def get_default_index(session_key):
+def get_default_index(session_key=None):
     """
     Get the default index to output results to.
     """
