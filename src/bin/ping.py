@@ -184,29 +184,30 @@ class PingInput(ModularInput):
 
         # Determines if the input needs another run
         elif self.needs_another_run(input_config.checkpoint_dir, stanza, interval):
-
             def run_ping():
                 self.logger.debug("Starting ping, stanza=%s", stanza)
 
                 # Get the time that the input last ran
                 last_ran = self.last_ran(input_config.checkpoint_dir, stanza)
                 for dest in dests:
+                    try:
+                        def output_result_callback(result):
+                            """
+                            Output the result
+                            """
+                            self.send_result(result, stanza, index, sourcetype, host, source)
 
-                    def output_result_callback(result):
-                        """
-                        Output the result
-                        """
-                        self.send_result(result, stanza, index, sourcetype, host, source)
+                        if port not in [None, ""]:
+                            results = tcp_ping_all(dest, port, count=runs, logger=self.logger, callback=output_result_callback)
+                        else:
+                            results = ping_all(dest, count=runs, logger=self.logger, callback=output_result_callback)
 
-                    if port not in [None, ""]:
-                        results = tcp_ping_all(dest, port, count=runs, logger=self.logger, callback=output_result_callback)
-                    else:
-                        results = ping_all(dest, count=runs, logger=self.logger, callback=output_result_callback)
-
-                    if len(results) == 1:
-                        self.logger.debug("Successfully pinged the host=%s", str(dest))
-                    elif len(results) > 1:
-                        self.logger.info("Successfully pinged all hosts in the network=%s", str(dest))
+                        if len(results) == 1:
+                            self.logger.debug("Successfully pinged the host=%s", str(dest))
+                        elif len(results) > 1:
+                            self.logger.info("Successfully pinged all hosts in the network=%s", str(dest))
+                    except Exception as e:
+                        self.logger.exception(e)
 
                 # Save the checkpoint so that we remember when we last ran the input
                 self.save_checkpoint_data(input_config.checkpoint_dir, stanza,

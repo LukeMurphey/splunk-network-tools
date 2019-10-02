@@ -18,6 +18,10 @@ ipaddress = modular_input.contrib.ipaddress
 
 DOMAIN_NAME_RE = re.compile('^((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\.(xn--)?([a-z0-9\-]{1,61}|[a-z0-9-]{1,30}\.[a-z]{2,})$')
 
+
+class NetworkDestinationTooHigh(Exception):
+    """The number of hosts to scan is excessively high."""
+
 def ping_all(dest, count=1, index=None, sourcetype="ping", source="ping_search_command", logger=None, callback=None):
     """
     Pings the host using the native ping command on the platform and returns a tuple consisting of:
@@ -36,6 +40,9 @@ def ping_all(dest, count=1, index=None, sourcetype="ping", source="ping_search_c
         # Parse the ipaddress if necessary
         dest_network = ipaddress.ip_network(dest, strict=False)
 
+        if logger:
+            logger.debug("Resolved destination to addresses; dest=%s, address_count=%i", dest, dest_network.num_addresses)
+
         if dest_network.num_addresses == 1:
             _, return_code, result = ping(str(dest_network.network_address), count, index=index, logger=logger)
 
@@ -50,7 +57,7 @@ def ping_all(dest, count=1, index=None, sourcetype="ping", source="ping_search_c
 
             results.append(result)
         elif dest_network.num_addresses >= 100:
-            raise Exception("The number of addresses to ping must be less than 100 but the count requested was %s" % dest_network.num_addresses)
+            raise NetworkDestinationTooHigh("The number of addresses to ping must be less than 100 but the count requested was %s" % dest_network.num_addresses)
         else:
             for next_dest in dest_network.hosts():
                 _, return_code, result = ping(str(next_dest), count, index=index, logger=logger)
