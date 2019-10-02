@@ -56,8 +56,8 @@ def ping_all(dest, count=1, index=None, sourcetype="ping", source="ping_search_c
                 callback(result)
 
             results.append(result)
-        elif dest_network.num_addresses >= 100:
-            raise NetworkDestinationTooHigh("The number of addresses to ping must be less than 100 but the count requested was %s" % dest_network.num_addresses)
+        elif dest_network.num_addresses >= 1024:
+            raise NetworkDestinationTooHigh("The number of addresses to ping must be less than 1025 but the count requested was %s" % dest_network.num_addresses)
         else:
             for next_dest in dest_network.hosts():
                 _, return_code, result = ping(str(next_dest), count, index=index, logger=logger)
