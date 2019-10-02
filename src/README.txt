@@ -116,4 +116,7 @@ Change History
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 1.4     | Added ability to perform port scans                                                                              |
 |         | Added colorization of historical results on the history page                                                     |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.4.1   | Fixed bug that prevented some errors from being reported                                                         |
+|         | Increased the maximum size of the network hosts that can be scanned to 1024                                      |
 +---------+------------------------------------------------------------------------------------------------------------------+
