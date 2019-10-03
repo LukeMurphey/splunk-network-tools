@@ -517,7 +517,7 @@ define([
          */
         render: function () {
 			// Below is the list of capabilities required
-			var capabilities_required = ['edit_modinput_ping', 'edit_tcp', 'list_inputs'];
+			var capabilities_required = ['edit_modinput_ping', 'list_inputs'];
 
 			// Find out which capabilities are missing
 			var capabilities_missing = [];

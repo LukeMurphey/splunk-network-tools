@@ -120,4 +120,5 @@ Change History
 | 1.4.1   | Fixed bug that prevented some errors from being reported                                                         |
 |         | Increased the maximum size of the network hosts that can be scanned to 1024                                      |
 |         | Fixed issue where the pinged destination was not included in the output                                          |
+|         | Removed requirement of "edit_tcp" capability since it is no longer required                                      |
 +---------+------------------------------------------------------------------------------------------------------------------+
