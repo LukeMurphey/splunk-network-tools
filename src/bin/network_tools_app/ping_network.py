@@ -70,6 +70,9 @@ def ping_all(dest, count=1, index=None, sourcetype="ping", source="ping_search_c
                 if 'dest' not in result:
                     result['dest'] = str(next_dest)
 
+                # Add the network to the output
+                result['dest_network'] = str(dest)
+
                 if callback:
                     callback(result)
 
@@ -124,6 +127,9 @@ def tcp_ping_all(dest, port, count=1, index=None, sourcetype="ping", source="pin
 
                 if callback:
                     callback(result)
+
+                # Add the network to the output
+                result['dest_network'] = str(dest)
 
                 results.append(result)
     except ValueError:
