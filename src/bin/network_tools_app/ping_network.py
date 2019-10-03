@@ -18,6 +18,7 @@ ipaddress = modular_input.contrib.ipaddress
 
 DOMAIN_NAME_RE = re.compile('^((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\.(xn--)?([a-z0-9\-]{1,61}|[a-z0-9-]{1,30}\.[a-z]{2,})$')
 
+ADDRESS_SCAN_LIMIT = 1024
 
 class NetworkDestinationTooHigh(Exception):
     """The number of hosts to scan is excessively high."""
@@ -56,16 +57,18 @@ def ping_all(dest, count=1, index=None, sourcetype="ping", source="ping_search_c
                 callback(result)
 
             results.append(result)
-        elif dest_network.num_addresses >= 1024:
-            raise NetworkDestinationTooHigh("The number of addresses to ping must be less than 1025 but the count requested was %s" % dest_network.num_addresses)
+        elif dest_network.num_addresses > ADDRESS_SCAN_LIMIT:
+            raise Exception("The number of addresses to ping must be less than %i but the count requested was %s" % (ADDRESS_SCAN_LIMIT, dest_network.num_addresses))
         else:
             for next_dest in dest_network.hosts():
+                if logger:
+                    logger.debug("Scanning host=%s", str(next_dest))
                 _, return_code, result = ping(str(next_dest), count, index=index, logger=logger)
                 result['return_code'] = return_code
 
                 # Make sure that the destination is present
                 if 'dest' not in result:
-                    result['dest'] = str(dest)
+                    result['dest'] = str(next_dest)
 
                 if callback:
                     callback(result)
@@ -113,8 +116,8 @@ def tcp_ping_all(dest, port, count=1, index=None, sourcetype="ping", source="pin
                 callback(result)
 
             results.append(result)
-        elif dest_network.num_addresses >= 100:
-            raise Exception("The number of addresses to ping must be less than 100 but the count requested was %s" % dest_network.num_addresses)
+        elif dest_network.num_addresses > ADDRESS_SCAN_LIMIT:
+            raise Exception("The number of addresses to ping must be less than %i but the count requested was %s" % (ADDRESS_SCAN_LIMIT, dest_network.num_addresses))
         else:
             for next_dest in dest_network.hosts():
                 result = tcp_ping(str(next_dest), port, count, index=index, logger=logger)
