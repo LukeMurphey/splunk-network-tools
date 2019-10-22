@@ -158,7 +158,7 @@ class NetworkOperationsHandler(rest_handler.RESTHandler):
             return self.render_error_json("Unable to perform network operation: no host argument provided")
 
         try:
-            output = wakeonlan(host, source="network_tools_controller", logger=logger)
+            output = wakeonlan(host, source="network_tools_controller", logger=logger, session_key=request_info.session_key)
 
             # Everything worked, return accordingly
             return {
