@@ -121,4 +121,7 @@ Change History
 |         | Increased the maximum size of the network hosts that can be scanned to 1024                                      |
 |         | Fixed issue where the pinged destination was not included in the output                                          |
 |         | Removed requirement of "edit_tcp" capability since it is no longer required                                      |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.4.2   | Added more sources to the log view page                                                                          |
+|         | Added Python 2+3 support                                                                                         |
 +---------+------------------------------------------------------------------------------------------------------------------+
