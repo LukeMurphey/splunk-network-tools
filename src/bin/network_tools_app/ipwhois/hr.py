@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2017 Philip Hane
+# Copyright (c) 2013-2019 Philip Hane
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -50,6 +50,11 @@ HR_ASN = {
         '_short': 'ASN Registry',
         '_name': 'ASN Assigned Registry',
         '_description': 'ASN assigned regional internet registry.'
+    },
+    'asn_description': {
+        '_short': 'ASN Description',
+        '_name': 'ASN Description',
+        '_description': 'A brief description for the assigned ASN.'
     }
 }
 

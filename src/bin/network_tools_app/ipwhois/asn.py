@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2017 Philip Hane
+# Copyright (c) 2013-2019 Philip Hane
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,11 +23,19 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import re
+import sys
 import copy
 import logging
+
 from .exceptions import (NetError, ASNRegistryError, ASNParseError,
                          ASNLookupError, HTTPLookupError, WhoisLookupError,
-                         WhoisRateLimitError)
+                         WhoisRateLimitError, ASNOriginLookupError)
+
+if sys.version_info >= (3, 3):  # pragma: no cover
+    from ipaddress import ip_network
+
+else:  # pragma: no cover
+    from ipaddr import IPNetwork as ip_network
 
 log = logging.getLogger(__name__)
 
@@ -78,7 +86,7 @@ class IPASN:
     The class for parsing ASN data for an IP address.
 
     Args:
-        net: A ipwhois.net.Net object.
+        net (:obj:`ipwhois.net.Net`): A ipwhois.net.Net object.
 
     Raises:
         NetError: The parameter provided is not an instance of
@@ -103,21 +111,27 @@ class IPASN:
         self.org_map = ORG_MAP
         self.rir_whois = RIR_WHOIS
 
-    def _parse_fields_dns(self, response):
+    def parse_fields_dns(self, response):
         """
         The function for parsing ASN fields from a dns response.
 
         Args:
-            response: The response from the ASN dns server.
+            response (:obj:`str`): The response from the ASN dns server.
 
         Returns:
-            Dictionary:
+            dict: The ASN lookup results
 
-            :asn: The Autonomous System Number (String)
-            :asn_date: The ASN Allocation date (String)
-            :asn_registry: The assigned ASN registry (String)
-            :asn_cidr: The assigned ASN CIDR (String)
-            :asn_country_code: The assigned ASN country code (String)
+            ::
+
+                {
+                    'asn' (str) - The Autonomous System Number
+                    'asn_date' (str) - The ASN Allocation date
+                    'asn_registry' (str) - The assigned ASN registry
+                    'asn_cidr' (str) - The assigned ASN CIDR
+                    'asn_country_code' (str) - The assigned ASN country code
+                    'asn_description' (None) - Cannot retrieve with this
+                        method.
+                }
 
         Raises:
             ASNRegistryError: The ASN registry is not known.
@@ -142,6 +156,7 @@ class IPASN:
             ret['asn_cidr'] = temp[1].strip(' \n')
             ret['asn_country_code'] = temp[2].strip(' \n').upper()
             ret['asn_date'] = temp[4].strip(' "\n')
+            ret['asn_description'] = None
 
         except ASNRegistryError:
 
@@ -154,21 +169,93 @@ class IPASN:
 
         return ret
 
-    def _parse_fields_whois(self, response):
+    def _parse_fields_dns(self, *args, **kwargs):
+        """
+        Deprecated. This will be removed in a future release.
+        """
+
+        from warnings import warn
+        warn('IPASN._parse_fields_dns() has been deprecated and will be '
+             'removed. You should now use IPASN.parse_fields_dns().')
+        return self.parse_fields_dns(*args, **kwargs)
+
+    def parse_fields_verbose_dns(self, response):
+        """
+        The function for parsing ASN fields from a verbose dns response.
+
+        Args:
+            response (:obj:`str`): The response from the ASN dns server.
+
+        Returns:
+            dict: The ASN lookup results
+
+            ::
+
+                {
+                    'asn' (str) - The Autonomous System Number
+                    'asn_date' (str) - The ASN Allocation date
+                    'asn_registry' (str) - The assigned ASN registry
+                    'asn_cidr' (None) - Cannot retrieve with this method.
+                    'asn_country_code' (str) - The assigned ASN country code
+                    'asn_description' (str) - The ASN description
+                }
+
+        Raises:
+            ASNRegistryError: The ASN registry is not known.
+            ASNParseError: ASN parsing failed.
+        """
+
+        try:
+
+            temp = response.split('|')
+
+            # Parse out the ASN information.
+            ret = {'asn_registry': temp[2].strip(' \n')}
+
+            if ret['asn_registry'] not in self.rir_whois.keys():
+
+                raise ASNRegistryError(
+                    'ASN registry {0} is not known.'.format(
+                        ret['asn_registry'])
+                )
+
+            ret['asn'] = temp[0].strip(' "\n')
+            ret['asn_cidr'] = None
+            ret['asn_country_code'] = temp[1].strip(' \n').upper()
+            ret['asn_date'] = temp[3].strip(' \n')
+            ret['asn_description'] = temp[4].strip(' "\n')
+
+        except ASNRegistryError:
+
+            raise
+
+        except Exception as e:
+
+            raise ASNParseError('Parsing failed for "{0}" with exception: {1}.'
+                                ''.format(response, e)[:100])
+
+        return ret
+
+    def parse_fields_whois(self, response):
         """
         The function for parsing ASN fields from a whois response.
 
         Args:
-            response: The response from the ASN whois server.
+            response (:obj:`str`): The response from the ASN whois server.
 
         Returns:
-            Dictionary:
+            dict: The ASN lookup results
 
-            :asn: The Autonomous System Number (String)
-            :asn_date: The ASN Allocation date (String)
-            :asn_registry: The assigned ASN registry (String)
-            :asn_cidr: The assigned ASN CIDR (String)
-            :asn_country_code: The assigned ASN country code (String)
+            ::
+
+                {
+                    'asn' (str) - The Autonomous System Number
+                    'asn_date' (str) - The ASN Allocation date
+                    'asn_registry' (str) - The assigned ASN registry
+                    'asn_cidr' (str) - The assigned ASN CIDR
+                    'asn_country_code' (str) - The assigned ASN country code
+                    'asn_description' (str) - The ASN description
+                }
 
         Raises:
             ASNRegistryError: The ASN registry is not known.
@@ -193,6 +280,7 @@ class IPASN:
             ret['asn_cidr'] = temp[2].strip(' \n')
             ret['asn_country_code'] = temp[3].strip(' \n').upper()
             ret['asn_date'] = temp[5].strip(' \n')
+            ret['asn_description'] = temp[6].strip(' \n')
 
         except ASNRegistryError:
 
@@ -205,27 +293,45 @@ class IPASN:
 
         return ret
 
-    def _parse_fields_http(self, response, extra_org_map=None):
+    def _parse_fields_whois(self, *args, **kwargs):
+        """
+        Deprecated. This will be removed in a future release.
+        """
+
+        from warnings import warn
+        warn('IPASN._parse_fields_whois() has been deprecated and will be '
+             'removed. You should now use IPASN.parse_fields_whois().')
+        return self.parse_fields_whois(*args, **kwargs)
+
+    def parse_fields_http(self, response, extra_org_map=None):
         """
         The function for parsing ASN fields from a http response.
 
         Args:
-            response: The response from the ASN http server.
-            extra_org_map: Dictionary mapping org handles to RIRs. This is for
-                limited cases where ARIN REST (ASN fallback HTTP lookup) does
-                not show an RIR as the org handle e.g., DNIC (which is now the
-                built in ORG_MAP) e.g., {'DNIC': 'arin'}. Valid RIR values are
-                (note the case-sensitive - this is meant to match the REST
-                result): 'ARIN', 'RIPE', 'apnic', 'lacnic', 'afrinic'
+            response (:obj:`str`): The response from the ASN http server.
+            extra_org_map (:obj:`dict`): Dictionary mapping org handles to
+                RIRs. This is for limited cases where ARIN REST (ASN fallback
+                HTTP lookup) does not show an RIR as the org handle e.g., DNIC
+                (which is now the built in ORG_MAP) e.g., {'DNIC': 'arin'}.
+                Valid RIR values are (note the case-sensitive - this is meant
+                to match the REST result): 'ARIN', 'RIPE', 'apnic', 'lacnic',
+                'afrinic'. Defaults to None.
 
         Returns:
-            Dictionary:
+            dict: The ASN lookup results
 
-            :asn: None, can't retrieve with this method.
-            :asn_date: None, can't retrieve with this method.
-            :asn_registry: The assigned ASN registry (String)
-            :asn_cidr: None, can't retrieve with this method.
-            :asn_country_code: None, can't retrieve with this method.
+            ::
+
+                {
+                    'asn' (None) - Cannot retrieve with this method.
+                    'asn_date' (None) - Cannot retrieve with this method.
+                    'asn_registry' (str) - The assigned ASN registry
+                    'asn_cidr' (None) - Cannot retrieve with this method.
+                    'asn_country_code' (None) - Cannot retrieve with this
+                        method.
+                    'asn_description' (None) - Cannot retrieve with this
+                        method.
+                }
 
         Raises:
             ASNRegistryError: The ASN registry is not known.
@@ -249,7 +355,8 @@ class IPASN:
                 'asn': None,
                 'asn_cidr': None,
                 'asn_country_code': None,
-                'asn_date': None
+                'asn_date': None,
+                'asn_description': None
             }
 
             try:
@@ -264,7 +371,7 @@ class IPASN:
                 log.debug('No networks found')
                 net_list = []
 
-            for n in net_list:
+            for n in reversed(net_list):
 
                 try:
 
@@ -276,9 +383,14 @@ class IPASN:
 
                     log.debug('Could not parse ASN registry via HTTP: '
                               '{0}'.format(str(e)))
-                    raise ASNRegistryError('ASN registry lookup failed.')
+                    continue
 
                 break
+
+            if not asn_data['asn_registry']:
+
+                log.debug('Could not parse ASN registry via HTTP')
+                raise ASNRegistryError('ASN registry lookup failed.')
 
         except ASNRegistryError:
 
@@ -291,101 +403,191 @@ class IPASN:
 
         return asn_data
 
+    def _parse_fields_http(self, *args, **kwargs):
+        """
+        Deprecated. This will be removed in a future release.
+        """
+
+        from warnings import warn
+        warn('IPASN._parse_fields_http() has been deprecated and will be '
+             'removed. You should now use IPASN.parse_fields_http().')
+        return self.parse_fields_http(*args, **kwargs)
+
     def lookup(self, inc_raw=False, retry_count=3, asn_alts=None,
-               extra_org_map=None):
+               extra_org_map=None, asn_methods=None,
+               get_asn_description=True):
         """
         The wrapper function for retrieving and parsing ASN information for an
         IP address.
 
         Args:
-            inc_raw: Boolean for whether to include the raw results in the
-                returned dictionary.
-            retry_count: The number of times to retry in case socket errors,
-                timeouts, connection resets, etc. are encountered.
-            asn_alts: Array of additional lookup types to attempt if the
+            inc_raw (:obj:`bool`): Whether to include the raw results in the
+                returned dictionary. Defaults to False.
+            retry_count (:obj:`int`): The number of times to retry in case
+                socket errors, timeouts, connection resets, etc. are
+                encountered. Defaults to 3.
+            asn_alts (:obj:`list`): Additional lookup types to attempt if the
                 ASN dns lookup fails. Allow permutations must be enabled.
-                Defaults to all ['whois', 'http'].
-            extra_org_map: Dictionary mapping org handles to RIRs. This is for
-                limited cases where ARIN REST (ASN fallback HTTP lookup) does
-                not show an RIR as the org handle e.g., DNIC (which is now the
-                built in ORG_MAP) e.g., {'DNIC': 'arin'}. Valid RIR values are
-                (note the case-sensitive - this is meant to match the REST
-                result): 'ARIN', 'RIPE', 'apnic', 'lacnic', 'afrinic'
+                Defaults to all ['whois', 'http']. *WARNING* deprecated in
+                favor of new argument asn_methods. Defaults to None.
+            extra_org_map (:obj:`dict`): Mapping org handles to RIRs. This is
+                for limited cases where ARIN REST (ASN fallback HTTP lookup)
+                does not show an RIR as the org handle e.g., DNIC (which is
+                now the built in ORG_MAP) e.g., {'DNIC': 'arin'}. Valid RIR
+                values are (note the case-sensitive - this is meant to match
+                the REST result): 'ARIN', 'RIPE', 'apnic', 'lacnic', 'afrinic'
+                Defaults to None.
+            asn_methods (:obj:`list`): ASN lookup types to attempt, in order.
+                If None, defaults to all: ['dns', 'whois', 'http'].
+            get_asn_description (:obj:`bool`): Whether to run an additional
+                query when pulling ASN information via dns, in order to get
+                the ASN description. Defaults to True.
 
         Returns:
-            Dictionary:
+            dict: The ASN lookup results
 
-            :asn: The Autonomous System Number (String)
-            :asn_date: The ASN Allocation date (String)
-            :asn_registry: The assigned ASN registry (String)
-            :asn_cidr: The assigned ASN CIDR (String)
-            :asn_country_code: The assigned ASN country code (String)
-            :raw: Raw ASN results if the inc_raw parameter is True. (String)
+            ::
+
+                {
+                    'asn' (str) - The Autonomous System Number
+                    'asn_date' (str) - The ASN Allocation date
+                    'asn_registry' (str) - The assigned ASN registry
+                    'asn_cidr' (str) - The assigned ASN CIDR
+                    'asn_country_code' (str) - The assigned ASN country code
+                    'asn_description' (str) - The ASN description
+                    'raw' (str) - Raw ASN results if the inc_raw parameter is
+                        True.
+                }
 
         Raises:
+            ValueError: methods argument requires one of dns, whois, http.
             ASNRegistryError: ASN registry does not match.
-            HTTPLookupError: The HTTP lookup failed.
         """
 
-        lookups = asn_alts if asn_alts is not None else ['whois', 'http']
+        if asn_methods is None:
 
-        # Attempt to resolve ASN info via Cymru. DNS is faster, try that first.
-        try:
+            if asn_alts is None:
 
-            self._net.dns_resolver.lifetime = (
-                self._net.dns_resolver.timeout * (
-                    retry_count and retry_count or 1
-                )
-            )
-            response = self._net.get_asn_dns()
-            asn_data = self._parse_fields_dns(response)
+                lookups = ['dns', 'whois', 'http']
 
-        except (ASNLookupError, ASNRegistryError) as e:
+            else:
 
-            if not self._net.allow_permutations:
+                from warnings import warn
+                warn('IPASN.lookup() asn_alts argument has been deprecated '
+                     'and will be removed. You should now use the asn_methods '
+                     'argument.')
+                lookups = ['dns'] + asn_alts
+
+        else:
+
+            if {'dns', 'whois', 'http'}.isdisjoint(asn_methods):
+
+                raise ValueError('methods argument requires at least one of '
+                                 'dns, whois, http.')
+
+            lookups = asn_methods
+
+        response = None
+        asn_data = None
+        dns_success = False
+        for index, lookup_method in enumerate(lookups):
+
+            if index > 0 and not asn_methods and not (
+                    self._net.allow_permutations):
 
                 raise ASNRegistryError('ASN registry lookup failed. '
                                        'Permutations not allowed.')
 
-            try:
-                if 'whois' in lookups:
+            if lookup_method == 'dns':
 
-                    log.debug('ASN DNS lookup failed, trying ASN WHOIS: '
-                              '{0}'.format(e))
-                    response = self._net.get_asn_whois(retry_count)
-                    asn_data = self._parse_fields_whois(response
-                                                        )    # pragma: no cover
+                try:
 
-                else:
+                    self._net.dns_resolver.lifetime = (
+                        self._net.dns_resolver.timeout * (
+                            retry_count and retry_count or 1
+                        )
+                    )
+                    response = self._net.get_asn_dns()
+                    asn_data_list = []
+                    for asn_entry in response:
 
-                    raise ASNLookupError
+                        asn_data_list.append(self.parse_fields_dns(
+                            str(asn_entry)))
 
-            except (ASNLookupError, ASNRegistryError):  # pragma: no cover
-
-                if 'http' in lookups:
-
-                    # Lets attempt to get the ASN registry information from
-                    # ARIN.
-                    log.debug('ASN WHOIS lookup failed, trying ASN via HTTP')
+                    # Iterate through the parsed ASN results to find the
+                    # smallest CIDR
+                    asn_data = asn_data_list.pop(0)
                     try:
 
-                        response = self._net.get_asn_http(
-                            retry_count=retry_count
-                        )
-                        asn_data = self._parse_fields_http(response,
-                                                           extra_org_map)
+                        prefix_len = ip_network(asn_data['asn_cidr']).prefixlen
+                        for asn_parsed in asn_data_list:
+                            prefix_len_comp = ip_network(
+                                asn_parsed['asn_cidr']).prefixlen
+                            if prefix_len_comp > prefix_len:
+                                asn_data = asn_parsed
+                                prefix_len = prefix_len_comp
 
-                    except ASNRegistryError:
+                    except (KeyError, ValueError):  # pragma: no cover
 
-                        raise ASNRegistryError('ASN registry lookup failed.')
+                        pass
 
-                    except ASNLookupError:
+                    dns_success = True
+                    break
 
-                        raise HTTPLookupError('ASN HTTP lookup failed.')
+                except (ASNLookupError, ASNRegistryError) as e:
 
-                else:
+                    log.debug('ASN DNS lookup failed: {0}'.format(e))
+                    pass
 
-                    raise ASNRegistryError('ASN registry lookup failed.')
+            elif lookup_method == 'whois':
+
+                try:
+
+                    response = self._net.get_asn_whois(retry_count)
+                    asn_data = self.parse_fields_whois(
+                        response)  # pragma: no cover
+                    break
+
+                except (ASNLookupError, ASNRegistryError) as e:
+
+                    log.debug('ASN WHOIS lookup failed: {0}'.format(e))
+                    pass
+
+            elif lookup_method == 'http':
+
+                try:
+
+                    response = self._net.get_asn_http(
+                        retry_count=retry_count
+                    )
+                    asn_data = self.parse_fields_http(response,
+                                                       extra_org_map)
+                    break
+
+                except (ASNLookupError, ASNRegistryError) as e:
+
+                    log.debug('ASN HTTP lookup failed: {0}'.format(e))
+                    pass
+
+        if asn_data is None:
+
+            raise ASNRegistryError('ASN lookup failed with no more methods to '
+                                   'try.')
+
+        if get_asn_description and dns_success:
+
+            try:
+
+                response = self._net.get_asn_verbose_dns('AS{0}'.format(
+                    asn_data['asn']))
+                asn_verbose_data = self.parse_fields_verbose_dns(response)
+                asn_data['asn_description'] = asn_verbose_data[
+                    'asn_description']
+
+            except (ASNLookupError, ASNRegistryError) as e:  # pragma: no cover
+
+                log.debug('ASN DNS verbose lookup failed: {0}'.format(e))
+                pass
 
         if inc_raw:
 
@@ -399,7 +601,7 @@ class ASNOrigin:
     The class for parsing ASN origin whois data
 
     Args:
-        net: A ipwhois.net.Net object.
+        net (:obj:`ipwhois.net.Net`): A ipwhois.net.Net object.
 
     Raises:
         NetError: The parameter provided is not an instance of
@@ -420,23 +622,24 @@ class ASNOrigin:
             raise NetError('The provided net parameter is not an instance of '
                            'ipwhois.net.Net')
 
-    def _parse_fields(self, response, fields_dict, net_start=None,
-                      net_end=None, field_list=None):
+    def parse_fields(self, response, fields_dict, net_start=None,
+                     net_end=None, field_list=None):
         """
         The function for parsing ASN whois fields from a data input.
 
         Args:
-            response: The response from the whois/rwhois server.
-            fields_dict: The dictionary of fields -> regex search values.
-            net_start: The starting point of the network (if parsing multiple
-                networks).
-            net_end: The ending point of the network (if parsing multiple
-                networks).
-            field_list: If provided, a list of fields to parse:
+            response (:obj:`str`): The response from the whois/rwhois server.
+            fields_dict (:obj:`dict`): Mapping of fields->regex search values.
+            net_start (:obj:`int`): The starting point of the network (if
+                parsing multiple networks). Defaults to None.
+            net_end (:obj:`int`): The ending point of the network (if parsing
+                multiple networks). Defaults to None.
+            field_list (:obj:`list`): If provided, a list of fields to parse:
                 ['description', 'maintainer', 'updated', 'source']
+                If None, defaults to all fields.
 
         Returns:
-            Dictionary: A dictionary of fields provided in fields_dict.
+            dict: A dictionary of fields provided in fields_dict.
         """
 
         ret = {}
@@ -503,24 +706,46 @@ class ASNOrigin:
 
         return ret
 
-    def _get_nets_radb(self, response, is_http=False):
+    def _parse_fields(self, *args, **kwargs):
+        """
+        Deprecated. This will be removed in a future release.
+        """
+
+        from warnings import warn
+        warn('ASNOrigin._parse_fields() has been deprecated and will be '
+             'removed. You should now use ASNOrigin.parse_fields().')
+        return self.parse_fields(*args, **kwargs)
+
+    def get_nets_radb(self, response, is_http=False):
         """
         The function for parsing network blocks from ASN origin data.
 
         Args:
-            response: The response from the RADB whois/http server.
-            is_http: If the query is RADB HTTP instead of whois, set to True.
+            response (:obj:`str`): The response from the RADB whois/http
+                server.
+            is_http (:obj:`bool`): If the query is RADB HTTP instead of whois,
+                set to True. Defaults to False.
 
         Returns:
-            List: A of dictionaries containing keys: cidr, start, end.
+            list: A list of network block dictionaries
+
+            ::
+
+                [{
+                    'cidr' (str) - The assigned CIDR
+                    'start' (int) - The index for the start of the parsed
+                        network block
+                    'end' (int) - The index for the end of the parsed network
+                        block
+                }]
         """
 
         nets = []
 
         if is_http:
-            regex = r'route:[^\S\n]+(?P<val>.+?)<br>'
+            regex = r'route(?:6)?:[^\S\n]+(?P<val>.+?)<br>'
         else:
-            regex = r'^route:[^\S\n]+(?P<val>.+|.+)$'
+            regex = r'^route(?:6)?:[^\S\n]+(?P<val>.+|.+)$'
 
         # Iterate through all of the networks found, storing the CIDR value
         # and the start and end positions.
@@ -544,39 +769,85 @@ class ASNOrigin:
 
         return nets
 
+    def _get_nets_radb(self, *args, **kwargs):
+        """
+        Deprecated. This will be removed in a future release.
+        """
+
+        from warnings import warn
+        warn('ASNOrigin._get_nets_radb() has been deprecated and will be '
+             'removed. You should now use ASNOrigin.get_nets_radb().')
+        return self.get_nets_radb(*args, **kwargs)
+
     def lookup(self, asn=None, inc_raw=False, retry_count=3, response=None,
-               field_list=None, asn_alts=None):
+               field_list=None, asn_alts=None, asn_methods=None):
         """
         The function for retrieving and parsing ASN origin whois information
         via port 43/tcp (WHOIS).
 
         Args:
-            asn: The ASN string (required).
-            inc_raw: Boolean for whether to include the raw results in the
-                returned dictionary.
-            retry_count: The number of times to retry in case socket errors,
-                timeouts, connection resets, etc. are encountered.
-            response: Optional response object, this bypasses the Whois lookup.
-            field_list: If provided, a list of fields to parse:
+            asn (:obj:`str`): The ASN (required).
+            inc_raw (:obj:`bool`): Whether to include the raw results in the
+                returned dictionary. Defaults to False.
+            retry_count (:obj:`int`): The number of times to retry in case
+                socket errors, timeouts, connection resets, etc. are
+                encountered. Defaults to 3.
+            response (:obj:`str`): Optional response object, this bypasses the
+                Whois lookup. Defaults to None.
+            field_list (:obj:`list`): If provided, fields to parse:
                 ['description', 'maintainer', 'updated', 'source']
-            asn_alts: Array of additional lookup types to attempt if the
-                ASN whois lookup fails. Defaults to all ['http'].
+                If None, defaults to all.
+            asn_alts (:obj:`list`): Additional lookup types to attempt if the
+                ASN whois lookup fails. If None, defaults to all ['http'].
+                *WARNING* deprecated in favor of new argument asn_methods.
+            asn_methods (:obj:`list`): ASN lookup types to attempt, in order.
+                If None, defaults to all ['whois', 'http'].
 
         Returns:
-            Dictionary:
+            dict: The ASN origin lookup results
 
-            :query: The Autonomous System Number (String)
-            :nets: Dictionaries containing network information which consists
-                of the fields listed in the ASN_ORIGIN_WHOIS dictionary. (List)
-            :raw: Raw ASN origin whois results if the inc_raw parameter is
-                True. (String)
+            ::
+
+                {
+                    'query' (str) - The Autonomous System Number
+                    'nets' (list) - Dictionaries containing network
+                        information which consists of the fields listed in the
+                        ASN_ORIGIN_WHOIS dictionary.
+                    'raw' (str) - Raw ASN origin whois results if the inc_raw
+                        parameter is True.
+                }
+
+        Raises:
+            ValueError: methods argument requires one of whois, http.
+            ASNOriginLookupError: ASN origin lookup failed.
         """
 
         if asn[0:2] != 'AS':
 
             asn = 'AS{0}'.format(asn)
 
-        lookups = asn_alts if asn_alts is not None else ['http']
+        if asn_methods is None:
+
+            if asn_alts is None:
+
+                lookups = ['whois', 'http']
+
+            else:
+
+                from warnings import warn
+                warn('ASNOrigin.lookup() asn_alts argument has been deprecated'
+                     ' and will be removed. You should now use the asn_methods'
+                     ' argument.')
+                lookups = ['whois'] + asn_alts
+
+        else:
+
+            if {'whois', 'http'}.isdisjoint(asn_methods):
+
+                raise ValueError('methods argument requires at least one of '
+                                 'whois, http.')
+
+            lookups = asn_methods
 
         # Create the return dictionary.
         results = {
@@ -590,24 +861,33 @@ class ASNOrigin:
         # Only fetch the response if we haven't already.
         if response is None:
 
-            try:
+            for index, lookup_method in enumerate(lookups):
 
-                log.debug('Response not given, perform ASN origin WHOIS lookup'
-                          ' for {0}'.format(asn))
-
-                # Retrieve the whois data.
-                response = self._net.get_asn_origin_whois(
-                    asn=asn, retry_count=retry_count
-                )
-
-            except (WhoisLookupError, WhoisRateLimitError) as e:
-
-                if 'http' in lookups:
+                if lookup_method == 'whois':
 
                     try:
 
-                        log.debug('ASN origin whois lookup failed, trying ASN '
-                                  'origin http: {0}'.format(e))
+                        log.debug('Response not given, perform ASN origin '
+                                  'WHOIS lookup for {0}'.format(asn))
+
+                        # Retrieve the whois data.
+                        response = self._net.get_asn_origin_whois(
+                            asn=asn, retry_count=retry_count
+                        )
+
+                    except (WhoisLookupError, WhoisRateLimitError) as e:
+
+                        log.debug('ASN origin WHOIS lookup failed: {0}'
+                                  ''.format(e))
+                        pass
+
+                elif lookup_method == 'http':
+
+                    try:
+
+                        log.debug('Response not given, perform ASN origin '
+                                  'HTTP lookup for: {0}'.format(asn))
+
                         tmp = ASN_ORIGIN_HTTP['radb']['form_data']
                         tmp[str(ASN_ORIGIN_HTTP['radb']['form_data_asn_field']
                                 )] = asn
@@ -619,13 +899,16 @@ class ASNOrigin:
                         )
                         is_http = True   # pragma: no cover
 
-                    except HTTPLookupError:
+                    except HTTPLookupError as e:
 
-                        raise
+                        log.debug('ASN origin HTTP lookup failed: {0}'
+                                  ''.format(e))
+                        pass
 
-                else:   # pragma: no cover
+            if response is None:
 
-                    raise
+                raise ASNOriginLookupError('ASN origin lookup failed with no '
+                                           'more methods to try.')
 
         # If inc_raw parameter is True, add the response to return dictionary.
         if inc_raw:
@@ -633,7 +916,7 @@ class ASNOrigin:
             results['raw'] = response
 
         nets = []
-        nets_response = self._get_nets_radb(response, is_http)
+        nets_response = self.get_nets_radb(response, is_http)
 
         nets.extend(nets_response)
 
@@ -653,7 +936,7 @@ class ASNOrigin:
 
                 section_end = nets[index + 1]['start']
 
-            temp_net = self._parse_fields(
+            temp_net = self.parse_fields(
                 response,
                 fields['radb']['fields'],
                 section_end,

@@ -1,8 +1,14 @@
 import socket
 import sys
-import threading, Queue
+import threading
+
+try:
+    import Queue
+except:
+    from queue import Queue
+
 from collections import OrderedDict
-import parseintset
+from . import parseintset
 
 DEFAULT_THREAD_LIMIT = 200
 CLOSED_STATUS = 'closed'

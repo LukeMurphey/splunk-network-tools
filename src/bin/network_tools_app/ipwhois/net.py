@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2017 Philip Hane
+# Copyright (c) 2013-2019 Philip Hane
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,7 @@ import sys
 import socket
 import dns.resolver
 import json
+from collections import namedtuple
 import logging
 from time import sleep
 
@@ -96,12 +97,15 @@ class Net:
     The class for performing network queries.
 
     Args:
-        address: An IPv4 or IPv6 address in string format.
-        timeout: The default timeout for socket connections in seconds.
-        proxy_opener: The urllib.request.OpenerDirector request for proxy
-            support or None.
-        allow_permutations: Use additional methods if DNS lookups to Cymru
-            fail.
+        address (:obj:`str`/:obj:`int`/:obj:`IPv4Address`/:obj:`IPv6Address`):
+            An IPv4 or IPv6 address
+        timeout (:obj:`int`): The default timeout for socket connections in
+            seconds. Defaults to 5.
+        proxy_opener (:obj:`urllib.request.OpenerDirector`): The request for
+            proxy support. Defaults to None.
+        allow_permutations (:obj:`bool`): Allow net.Net() to use additional
+            methods if DNS lookups to Cymru fail. *WARNING* deprecated in
+            favor of new argument asn_methods. Defaults to False.
 
     Raises:
         IPDefinedError: The address provided is defined (does not need to be
@@ -109,7 +113,7 @@ class Net:
     """
 
     def __init__(self, address, timeout=5, proxy_opener=None,
-                 allow_permutations=True):
+                 allow_permutations=False):
 
         # IPv4Address or IPv6Address
         if isinstance(address, IPv4Address) or isinstance(
@@ -127,6 +131,13 @@ class Net:
 
         # Allow other than DNS lookups for ASNs.
         self.allow_permutations = allow_permutations
+
+        if self.allow_permutations:
+
+            from warnings import warn
+            warn('allow_permutations has been deprecated and will be removed. '
+                 'It is no longer needed, due to the deprecation of asn_alts, '
+                 'and the addition of the asn_methods argument.')
 
         self.dns_resolver = dns.resolver.Resolver()
         self.dns_resolver.timeout = timeout
@@ -212,7 +223,7 @@ class Net:
         """
         Temporary wrapper for IP ASN lookups (moved to
         asn.IPASN.lookup()). This will be removed in a future
-        release (1.0.0).
+        release.
         """
 
         from warnings import warn
@@ -229,7 +240,7 @@ class Net:
         Cymru via port 53 (DNS).
 
         Returns:
-            String: The raw ASN data.
+            list: The raw ASN data.
 
         Raises:
             ASNLookupError: The ASN lookup failed.
@@ -239,7 +250,7 @@ class Net:
 
             log.debug('ASN query for {0}'.format(self.dns_zone))
             data = self.dns_resolver.query(self.dns_zone, 'TXT')
-            return str(data[0])
+            return list(data)
 
         except (dns.resolver.NXDOMAIN, dns.resolver.NoNameservers,
                 dns.resolver.NoAnswer, dns.exception.Timeout) as e:
@@ -255,17 +266,60 @@ class Net:
                 'ASN lookup failed for {0}.'.format(self.address_str)
             )
 
+    def get_asn_verbose_dns(self, asn=None):
+        """
+        The function for retrieving the information for an ASN from
+        Cymru via port 53 (DNS). This is needed since IP to ASN mapping via
+        Cymru DNS does not return the ASN Description like Cymru Whois does.
+
+        Args:
+            asn (:obj:`str`): The AS number (required).
+
+        Returns:
+            str: The raw ASN data.
+
+        Raises:
+            ASNLookupError: The ASN lookup failed.
+        """
+
+        if asn[0:2] != 'AS':
+
+            asn = 'AS{0}'.format(asn)
+
+        zone = '{0}.asn.cymru.com'.format(asn)
+
+        try:
+
+            log.debug('ASN verbose query for {0}'.format(zone))
+            data = self.dns_resolver.query(zone, 'TXT')
+            return str(data[0])
+
+        except (dns.resolver.NXDOMAIN, dns.resolver.NoNameservers,
+                dns.resolver.NoAnswer, dns.exception.Timeout) as e:
+
+            raise ASNLookupError(
+                'ASN lookup failed (DNS {0}) for {1}.'.format(
+                    e.__class__.__name__, asn)
+            )
+
+        except:  # pragma: no cover
+
+            raise ASNLookupError(
+                'ASN lookup failed for {0}.'.format(asn)
+            )
+
     def get_asn_whois(self, retry_count=3):
         """
         The function for retrieving ASN information for an IP address from
         Cymru via port 43/tcp (WHOIS).
 
         Args:
-            retry_count: The number of times to retry in case socket errors,
-                timeouts, connection resets, etc. are encountered.
+            retry_count (:obj:`int`): The number of times to retry in case
+                socket errors, timeouts, connection resets, etc. are
+                encountered. Defaults to 3.
 
         Returns:
-            String: The raw ASN data.
+            str: The raw ASN data.
 
         Raises:
             ASNLookupError: The ASN lookup failed.
@@ -281,7 +335,7 @@ class Net:
 
             # Query the Cymru whois server, and store the results.
             conn.send((
-                ' -r -a -c -p -f -o {0}{1}'.format(
+                ' -r -a -c -p -f {0}{1}'.format(
                     self.address_str, '\r\n')
             ).encode())
 
@@ -329,11 +383,12 @@ class Net:
         chance fallback call behind ASN DNS & ASN Whois lookups.
 
         Args:
-            retry_count: The number of times to retry in case socket errors,
-                timeouts, connection resets, etc. are encountered.
+            retry_count (:obj:`int`): The number of times to retry in case
+                socket errors, timeouts, connection resets, etc. are
+                encountered. Defaults to 3.
 
         Returns:
-            Dictionary: The ASN data in json format.
+            dict: The ASN data in json format.
 
         Raises:
             ASNLookupError: The ASN lookup failed.
@@ -379,16 +434,17 @@ class Net:
         The function for retrieving CIDR info for an ASN via whois.
 
         Args:
-            asn_registry: The source to run the query against
+            asn_registry (:obj:`str`): The source to run the query against
                 (asn.ASN_ORIGIN_WHOIS).
-            asn: The ASN string (required).
-            retry_count: The number of times to retry in case socket errors,
-                timeouts, connection resets, etc. are encountered.
-            server: An optional server to connect to. Defaults to RADB.
-            port: The network port to connect on.
+            asn (:obj:`str`): The AS number (required).
+            retry_count (:obj:`int`): The number of times to retry in case
+                socket errors, timeouts, connection resets, etc. are
+                encountered. Defaults to 3.
+            server (:obj:`str`): An optional server to connect to.
+            port (:obj:`int`): The network port to connect on. Defaults to 43.
 
         Returns:
-            String: The raw ASN origin whois data.
+            str: The raw ASN origin whois data.
 
         Raises:
             WhoisLookupError: The ASN origin whois lookup failed.
@@ -491,17 +547,19 @@ class Net:
         address via any port. Defaults to port 43/tcp (WHOIS).
 
         Args:
-            asn_registry: The NIC to run the query against.
-            retry_count: The number of times to retry in case socket errors,
-                timeouts, connection resets, etc. are encountered.
-            server: An optional server to connect to. If provided, asn_registry
-                will be ignored.
-            port: The network port to connect on.
-            extra_blacklist: A list of blacklisted whois servers in addition to
-                the global BLACKLIST.
+            asn_registry (:obj:`str`): The NIC to run the query against.
+                Defaults to 'arin'.
+            retry_count (:obj:`int`): The number of times to retry in case
+                socket errors, timeouts, connection resets, etc. are
+                encountered. Defaults to 3.
+            server (:obj:`str`): An optional server to connect to. If
+                provided, asn_registry will be ignored.
+            port (:obj:`int`): The network port to connect on. Defaults to 43.
+            extra_blacklist (:obj:`list` of :obj:`str`): Blacklisted whois
+                servers in addition to the global BLACKLIST. Defaults to None.
 
         Returns:
-            String: The raw whois data.
+            str: The raw whois data.
 
         Raises:
             BlacklistError: Raised if the whois server provided is in the
@@ -617,16 +675,18 @@ class Net:
         The function for retrieving a json result via HTTP.
 
         Args:
-            url: The URL to retrieve.
-            retry_count: The number of times to retry in case socket errors,
-                timeouts, connection resets, etc. are encountered.
-            rate_limit_timeout: The number of seconds to wait before retrying
-                when a rate limit notice is returned via rdap+json.
-            headers: The HTTP headers dictionary. The Accept header defaults
-                to 'application/rdap+json'.
+            url (:obj:`str`): The URL to retrieve (required).
+            retry_count (:obj:`int`): The number of times to retry in case
+                socket errors, timeouts, connection resets, etc. are
+                encountered. Defaults to 3.
+            rate_limit_timeout (:obj:`int`): The number of seconds to wait
+                before retrying when a rate limit notice is returned via
+                rdap+json or HTTP error 429. Defaults to 60.
+            headers (:obj:`dict`): The HTTP headers. The Accept header
+                defaults to 'application/rdap+json'.
 
         Returns:
-            Dictionary: The data in json format.
+            dict: The data in json format.
 
         Raises:
             HTTPLookupError: The HTTP lookup failed.
@@ -708,15 +768,6 @@ class Net:
 
         except (URLError, socket.timeout, socket.error) as e:
 
-            # Check needed for Python 2.6, also why URLError is caught.
-            try:  # pragma: no cover
-                if not isinstance(e.reason, (socket.timeout, socket.error)):
-                    raise HTTPLookupError('HTTP lookup failed for {0}.'
-                                          ''.format(url))
-            except AttributeError:  # pragma: no cover
-
-                pass
-
             log.debug('HTTP query socket error: {0}'.format(e))
             if retry_count > 0:
 
@@ -746,11 +797,17 @@ class Net:
         The function for retrieving host information for an IP address.
 
         Args:
-            retry_count: The number of times to retry in case socket errors,
-                timeouts, connection resets, etc. are encountered.
+            retry_count (:obj:`int`): The number of times to retry in case
+                socket errors, timeouts, connection resets, etc. are
+                encountered. Defaults to 3.
 
         Returns:
-            Tuple: hostname, aliaslist, ipaddrlist
+            namedtuple:
+
+            :hostname (str): The hostname returned mapped to the given IP
+                address.
+            :aliaslist (list): Alternate names for the given IP address.
+            :ipaddrlist (list): IPv4/v6 addresses mapped to the same hostname.
 
         Raises:
             HostLookupError: The host lookup failed.
@@ -771,7 +828,9 @@ class Net:
 
                 socket.setdefaulttimeout(None)
 
-            return ret
+            results = namedtuple('get_host_results', 'hostname, aliaslist, '
+                                                     'ipaddrlist')
+            return results(ret)
 
         except (socket.timeout, socket.error) as e:
 
@@ -801,16 +860,18 @@ class Net:
         The function for retrieving a raw HTML result via HTTP.
 
         Args:
-            url: The URL to retrieve.
-            retry_count: The number of times to retry in case socket errors,
-                timeouts, connection resets, etc. are encountered.
-            headers: The HTTP headers dictionary. The Accept header defaults
-                to 'text/html'.
-            request_type: 'GET' or 'POST'
-            form_data: Dictionary of form POST data
+            url (:obj:`str`): The URL to retrieve (required).
+            retry_count (:obj:`int`): The number of times to retry in case
+                socket errors, timeouts, connection resets, etc. are
+                encountered. Defaults to 3.
+            headers (:obj:`dict`): The HTTP headers. The Accept header
+                defaults to 'text/html'.
+            request_type (:obj:`str`): Request type 'GET' or 'POST'. Defaults
+                to 'GET'.
+            form_data (:obj:`dict`): Optional form POST data.
 
         Returns:
-            String: The raw data.
+            str: The raw data.
 
         Raises:
             HTTPLookupError: The HTTP lookup failed.
@@ -849,15 +910,6 @@ class Net:
             return str(d)
 
         except (URLError, socket.timeout, socket.error) as e:
-
-            # Check needed for Python 2.6, also why URLError is caught.
-            try:  # pragma: no cover
-                if not isinstance(e.reason, (socket.timeout, socket.error)):
-                    raise HTTPLookupError('HTTP lookup failed for {0}.'
-                                          ''.format(url))
-            except AttributeError:  # pragma: no cover
-
-                pass
 
             log.debug('HTTP query socket error: {0}'.format(e))
             if retry_count > 0:

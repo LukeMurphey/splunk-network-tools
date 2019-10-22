@@ -31,8 +31,13 @@ from network_tools_app.wakeonlan import wol
 from network_tools_app.ipwhois import IPWhois
 from network_tools_app.pythonwhois import get_whois
 from network_tools_app.flatten import flatten
-from network_tools_app.ipaddr import IPAddress
-from network_tools_app.dns import resolver,reversename
+
+if sys.version_info >= (3, 3):  # pragma: no cover
+    from ipaddress import ip_network
+else:
+    from network_tools_app.ipaddr import ip_network
+
+from dns import resolver,reversename
 from network_tools_app.portscan import port_scan
 
 # Environment imports
@@ -574,7 +579,7 @@ def whois(host, index=None, sourcetype="whois", source="whois_search_command", l
     # See if this is an IP address. If so, do an IP whois.
     try:
         # The following will throw a ValueError exception indicating that this is not an IP address
-        IPAddress(host)
+        ip_network(host)
 
         whois_object = IPWhois(host)
         results_orig = whois_object.lookup_rdap(depth=1)
@@ -625,7 +630,7 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup",
 
     # See if this is an IP address. If so, do a reverse lookup.
     try:
-        IPAddress(host)
+        ip_network(host)
 
         addr = reversename.from_address(host)
 
