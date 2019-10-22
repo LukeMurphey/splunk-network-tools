@@ -26,7 +26,7 @@
     <panel>
       <chart>
         <search>
-          <query>index=_internal sourcetype=ping_modular_input $severity$ | rex field=_raw "(?&lt;severity&gt;(DEBUG)|(ERROR)|(WARNING)|(INFO)|(CRITICAL)) (?&lt;message&gt;.*)" | fillnull severity value="UNDEFINED" | timechart count(severity) as count by severity</query>
+          <query>index=_internal `network_tools_sourcetypes` $severity$ | rex field=_raw "(?&lt;severity&gt;(DEBUG)|(ERROR)|(WARNING)|(INFO)|(CRITICAL)) (?&lt;message&gt;.*)" | fillnull severity value="UNDEFINED" | timechart count(severity) as count by severity</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
         </search>
@@ -42,7 +42,7 @@
       <table>
         <title>Logs by Severity</title>
         <search>
-          <query>index=_internal sourcetype=ping_modular_input | rex field=_raw "(?&lt;severity&gt;(DEBUG)|(ERROR)|(WARNING)|(INFO)|(CRITICAL)) (?&lt;message&gt;.*)" | fillnull value="undefined" vendor_severity | stats sparkline count by severity | sort -count</query>
+          <query>index=_internal `network_tools_sourcetypes` | rex field=_raw "(?&lt;severity&gt;(DEBUG)|(ERROR)|(WARNING)|(INFO)|(CRITICAL)) (?&lt;message&gt;.*)" | fillnull value="undefined" vendor_severity | stats sparkline count by severity | sort -count</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
         </search>
@@ -59,12 +59,12 @@
       <table>
         <title>Latest Logs</title>
         <search>
-          <query>index=_internal sourcetype=ping_modular_input $severity$
+          <query>index=_internal `network_tools_sourcetypes` $severity$
           | rex field=_raw "(?&lt;severity&gt;(DEBUG)|(ERROR)|(WARNING)|(INFO)|(CRITICAL)) (?&lt;message&gt;.*)"
           | sort -_time
           | eval time=_time
           | convert ctime(time)
-          | table time severity message</query>
+          | table time severity sourcetype message</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
         </search>
@@ -74,7 +74,7 @@
         <option name="drilldown">cell</option>
         <option name="count">10</option>
         <drilldown>
-          <link target="_blank">search?q=index=_internal sourcetype=ping_modular_input $severity$&amp;earliest=$field1.earliest$&amp;latest=$field1.latest$</link>
+          <link target="_blank">search?q=index=_internal `network_tools_sourcetypes` $severity$&amp;earliest=$field1.earliest$&amp;latest=$field1.latest$</link>
         </drilldown>
       </table>
     </panel>
