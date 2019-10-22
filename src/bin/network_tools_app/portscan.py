@@ -3,9 +3,9 @@ import sys
 import threading
 
 try:
-    import Queue
+    from Queue import Queue, Empty
 except:
-    from queue import Queue
+    from queue import Queue, Empty
 
 from collections import OrderedDict
 from . import parseintset
@@ -13,6 +13,9 @@ from . import parseintset
 DEFAULT_THREAD_LIMIT = 200
 CLOSED_STATUS = 'closed'
 OPEN_STATUS = 'open'
+
+if sys.version_info.major >= 3:
+    unicode = str
 
 class Scanner(threading.Thread):
     def __init__(self, input_queue, output_queue, timeout=5):
@@ -32,7 +35,7 @@ class Scanner(threading.Thread):
 
             try:
                 host, port = self.input_queue.get(timeout=5)
-            except Queue.Empty:
+            except Empty:
                 continue
 
             # Make the socket for performing the scan
@@ -64,8 +67,8 @@ def port_scan(host, ports, thread_count=DEFAULT_THREAD_LIMIT, callback=None, tim
         parsed_ports = ports
 
     # Setup the queues
-    to_scan = Queue.Queue()
-    scanned = Queue.Queue()
+    to_scan = Queue()
+    scanned = Queue()
 
     # Prepare the scanners
     # These scanners will monitor the input queue for new things to scan, scan them, and them put

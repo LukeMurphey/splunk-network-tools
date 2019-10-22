@@ -1,6 +1,12 @@
 import time
 import collections
 
+# Python 2+3 basestring
+try:
+    basestring
+except NameError:
+    basestring = str
+
 def is_list_of_lists(l):
     for item in l:
         if not isinstance(item, basestring) and isinstance(item, (list, tuple)):

@@ -3,6 +3,7 @@ This module provides a wrapper around the ping module but adds the ability to sc
 """
 import os
 import re
+import sys
 import zipimport
 
 from . import ping, tcp_ping
@@ -20,6 +21,9 @@ DOMAIN_NAME_RE = re.compile('^((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1
 
 ADDRESS_SCAN_LIMIT = 1024
 
+if sys.version_info.major >= 3:
+    unicode = str
+
 class NetworkDestinationTooHigh(Exception):
     """The number of hosts to scan is excessively high."""
 
@@ -33,8 +37,10 @@ def ping_all(dest, count=1, index=None, sourcetype="ping", source="ping_search_c
     """
     results = []
 
-    # Convert the entry to unicode since this is what the ipaddress library expects 
-    dest = unicode(dest)
+    # Convert the entry to unicode since this is what the ipaddress library expects
+    # This is only needed for Python 2
+    if not isinstance(dest, unicode):
+        dest = unicode(dest)
 
     # Try to treat this as an IP address by default
     try:
@@ -104,8 +110,10 @@ def tcp_ping_all(dest, port, count=1, index=None, sourcetype="ping", source="pin
     """
     results = []
 
-    # Convert the entry to unicode since this is what the ipaddress library expects 
-    dest = unicode(dest)
+    # Convert the entry to unicode since this is what the ipaddress library expects
+    # This is only needed for Python 2
+    if not isinstance(dest, unicode):
+        dest = unicode(dest)
 
     # Try to treat this as an IP address by default
     try:

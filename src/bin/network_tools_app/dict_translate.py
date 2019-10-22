@@ -33,6 +33,10 @@ Here are some notes on the behavior:
  2) The translation rules work on wildcards, not on full regular expressions.
 """
 import re
+import sys
+
+if sys.version_info.major >= 3:
+    unicode = str
 
 def prepare_translation_rules(translation_rules=None):
     """

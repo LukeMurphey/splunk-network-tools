@@ -18,6 +18,9 @@ from modular_input.shortcuts import forgive_splunkd_outages
 from network_tools_app import portscan
 from network_tools_app.parseintset import parseIntSet
 
+if sys.version_info.major >= 3:
+    unicode = str
+
 class DomainOrIPNetworkField(MultiValidatorField):
     def __init__(self, name, title, description, none_allowed=False, empty_allowed=True,
                  required_on_create=None, required_on_edit=None):

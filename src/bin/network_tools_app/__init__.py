@@ -281,6 +281,7 @@ def tcp_ping(host, port=80, count=1, index=None, sourcetype="ping", source="ping
             sock.connect((host, int(port)))
             sent += 1
             sock.shutdown(socket.SHUT_RD)
+            sock.close()
             success = True
         
         # Connection Time Out

@@ -52,7 +52,7 @@ class TestPing(unittest.TestCase):
 
         output, return_code, _ = ping("doesnotexist", count=3)
 
-        self.assertNotEquals(return_code, 0)
+        self.assertNotEqual(return_code, 0)
         self.assertGreater(len(output), 0)
 
 class TestTraceroute(unittest.TestCase):
