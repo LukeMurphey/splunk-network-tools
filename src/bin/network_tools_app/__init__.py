@@ -22,13 +22,6 @@ lib_dir = os.path.join(util.get_apps_dir(), 'network_tools', 'bin', 'network_too
 if not lib_dir in sys.path:
     sys.path.append(lib_dir)
 
-lib_dir = os.path.join(util.get_apps_dir(), 'network_tools', 'bin', 'network_tools_app', 'dns')
-
-if not lib_dir in sys.path:
-    sys.path.append(lib_dir)
-
-import dns.resolver
-
 # App provided imports
 from network_tools_app.event_writer import StashNewWriter
 from network_tools_app import pyspeedtest
