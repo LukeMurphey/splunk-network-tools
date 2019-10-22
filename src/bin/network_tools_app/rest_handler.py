@@ -167,7 +167,7 @@ class RESTHandler(PersistentServerConnectionApplication):
     def handle(self, in_string):
         try:
 
-            self.logger.info("Handling a request")
+            self.logger.debug("Handling a request")
 
             # Parse the arguments
             args = self.parse_in_string(in_string)
@@ -207,7 +207,7 @@ class RESTHandler(PersistentServerConnectionApplication):
             # Try to run the function
             if function_to_call is not None:
                 if self.logger is not None:
-                    self.logger.info("Executing function, name=%s", function_name)
+                    self.logger.debug("Executing function, name=%s", function_name)
 
                 # Execute the function
                 return function_to_call(request_info, **query)
