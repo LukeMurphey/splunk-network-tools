@@ -21,8 +21,6 @@ import json
 import errno
 import collections
 
-import HTMLTestRunner
-
 sys.path.append(os.path.join("..", "src", "bin"))
 
 from network_tools_app import ping, traceroute, whois, nslookup, tcp_ping
@@ -816,17 +814,4 @@ class TestPortRangeField(unittest.TestCase):
         self.assertEquals(value, set([80, 443]))
 
 if __name__ == '__main__':
-    report_path = os.path.join('..', os.environ.get('TEST_OUTPUT', 'tmp/test_report.html'))
-
-    # Make the test directory
-    try:
-        os.makedirs(os.path.dirname(report_path))
-    except OSError as exception:
-        if exception.errno != errno.EEXIST:
-            raise
-
-    with open(report_path, 'w') as report_file:
-        test_runner = HTMLTestRunner.HTMLTestRunner(
-            stream=report_file
-        )
-        unittest.main(testRunner=test_runner)
+    unittest.main()
