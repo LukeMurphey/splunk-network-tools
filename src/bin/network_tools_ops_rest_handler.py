@@ -39,7 +39,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from network_tools_app import rest_handler
-from network_tools_app import ping, whois, nslookup, traceroute
+from network_tools_app import ping, whois, nslookup, traceroute, wakeonlan
 
 class NetworkOperationsHandler(rest_handler.RESTHandler):
     """
@@ -137,6 +137,27 @@ class NetworkOperationsHandler(rest_handler.RESTHandler):
 
         try:
             output = traceroute(host, source="network_tools_controller", logger=logger)
+
+            # Everything worked, return accordingly
+            return {
+                'payload': output, # Payload of the request.
+                'status': 200 # HTTP status code
+            }
+
+        except:
+            self.logger.exception("Exception generated when attempting to perform an operation")
+            return self.render_error_json("Unable to perform network operation")
+
+    def post_wake(self, request_info, host=None, **kwargs):
+        """
+        Perform a wake-on-LAN request.
+        """
+
+        if host is None:
+            return self.render_error_json("Unable to perform network operation: no host argument provided")
+
+        try:
+            output = wakeonlan(host, source="network_tools_controller", logger=logger)
 
             # Everything worked, return accordingly
             return {

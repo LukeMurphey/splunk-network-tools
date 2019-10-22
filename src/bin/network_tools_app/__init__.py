@@ -9,7 +9,12 @@ This module includes a series of functions for performing network operations (pi
 import sys
 import os
 import errno
-import ConfigParser
+
+try:
+    import ConfigParser
+except ModuleNotFoundError:
+    from configparser import ConfigParser
+
 import splunk.appserver.mrsparkle.lib.util as util
 
 lib_dir = os.path.join(util.get_apps_dir(), 'network_tools', 'bin', 'network_tools_app')
@@ -17,18 +22,25 @@ lib_dir = os.path.join(util.get_apps_dir(), 'network_tools', 'bin', 'network_too
 if not lib_dir in sys.path:
     sys.path.append(lib_dir)
 
+lib_dir = os.path.join(util.get_apps_dir(), 'network_tools', 'bin', 'network_tools_app', 'dns')
+
+if not lib_dir in sys.path:
+    sys.path.append(lib_dir)
+
+import dns.resolver
+
 # App provided imports
-from event_writer import StashNewWriter
-import pyspeedtest
-import pingparser
-from tracerouteparser import Traceroute
-from wakeonlan import wol
-from ipwhois import IPWhois
-from pythonwhois import get_whois
-from flatten import flatten
-from ipaddr import IPAddress
-from dns import resolver,reversename
-from portscan import port_scan
+from network_tools_app.event_writer import StashNewWriter
+from network_tools_app import pyspeedtest
+from network_tools_app import pingparser
+from .tracerouteparser import Traceroute
+from network_tools_app.wakeonlan import wol
+from network_tools_app.ipwhois import IPWhois
+from network_tools_app.pythonwhois import get_whois
+from network_tools_app.flatten import flatten
+from network_tools_app.ipaddr import IPAddress
+from network_tools_app.dns import resolver,reversename
+from network_tools_app.portscan import port_scan
 
 # Environment imports
 from platform import system as system_name
@@ -97,7 +109,7 @@ def get_app_config(session_key, stanza="default"):
                     options = conf.options(stanza)
                     for o in options:
                         app_config.update({o: conf.get(stanza, o)})
-        except BaseException, e:
+        except BaseException as e:
             # Could not read configuration file(s)
             app_config = None
     else:
