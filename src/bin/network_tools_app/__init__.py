@@ -55,6 +55,12 @@ import splunk.rest as rest
 from splunk.models.base import SplunkAppObjModel
 from splunk.models.field import Field
 
+# unicode / binary types
+if sys.version_info > (3,):
+    text_type = str
+else:
+    text_type = unicode  
+
 class CommandNotFoundException(Exception):
     """
     Represents the inability to run a command because it could not be found.
@@ -75,6 +81,12 @@ class AttrDict(dict):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
 
+def validate_ip(host):
+    if not isinstance(host, text_type):
+        host = text_type(host)
+
+    return ip_network(host)
+
 def get_app_config(session_key, stanza="default"):
     """
     Get the app configuration
@@ -92,7 +104,7 @@ def get_app_config(session_key, stanza="default"):
     if session_key == None:
         # Scripted lookups don't get a session key
         default_conf = os.path.join(os.environ['SPLUNK_HOME'], 'etc', 'apps', 'network_tools', 'default', 'network_tools.conf')
-        local_conf =   os.path.join(os.environ['SPLUNK_HOME'], 'etc', 'apps', 'network_tools', 'local', 'network_tools.conf')
+        local_conf = os.path.join(os.environ['SPLUNK_HOME'], 'etc', 'apps', 'network_tools', 'local', 'network_tools.conf')
         system_local_conf = os.path.join(os.environ['SPLUNK_HOME'], 'etc', 'system', 'local', 'network_tools.conf')
         
         conf = ConfigParser.SafeConfigParser()
@@ -580,7 +592,7 @@ def whois(host, index=None, sourcetype="whois", source="whois_search_command", l
     # See if this is an IP address. If so, do an IP whois.
     try:
         # The following will throw a ValueError exception indicating that this is not an IP address
-        ip_network(host)
+        validate_ip(host)
 
         whois_object = IPWhois(host)
         results_orig = whois_object.lookup_rdap(depth=1)
@@ -631,15 +643,14 @@ def nslookup(host, server=None, index=None, sourcetype="nslookup",
 
     # See if this is an IP address. If so, do a reverse lookup.
     try:
-        ip_network(host)
-
+        validate_ip(host)
         addr = reversename.from_address(host)
 
         if len(resolver.query(addr, "PTR")) > 0:
             result['host'] = str(resolver.query(addr, "PTR")[0])
 
     # If this isn't an IP address, handle it as a DNS name.
-    except ValueError:
+    except ValueError as e:
         # Make a resolver
         custom_resolver = resolver.Resolver()
 
