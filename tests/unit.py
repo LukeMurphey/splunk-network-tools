@@ -101,6 +101,15 @@ class TestNSLookup(unittest.TestCase):
         Test performing an nslookup.
         """
 
+        output = nslookup('google.com')
+
+        self.assertGreater(len(output), 0)
+
+    def test_do_nslookup_bug_2480(self):
+        """
+        Test performing an nslookup on a domain that is recognized as IPv6.
+        """
+
         output = nslookup('textcritical.net')
 
         self.assertGreater(len(output), 0)
