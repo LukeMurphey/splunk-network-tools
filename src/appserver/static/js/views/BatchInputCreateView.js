@@ -151,9 +151,9 @@ define([
         	
         	// Perform the call
         	$.ajax({
-        			url: splunkd_utils.fullpath("/servicesNS/" + Splunk.util.getConfigValue("USERNAME") +  "/network_tools/data/inputs/ping?output_mode=json"),
+        			url: splunkd_utils.fullpath("/servicesNS/" + Splunk.util.getConfigValue("USERNAME") +  "/services/data/network_tools_ops/ping"),
         			data: data,
-        			type: 'POST',
+        			type: 'GET',
         			
         			// On success
         			success: function(data) {

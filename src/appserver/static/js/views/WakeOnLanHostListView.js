@@ -253,7 +253,7 @@ define([
         	
         	// Perform the call
         	$.ajax({
-        			url: splunkd_utils.fullpath(['/en-US/custom/network_tools/network_tools/wake'].join('/')),
+					url: splunkd_utils.fullpath(['/services/data/network_tools_ops/wake'].join('/')),
         			data: {'host' : name},
         			type: 'POST',
         			
@@ -698,9 +698,9 @@ define([
 			
         	// Perform the call
         	$.ajax({
-        			url: splunkd_utils.fullpath(['/en-US/custom/network_tools/network_tools/ping'].join('/')),
+        			url: splunkd_utils.fullpath(['/services/data/network_tools_ops/ping'].join('/')),
         			data: {'host' : ip_address},
-        			type: 'POST',
+        			type: 'GET',
         			
         			// On success, populate the table
         			success: function(data) {

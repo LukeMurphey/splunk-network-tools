@@ -47,7 +47,8 @@ class NetworkOperationsHandler(rest_handler.RESTHandler):
 
      1) Pings
      2) Traceroutes
-     3) Whois requests 
+     3) Whois requests
+     4) Wake-on-LAN requests 
     """
 
     def __init__(self, command_line, command_arg):
