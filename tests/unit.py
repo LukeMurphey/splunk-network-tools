@@ -717,7 +717,7 @@ class TestTCPPing(unittest.TestCase):
 
     def test_ping(self):
         result = tcp_ping('textcritical.net', port=80, count=5)
-        print(result['output'])
+
         self.assertEqual(result['dest'], 'textcritical.net')
         self.assertEqual(result['sent'], 5)
         self.assertEqual(result['received'], 5)

@@ -4,6 +4,7 @@ This class implements a class for parsing traceroute output.
 
 import re
 from compat import text_type
+import sys
 
 class Probe(object):
     """
@@ -160,8 +161,8 @@ class Traceroute(object):
 
         hop = None
 
-        if not isinstance(output, text_type):
-            output = text_type(output)
+        if not isinstance(output, text_type) and sys.version_info.major >= 3:
+            output = output.decode('utf-8')
 
         # Go through each line
         for line in output.splitlines():
@@ -179,7 +180,7 @@ class Traceroute(object):
 
             # Try to parse this as a hop
             else:
-
+ 
                 # Parse each hop
                 parsed_hops = self.try_to_match(line, self.HOP_RE_LIST, find_all=True)
 
@@ -191,8 +192,6 @@ class Traceroute(object):
                 for parsed_hop in parsed_hops:
 
                     parsed_hop = parsed_hop.groupdict()
-
-                    #print parsed_hop
 
                     if parsed_hop:
 
