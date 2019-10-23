@@ -11,6 +11,8 @@ import re
 import sys
 import collections
 
+from compat import text_type
+
 __all__ = ["parse",
            "format_ping_result",
            "main",
@@ -113,6 +115,10 @@ def parse(ping_output):
         `jitter`: *float*; the standard deviation between round trip ping times
                     in milliseconds
     """
+
+    if not isinstance(ping_output, text_type):
+        ping_output = text_type(ping_output)
+
     host = _get_match_groups(ping_output, host_matcher)[0]
     sent, received, packet_loss = _get_match_groups(ping_output, [rslt_matcher, rslt_matcher_windows], ['sent', 'received', 'packet_loss'])
 

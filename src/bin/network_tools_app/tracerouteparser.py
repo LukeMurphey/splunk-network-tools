@@ -3,6 +3,7 @@ This class implements a class for parsing traceroute output.
 """
 
 import re
+from compat import text_type
 
 class Probe(object):
     """
@@ -159,8 +160,11 @@ class Traceroute(object):
 
         hop = None
 
+        if not isinstance(output, text_type):
+            output = text_type(output)
+
         # Go through each line
-        for line in output.split('\n'):
+        for line in output.splitlines():
 
             # See if this is something to just ignore
             if self.try_to_match(line, self.IGNORE_LIST):

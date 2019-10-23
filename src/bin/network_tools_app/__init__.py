@@ -55,11 +55,7 @@ import splunk.rest as rest
 from splunk.models.base import SplunkAppObjModel
 from splunk.models.field import Field
 
-# unicode / binary types
-if sys.version_info > (3,):
-    text_type = str
-else:
-    text_type = unicode  
+from compat import text_type
 
 class CommandNotFoundException(Exception):
     """
