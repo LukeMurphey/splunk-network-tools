@@ -8,8 +8,6 @@ To use this, you will need to:
 
 1) Define a restmap.conf and declare the handler
 2) Define the Python code of the REST handler
-3) Define your conf spec file that declares the parameters
-4) Make a default of your .conf file
 
 See below for examples.
 
@@ -66,40 +64,6 @@ class MyCustomRestHandler(RestHandler):
 # initialize the handler
 if __name__ == "__main__":
     admin.init(MyCustomRestHandler, admin.CONTEXT_NONE)
-
-
-
-------------------------------------------------
-Custom .conf.spec example
-------------------------------------------------
-Below is an example of the conf spec file. Note that the filename must match the
-"conf_file" parameter defined in your custom RestHandler. In the above example, the conf file
-was defined as "example". Thus, the custom conf file will be put in "example.conf". The spec file
-will need to be in README/example.conf.spec.
-
-
-debug = <value>
-    * Whether debug logs should be created
-
-foo = <value>
-    * Defines the value of the foo for whatever it is used for
-
-some_integer = <int>
-    * Defines the value used for something
-    * Example: 1234
-
-
-------------------------------------------------
-Default .conf file example
-------------------------------------------------
-You will likely want to define the defaults for your custom conf file.
-In this example, you would make "example.conf" and include something like:
-
-
-[default]
-debug = false
-foo = bar quix
-some_integer = 1
 """
 
 import splunk.admin as admin
@@ -384,7 +348,7 @@ class RestHandler(admin.MConfigHandler):
             if not file_name.endswith('.log'):
                 file_name = file_name + '.log'
 
-            self._logger = setup_logger(logging.INFO, self.logger_name, file_name)
+            self._logger = setup_logger(self.logger_level, self.logger_name, file_name)
 
         return self._logger
 
@@ -425,6 +389,7 @@ class RestHandler(admin.MConfigHandler):
         """
         Setup the required and optional arguments
         """
+        self.logger.debug('Starting the REST handler')
 
         try:
             self.checkIfProperlyInitialized()
@@ -511,18 +476,6 @@ class RestHandler(admin.MConfigHandler):
 
                     # ADD CODE HERE to get your parameters
 
-    @log_function_invocation
-    def handleReload(self, confInfo):
-        """
-        Reload the list of configuration options.
-
-        Arguments
-        confInfo -- The object containing the information about what is being requested.
-        """
-
-        # Refresh the configuration (handles disk based updates)
-        entity.refreshEntities('properties/' + self.conf_file, sessionKey=self.getSessionKey())
-
     def clearValue(self, d, name):
         """
         Set the value of in the dictionary to none
@@ -543,7 +496,17 @@ class RestHandler(admin.MConfigHandler):
         Arguments
         confInfo -- The object containing the information about what is being requested.
         """
+        return self.saveConf(confInfo, verify_exists=True)
 
+    @log_function_invocation
+    def saveConf(self, confInfo, verify_exists=False):
+        """
+        Handles edits to the configuration options
+
+        Arguments
+        confInfo -- The object containing the information about what is being requested.
+        verify_exists -- Make sure the entry exists before saving
+        """
         try:
 
             name = self.callerArgs.id
@@ -554,6 +517,7 @@ class RestHandler(admin.MConfigHandler):
 
             # Get the settings for the given stanza
             is_found = False
+            existing_settings = None
 
             if name is not None:
                 for stanza, settings in confDict.items():
@@ -566,7 +530,7 @@ class RestHandler(admin.MConfigHandler):
                         break # Got the settings object we were looking for
 
             # Stop if we could not find the name
-            if not is_found:
+            if not is_found and verify_exists:
                 raise admin.NotFoundException("A stanza for the given name '%s' could not be found" % (name))
 
             # Get the settings that are being set
@@ -576,7 +540,10 @@ class RestHandler(admin.MConfigHandler):
                 new_settings[key] = args[key][0]
 
             # Create the resulting configuration that would be persisted if the settings provided are applied
-            settings.update(new_settings)
+            if is_found:
+                settings.update(new_settings)
+            else:
+                settings = existing_settings
 
             # Check the configuration settings
             cleaned_params = self.checkConf(new_settings, name, confInfo, existing_settings=existing_settings)
@@ -594,12 +561,28 @@ class RestHandler(admin.MConfigHandler):
             # Write out the updated conf
             self.writeConf(self.conf_file, name, validated_params)
 
-        except admin.NotFoundException, e:
+        except admin.NotFoundException as e:
             raise e
-        except Exception, e:
+        except Exception as e:
             self.logger.exception("Exception generated while performing edit")
 
             raise e
+
+    @log_function_invocation
+    def handleReload(self, confInfo):
+        """
+        Reload the list of configuration options.
+
+        Arguments
+        confInfo -- The object containing the information about what is being requested.
+        """
+
+        # Refresh the configuration (handles disk based updates)
+        entity.refreshEntities('properties/' + self.conf_file, sessionKey=self.getSessionKey())
+
+    @log_function_invocation
+    def handleCreate(self, confInfo):
+        return self.saveConf(confInfo, verify_exists=False)
 
     def checkConf(self, settings, stanza=None, confInfo=None, onlyCheckProvidedFields=False, existing_settings=None):
         """
