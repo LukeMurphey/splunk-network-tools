@@ -151,9 +151,9 @@ define([
         	
         	// Perform the call
         	$.ajax({
-        			url: splunkd_utils.fullpath("/servicesNS/" + Splunk.util.getConfigValue("USERNAME") +  "/services/data/network_tools_ops/ping"),
+        			url: splunkd_utils.fullpath("/servicesNS/" + Splunk.util.getConfigValue("USERNAME") +  "/network_tools/data/inputs/ping?output_mode=json"),
         			data: data,
-        			type: 'GET',
+        			type: 'POST',
         			
         			// On success
         			success: function(data) {
@@ -488,7 +488,7 @@ define([
          */
         getExistingInputs: function(){
 
-        	var uri = splunkd_utils.fullpath("/servicesNS/nobody/search/data/inputs/ping?output_mode=json&count=-1");
+        	var uri = splunkd_utils.fullpath("/splunkd/__raw/servicesNS/nobody/search/data/inputs/ping?output_mode=json&count=-1");
 
 	        // Fire off the request
         	jQuery.ajax({
