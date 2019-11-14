@@ -8,6 +8,7 @@ import sys
 from network_tools_app.search_command import SearchCommand
 from network_tools_app import get_default_index
 from network_tools_app.ping_network import ping_all, tcp_ping_all
+from compat import text_type
 
 class Ping(SearchCommand):
     """
@@ -20,11 +21,11 @@ class Ping(SearchCommand):
         self.dest = None
 
         if dest is not None:
-            self.dest = unicode(dest)
+            self.dest = text_type(dest)
 
         # Use the host argument if someone provided that instead (since that is the old argument)
         elif self.dest is None and host is not None:
-            self.dest = unicode(host)
+            self.dest = text_type(host)
 
         self.index = index
 
