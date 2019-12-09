@@ -178,6 +178,16 @@ class TestFlatten(unittest.TestCase):
 
         self.assertGreaterEqual(len(flattened['configuration']), 3)
 
+
+    def test_flatten_byte_array(self):
+        """
+        This tests the conversion to ensure that a bytes array is handled correctly.
+        """
+
+        flattened = flatten(bytes('test'))
+
+        self.assertGreaterEqual(len(flattened['configuration']), 3)
+
 class TestDictTranslate(unittest.TestCase):
     """
     Test the dict_translate module which converts a Python object to a flat dictionary.
