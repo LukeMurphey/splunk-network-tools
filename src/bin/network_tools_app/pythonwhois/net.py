@@ -73,22 +73,43 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
 		return new_list
 	
 def get_root_server(domain):
-	data = whois_request(domain, "whois.iana.org")
-	for line in [x.strip() for x in data.splitlines()]:
-		match = re.match("refer:\s*([^\s]+)", line)
-		if match is None:
-			continue
-		return match.group(1)
-	raise shared.WhoisException("No root WHOIS server found for domain.")
+	if domain is not None and '.' in domain:
+		data = whois_request(domain, "whois.iana.org")
+		for line in [x.strip() for x in data.splitlines()]:
+			match = re.match("refer:\s*([^\s]+)", line)
+			if match is None:
+				continue
+			return match.group(1)
+		raise shared.WhoisException("No root WHOIS server found for domain %s" % domain)
+	else:
+		raise shared.WhoisException("Invalid domain supplied")
 	
 def whois_request(domain, server, port=43):
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	sock.connect((server, port))
-	sock.send(("%s\r\n" % domain).encode("utf-8"))
-	buff = b""
-	while True:
-		data = sock.recv(1024)
-		if len(data) == 0:
-			break
-		buff += data
-	return buff.decode("utf-8")
+	# Timeout in seconds
+	sock.settimeout(5)
+	# Buffer size
+	buff_size = 1024
+	data = b""
+	
+	try:
+		sock.connect((server, port))
+		# Set a 5 second timeout
+		sock.settimeout(5)
+		sock.send(("%s\r\n" % domain).encode("utf-8"))
+		while True:
+			buff = sock.recv(buff_size)
+			if buff:
+				data += buff
+			else:
+				break
+			if len(buff) < buff_size:
+				# len=0 or end of data
+				break
+		# Close the socket to prevent CLOSE_WAIT state and hung connections
+		sock.close()
+	except socket.error, exc:
+		if sock:
+			sock.close()
+		raise shared.WhoisException("Caught exception socket.error : %s" % exc)
+	return data.decode("utf-8")
