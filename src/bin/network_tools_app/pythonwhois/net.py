@@ -108,7 +108,7 @@ def whois_request(domain, server, port=43):
 				break
 		# Close the socket to prevent CLOSE_WAIT state and hung connections
 		sock.close()
-	except socket.error, exc:
+	except socket.error as exc:
 		if sock:
 			sock.close()
 		raise shared.WhoisException("Caught exception socket.error : %s" % exc)
