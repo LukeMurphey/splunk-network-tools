@@ -117,7 +117,7 @@ def translate_key(existing_key, re_rules):
         if re.match(rule[0], existing_key):
             return rule[1]
 
-    return None
+    return existing_key
 
 def translate(dictionary=None, translation_rules=None):
     """
