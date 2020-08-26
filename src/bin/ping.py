@@ -105,7 +105,7 @@ class PingInput(ModularInput):
         """
 
         # Clean up old threads
-        for thread_stanza in self.threads.keys():
+        for thread_stanza in list(self.threads.keys()):
 
             # Keep track of the number of removed threads so that we can make sure to emit a log
             # message noting the number of threads
