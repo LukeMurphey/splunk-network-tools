@@ -52,6 +52,13 @@ import threading
 
 from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
 
+# Python 2+3 basestring
+try:
+    basestring
+except:
+    basestring = str
+
+
 class CustomLookup(object):
 
     def __init__(self, fieldnames=None, logger_name='custom_lookup_command', log_level=logging.INFO, thread_limit=25):
