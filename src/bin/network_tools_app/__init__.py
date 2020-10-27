@@ -11,7 +11,7 @@ import os
 import errno
 
 try:
-    import ConfigParser
+    from ConfigParser import SafeConfigParser as ConfigParser
 except ModuleNotFoundError:
     from configparser import ConfigParser
 
@@ -103,7 +103,7 @@ def get_app_config(session_key, stanza="default"):
         local_conf = os.path.join(os.environ['SPLUNK_HOME'], 'etc', 'apps', 'network_tools', 'local', 'network_tools.conf')
         system_local_conf = os.path.join(os.environ['SPLUNK_HOME'], 'etc', 'system', 'local', 'network_tools.conf')
         
-        conf = ConfigParser.SafeConfigParser()
+        conf = ConfigParser()
         try:
             # Create an empty object with AttrDict type
             app_config = AttrDict()
